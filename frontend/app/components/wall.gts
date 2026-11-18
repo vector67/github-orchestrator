@@ -406,7 +406,15 @@ export default class Wall extends Component<WallSignature> {
                   <span class="state-chips">{{#each
                       reading.rowChips key="key"
                       as |chip|
-                    }}<StateChip @chip={{chip}} />{{/each}}{{#if pr.moved}}<span
+                    }}<StateChip @chip={{chip}} />{{/each}}{{#if
+                      pr.summaries.terminalsWaiting
+                    }}<span
+                        class="state-chip tone-strong"
+                        title="Terminal sessions of this pull request waiting for you, on the Terminals page"
+                        data-test-state="terminals-waiting"
+                      >{{pr.summaries.terminalsWaiting}}</span>{{/if}}{{#if
+                      pr.moved
+                    }}<span
                         class="state-chip tone-accent moved"
                         data-test-moved
                       >moved here</span>{{/if}}{{#if
@@ -429,6 +437,9 @@ export default class Wall extends Component<WallSignature> {
                       reading.rowChips key="key"
                       as |chip|
                     }}<span>{{chip.text}}: {{chip.hint}}.</span>{{/each}}{{#if
+                      pr.summaries.terminalsWaiting
+                    }}<span
+                      >{{pr.summaries.terminalsWaiting}}.</span>{{/if}}{{#if
                       pr.moved
                     }}<span>moved here.</span>{{/if}}{{#if
                       pr.summaries.pressing.controls.pending

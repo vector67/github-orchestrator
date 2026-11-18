@@ -207,7 +207,7 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
         fake_provider(ManagerPanels, OnePanel(serving.get("manager") or FakeManagerPanel())),
         *serving.get("summaries", no_summaries()),
         clocks_of(serving.get("clock", at(MOMENT))),
-        ServerAppWiring(app_root=serving.get("app_root", UNBUILT), font_dir=serving.get("font_dir"),
+        ServerAppWiring(agent_program="claude", app_root=serving.get("app_root", UNBUILT), font_dir=serving.get("font_dir"),
                         watching=(Repo("acme", "widgets"),), version="0.1.0",
                         check_presence=serving.get("check_presence", False),
                         first_names_only=serving.get("first_names_only", False),
@@ -295,18 +295,18 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
 def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(MOMENT),
                watching: Collection[Repo] = (Repo("acme", "widgets"),),
                told: Told | None = None, summaries: list[Part] | None = None,
-               **wall: Any) -> TestClient:
+               terminals: Terminals | None = None, **wall: Any) -> TestClient:
     fake = fake_threads()
     server: ServerApp = wire(
         fake_provider(Told, told or FakeTold()),
         *_hub_parts(**wall),
         fake_provider(ConversationManagerFactory, fake),
         fake_provider(WorkingCopies, fake.working_copies),
-        fake_provider(Terminals, FakeTerminals()),
+        fake_provider(Terminals, terminals or FakeTerminals()),
         fake_provider(ManagerPanels, OnePanel(FakeManagerPanel())),
         *(summaries or no_summaries()),
         clocks_of(clock),
-        ServerAppWiring(app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
+        ServerAppWiring(agent_program="claude", app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
                         check_presence=False, first_names_only=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
     return OneLoopClient(server.app(HUB_PORT, SERVER_PID), base_url=f"http://127.0.0.1:{HUB_PORT}")
@@ -548,7 +548,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
         fake_provider(ManagerPanels, panels),
         *no_summaries(),
         clocks_of(at(MOMENT)),
-        ServerAppWiring(app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
+        ServerAppWiring(agent_program="claude", app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
                         version="0.1.0", check_presence=False, first_names_only=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
     client = OneLoopClient(server.app(port, SERVER_PID),

@@ -13,6 +13,7 @@ from github_orchestrator.board_api._hub import Desk, hub_app
 from github_orchestrator.board_api._loopback import loopback_url
 from github_orchestrator.board_api._pages import pr_page
 from github_orchestrator.board_api._wall import Wall
+from github_orchestrator.board_api._watched import WatchedSessions
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Descriptions,
@@ -93,7 +94,8 @@ class _Routed:
 
 
 class OneServer:
-    def __init__(self, *, app_root: Path, font_dir: str | None, dashboards: Dashboards,
+    def __init__(self, *, agent_program: str, app_root: Path, font_dir: str | None,
+                 dashboards: Dashboards,
                  ledger: Ledger, pulse: WatcherPulse, clock: UtcClock,
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
@@ -108,7 +110,8 @@ class OneServer:
                  check_seconds: float) -> None:
         self._app_root = app_root
         self._fonts = routes.served_fonts(font_dir)
-        self._wall = Wall(dashboards, watching, summaries)
+        self._sessions = WatchedSessions(terminals, agent_program, clock)
+        self._wall = Wall(dashboards, watching, summaries, self._sessions)
         self._ledger = ledger
         self._pulse = pulse
         self._clock = clock
@@ -145,7 +148,7 @@ class OneServer:
                     version=self._version, problem=self._problem, setup=self._setup,
                     releases=self._releases, tour=self._tour, emojis=self._emojis,
                     harvest=self._harvest, mentions=self._mentions,
-                    migration=self._migration, pid=pid)
+                    migration=self._migration, sessions=self._sessions, pid=pid)
 
         def board(pr: Pr) -> ASGIApp:
             return board_app(Board(

@@ -10,6 +10,7 @@ import string
 import subprocess
 import sys
 from collections.abc import Callable, Mapping
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from github_orchestrator.domain import Pr
@@ -23,8 +24,20 @@ from github_orchestrator.terminal_sessions._frames import (
     framed,
     sized,
 )
-from github_orchestrator.terminal_sessions._holder import KEPT, LOG, RECORD, SOCKET
-from github_orchestrator.terminal_sessions.interface import Session, TerminalSessions
+from github_orchestrator.terminal_sessions._holder import (
+    KEPT,
+    LOG,
+    OUTPUT_MARK,
+    RECORD,
+    SOCKET,
+    TURN,
+)
+from github_orchestrator.terminal_sessions.interface import (
+    Activity,
+    Session,
+    TerminalSessions,
+    Watched,
+)
 
 log = logging.getLogger(__name__)
 
@@ -34,6 +47,26 @@ HOLDER = "github_orchestrator.terminal_sessions._holder"
 READ_BYTES = 64 * 1024
 PLACE = 12
 UNMANAGED = "unmanaged"
+QUIET_AFTER = timedelta(seconds=30)
+TURNS = {"working": Activity.WORKING, "waiting": Activity.WAITING}
+
+
+def _changed_at(path: Path) -> datetime | None:
+    try:
+        return datetime.fromtimestamp(path.stat().st_mtime, timezone.utc)
+    except OSError:
+        return None
+
+
+def _turn_in(path: Path) -> Activity | None:
+    try:
+        return TURNS.get(path.read_text().strip())
+    except (OSError, UnicodeDecodeError):
+        return None
+
+
+def _named(word: str, program: str) -> bool:
+    return os.path.basename(word) == os.path.basename(program)
 
 
 class _Connection:
@@ -99,6 +132,36 @@ def _alive(pid: int) -> bool:
     return True
 
 
+class _Processes:
+    def __init__(self, popen: Popen) -> None:
+        self._popen = popen
+        self._listed: list[tuple[int, int, list[str]]] | None = None
+
+    def _all(self) -> list[tuple[int, int, list[str]]]:
+        if self._listed is None:
+            listing = self._popen(["ps", "-A", "-o", "pid=,ppid=,args="],
+                                  stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL)
+            printed, _ = listing.communicate()
+            self._listed = []
+            for line in printed.decode(errors="replace").splitlines():
+                pid, ppid, *args = line.split()
+                self._listed.append((int(pid), int(ppid), args))
+        return self._listed
+
+    def runs(self, holder: int, program: str) -> bool:
+        under = {holder}
+        found = True
+        while found:
+            found = False
+            for pid, ppid, args in self._all():
+                if ppid in under and pid not in under:
+                    under.add(pid)
+                    found = True
+        return any(any(_named(word, program) for word in args[:2])
+                   for pid, _, args in self._all() if pid in under and pid != holder)
+
+
 class PtySessions:
     def __init__(self, popen: Popen, environment: Mapping[str, str], directory: Path, *,
                  first_connection_seconds: float, clamp: tuple[str, ...]) -> None:
@@ -129,10 +192,10 @@ class PtySessions:
         return session
 
     def _forget(self, session: str) -> None:
-        for suffix in (RECORD, SOCKET, LOG):
+        for suffix in (RECORD, SOCKET, LOG, OUTPUT_MARK, TURN):
             (self._directory / f"{session}{suffix}").unlink(missing_ok=True)
 
-    def _held(self) -> list[tuple[int, Session]]:
+    def _recorded(self) -> list[tuple[int, int, Session]]:
         found = []
         for record in self._directory.glob(f"*{RECORD}"):
             session = record.name.removesuffix(RECORD)
@@ -146,10 +209,44 @@ class PtySessions:
                 continue
             found.append((fields["started"], fields["pid"],
                           Session(session, tuple(fields["argv"]), fields["worktree"])))
-        return [(pid, held) for _, pid, held in sorted(found, key=lambda one: one[0])]
+        return [(started, pid, held) for started, pid, held in sorted(found, key=lambda one: one[0])]
+
+    def _held(self) -> list[tuple[int, Session]]:
+        return [(pid, held) for _, pid, held in self._recorded()]
 
     def listed(self) -> list[Session]:
         return [held for _, held in self._held()]
+
+    def watched(self, now: datetime, agent: str) -> list[Watched]:
+        processes = _Processes(self._popen)
+        return [self._watched(started, pid, held, now, agent, processes)
+                for started, pid, held in self._recorded()]
+
+    def _watched(self, started: int, pid: int, held: Session, now: datetime, agent: str,
+                 processes: _Processes) -> Watched:
+        started_at = datetime.fromtimestamp(started / 1e9, timezone.utc)
+        turn_file = self._directory / f"{held.id}{TURN}"
+        turn = _turn_in(turn_file)
+        if turn is not None:
+            return Watched(held, started_at, turn,
+                           _changed_at(turn_file) if turn is Activity.WAITING else None)
+        quiet_since = _changed_at(self._directory / f"{held.id}{OUTPUT_MARK}") or started_at
+        if now - quiet_since < QUIET_AFTER:
+            return Watched(held, started_at, Activity.WORKING, None)
+        if (held.argv and _named(held.argv[0], "git")) or processes.runs(pid, agent):
+            return Watched(held, started_at, Activity.WAITING, quiet_since)
+        return Watched(held, started_at, Activity.IDLE, None)
+
+    def close(self, session: str) -> bool:
+        for pid, held in self._held():
+            if held.id == session:
+                log.info("terminal session %s: closing", session)
+                try:
+                    os.kill(pid, signal.SIGTERM)
+                except ProcessLookupError:
+                    return False
+                return True
+        return False
 
     def hang_up(self) -> None:
         for pid, held in self._held():

@@ -11,7 +11,7 @@ from tests.agent_runs.cli_flags import assert_the_cli_takes, invocations
 from tests.agent_runs.pinned import assert_pinned
 from tests.agent_runs.scripted_claude import ScriptedClaude
 from tests.agent_runs.scripted_jev import ScriptedJev
-from tests.agent_runs.support import finish, real_agent_runs
+from tests.agent_runs.support import finish, real_agent_runs, unhooked
 from tests.builders import a_pr
 
 
@@ -342,7 +342,7 @@ def test_a_reviewer_watching_a_session_on_a_mention_is_asked_only_for_a_reply(
     runs.fix_in_session(_thread(at_wt, reviewing=True))
     [session] = world.pr_processes.sessions[ACME]
 
-    _pinned("mention-reply-session", shlex.join(session.argv), at_wt)
+    _pinned("mention-reply-session", shlex.join(unhooked(session.argv)), at_wt)
 
 
 def test_the_fix_of_a_thread_on_no_line(runs, claude, at_wt):
@@ -387,7 +387,7 @@ def test_the_rework_of_a_skipped_fix(runs, claude, at_wt):
 def _session(world, runs, fix, steer):
     runs.open_session(fix, steer)
     [session] = world.pr_processes.sessions[fix.pr]
-    return shlex.join(session.argv)
+    return shlex.join(unhooked(session.argv))
 
 
 def test_a_steered_session_on_a_skipped_fix(world, runs, at_wt):
@@ -405,7 +405,7 @@ def test_a_session_nobody_steered(world, runs, at_wt):
 def _first_in_session(world, runs, at_wt):
     runs.fix_in_session(_thread(at_wt))
     [session] = world.pr_processes.sessions[ACME]
-    return shlex.join(session.argv)
+    return shlex.join(unhooked(session.argv))
 
 
 def test_a_first_fix_run_in_a_session_is_briefed_as_the_run_would_be(world, runs, at_wt):

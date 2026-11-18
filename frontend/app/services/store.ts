@@ -63,6 +63,8 @@ import type {
   SessionCheck,
   TerminalSession,
   TerminalSessionList,
+  WatchedSession,
+  WatchedSessions,
   ThreadNamesMigration,
   Tour,
   WallGroup,
@@ -265,6 +267,7 @@ export interface PrEntity {
   history: Partial<Record<DiffSource, PullRequestCommits>>;
   read: ReadMark[] | null;
   mismatches: number | null;
+  terminals_waiting: number;
 }
 
 export type ShownPr = PrEntity & { drawn: Drawn };
@@ -280,6 +283,7 @@ export interface Manager {
 export type Feed =
   | { kind: 'wall' }
   | { kind: 'runs' }
+  | { kind: 'terminals' }
   | { kind: 'mentions' }
   | { kind: 'dashboard'; pr: Numbered }
   | { kind: 'pull-request'; pr: Numbered }
@@ -339,6 +343,7 @@ const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
 const FEED_PATHS: Record<Feed['kind'], string> = {
   wall: '/api/pull-requests',
   runs: '/api/runs',
+  terminals: '/api/terminal-sessions',
   mentions: '/api/mentions',
   dashboard: '/api/dashboard',
   'pull-request': '/api/pull-request',
@@ -488,6 +493,7 @@ export default class StoreService extends Service {
   @tracked watching: string[] = [];
   @tracked ledger: Omit<RunLedger, 'watcher'> | null = null;
   @tracked mentions: Mentions | null = null;
+  @tracked watchedSessions: WatchedSession[] | null = null;
   @tracked health: Omit<Health, 'watcher'> | null = null;
   @tracked watcher: WatcherHealth | null = null;
   @tracked unheld: Unheld | null = null;
@@ -1703,6 +1709,21 @@ export default class StoreService extends Service {
     if (asked.changed) asked.take();
   }
 
+  async closeTerminalSession(one: WatchedSession): Promise<Tried<void>> {
+    const answer = await tried(
+      'close terminal session',
+      handed(
+        `${one.board_url}/api/terminal/sessions/${encodeURIComponent(one.id)}:close`,
+      ),
+    );
+    if (answer.done && this.watchedSessions) {
+      this.watchedSessions = this.watchedSessions.filter(
+        (held) => held.board_url !== one.board_url || held.id !== one.id,
+      );
+    }
+    return answer;
+  }
+
   async dismissMention(asked: DismissMentionRequest): Promise<Tried<void>> {
     const answer = await tried(
       'dismiss mention',
@@ -1885,6 +1906,9 @@ export default class StoreService extends Service {
         return true;
       case 'runs':
         this.takeLedger(body as RunLedger);
+        return true;
+      case 'terminals':
+        this.watchedSessions = (body as WatchedSessions).sessions;
         return true;
       case 'mentions':
         this.mentions = body as Mentions;
@@ -2452,6 +2476,7 @@ export default class StoreService extends Service {
         ...pr,
         board_url: row.board_url,
         mismatches: row.mismatches,
+        terminals_waiting: row.terminals_waiting,
       }));
       this.place(row.repo, row.number, true);
     }
@@ -2513,6 +2538,7 @@ export default class StoreService extends Service {
       history: {},
       read: null,
       mismatches: null,
+      terminals_waiting: 0,
     };
     this.prs = { ...this.prs, [key]: changed(held) };
     this.place(repo, number);

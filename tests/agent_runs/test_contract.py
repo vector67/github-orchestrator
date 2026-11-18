@@ -13,6 +13,7 @@ from tests.agent_runs.support import (
     ledger_file,
     pump_until,
     real_agent_runs,
+    unhooked,
 )
 from tests.builders import a_pr
 
@@ -395,14 +396,14 @@ def test_a_rebase_session_runs_claude_on_the_skill_in_the_worktree(world):
     assert world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
-    assert (session.worktree, session.argv) == ("/tmp/wt", ["claude", "/rebase-on-main"])
+    assert (session.worktree, unhooked(session.argv)) == ("/tmp/wt", ["claude", "/rebase-on-main"])
 
 
 def test_a_rebase_session_on_someone_else_s_pr_loads_none_of_its_project_settings(world):
     assert world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=False) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
-    assert session.argv == ["claude", "--setting-sources", "user", "/rebase-on-main"]
+    assert unhooked(session.argv) == ["claude", "--setting-sources", "user", "/rebase-on-main"]
 
 
 def test_a_question_session_runs_claude_on_the_prompt_in_the_worktree(world):
@@ -416,14 +417,14 @@ def test_a_question_starting_with_a_dash_reaches_claude_as_the_prompt_not_a_flag
     assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "-p or --print?", yours=True) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
-    assert session.argv == ["claude", "--", "-p or --print?"]
+    assert unhooked(session.argv) == ["claude", "--", "-p or --print?"]
 
 
 def test_a_question_on_someone_else_s_pr_loads_none_of_its_project_settings(world):
     assert world.runs.ask_in_session(THE_PR, "/tmp/wt", "Why this name?", yours=False) is None
 
     [session] = world.fake.pr_processes.sessions[THE_PR]
-    assert session.argv == ["claude", "--setting-sources", "user", "--", "Why this name?"]
+    assert unhooked(session.argv) == ["claude", "--setting-sources", "user", "--", "Why this name?"]
 
 
 def test_a_gist_is_the_first_line_the_model_writes(world):

@@ -41,6 +41,7 @@ from github_orchestrator.board_api._contract import (
     SessionInTheWay,
     ThreadNamesMigration,
     Tour,
+    WatchedSessions,
 )
 from github_orchestrator.board_api._errors import (
     NOT_FOUND,
@@ -53,6 +54,7 @@ from github_orchestrator.board_api._runs import ledger_read, watcher_read
 from github_orchestrator.board_api._streams import FOLLOWABLE, FOLLOWED, Followed
 from github_orchestrator.board_api._terminal import GONE
 from github_orchestrator.board_api._wall import Wall
+from github_orchestrator.board_api._watched import WatchedSessions as Sessions
 from github_orchestrator.board_api.interface import (
     DeferredUntilPr,
     Emojis,
@@ -113,6 +115,7 @@ class Desk:
     harvest: HarvestSetup
     mentions: MentionsList
     migration: NamesMigration
+    sessions: Sessions
     pid: int
 
 
@@ -190,6 +193,17 @@ def read_runs(request: Request, desk: Serving) -> Response:
     """
     return etag.answered(request, ledger_read(desk.ledger, desk.pulse,
                                               tuple(desk.told.held().managers), desk.clock()))
+
+
+@reads.get("/terminal-sessions", response_model=WatchedSessions, tags=["hub"],
+           operation_id="listWatchedTerminalSessions",
+           summary="Every terminal session of every pull request the watcher holds.",
+           responses=etag.TAGGED)
+def list_terminal_sessions(request: Request, desk: Serving) -> Response:
+    """The Terminals page: each session with its pull request, whether it is
+    working, waiting for you or idle, and since when it waits.
+    """
+    return etag.answered(request, desk.sessions.read(desk.told.held().managers))
 
 
 @reads.get("/health", tags=["hub"], operation_id="readHubHealth",

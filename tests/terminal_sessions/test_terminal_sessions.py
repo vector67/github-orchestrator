@@ -2,11 +2,11 @@ import os
 import secrets
 import subprocess
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from github_orchestrator.terminal_sessions import TerminalSessions
+from github_orchestrator.terminal_sessions import Activity, TerminalSessions
 from github_orchestrator.terminal_sessions.fake import (
     FakeTerminals,
     FakeTerminalSessions,
@@ -418,3 +418,92 @@ def test_hanging_up_ends_a_command_that_ignores_ctrl_c(real, worktree, tmp_path)
     real.hang_up()
 
     assert until(lambda: not _running(command))
+
+
+QUIET = timedelta(seconds=31)
+PRINTING = ["sh", "-c", "echo hello; while :; do sleep 0.1; done"]
+
+
+def _started_and_heard(sessions: TerminalSessions, worktree, command: list[str],
+                       wanted: bytes = b"hello") -> str:
+    started = sessions.start(str(worktree), command)
+    connection = sessions.attach(started)
+    assert wanted in _heard(connection, wanted)
+    connection.close()
+    return started
+
+
+def _activity(sessions: TerminalSessions, now: datetime, agent: str = "claude") -> list:
+    return [(one.session.id, one.activity) for one in sessions.watched(now, agent)]
+
+
+def test_a_session_that_just_printed_is_working(real, worktree):
+    started = _started_and_heard(real, worktree, PRINTING)
+
+    assert _activity(real, datetime.now(timezone.utc)) == [(started, Activity.WORKING)]
+
+
+def test_a_quiet_shell_is_idle(real, worktree):
+    started = _started_and_heard(real, worktree, PRINTING)
+
+    assert _activity(real, datetime.now(timezone.utc) + QUIET) == [(started, Activity.IDLE)]
+
+
+def test_a_quiet_git_session_waits_since_its_last_output(real, worktree):
+    before = datetime.now(timezone.utc)
+    started = real.start(str(worktree), ["git", "hash-object", "--stdin"])
+    later = datetime.now(timezone.utc) + QUIET
+
+    [watched] = real.watched(later, "claude")
+
+    assert (watched.session.id, watched.activity) == (started, Activity.WAITING)
+    assert watched.waiting_since is not None
+    assert before - timedelta(seconds=1) <= watched.waiting_since <= datetime.now(timezone.utc)
+
+
+def test_a_quiet_shell_running_the_agent_program_is_waiting(real, worktree):
+    started = _started_and_heard(real, worktree, ["sh", "-c", "echo hello; sleep 600; true"])
+    later = datetime.now(timezone.utc) + QUIET
+
+    assert _activity(real, later, agent="/usr/local/bin/sleep") == [(started, Activity.WAITING)]
+    assert _activity(real, later, agent="claude") == [(started, Activity.IDLE)]
+
+
+def test_a_session_whose_turn_file_says_working_is_working_however_quiet(real, worktree):
+    started = _started_and_heard(real, worktree, [
+        "sh", "-c", 'printf working > "$GITHUB_ORCHESTRATOR_TURN_FILE"; echo hello; '
+                    "while :; do sleep 0.1; done"])
+
+    assert until(lambda: _activity(real, datetime.now(timezone.utc) + QUIET)
+                 == [(started, Activity.WORKING)])
+
+
+def test_a_session_whose_turn_file_says_waiting_is_waiting_however_loud(real, worktree):
+    started = _started_and_heard(real, worktree, [
+        "sh", "-c", 'printf waiting > "$GITHUB_ORCHESTRATOR_TURN_FILE"; echo hello; '
+                    "while :; do sleep 0.1; done"])
+
+    assert until(lambda: _activity(real, datetime.now(timezone.utc))
+                 == [(started, Activity.WAITING)])
+
+
+def test_a_watched_session_says_when_it_started(real, worktree):
+    before = datetime.now(timezone.utc)
+    _started_and_heard(real, worktree, PRINTING)
+
+    [watched] = real.watched(datetime.now(timezone.utc), "claude")
+
+    assert before - timedelta(seconds=1) <= watched.started_at <= datetime.now(timezone.utc)
+
+
+def test_closing_a_session_ends_it_and_leaves_the_others(any_sessions, worktree):
+    first = any_sessions.start(str(worktree), FOREVER)
+    second = any_sessions.start(str(worktree), FOREVER)
+
+    assert any_sessions.close(first)
+
+    assert until(lambda: [session.id for session in any_sessions.listed()] == [second])
+
+
+def test_closing_a_session_that_is_not_running_says_so(any_sessions):
+    assert not any_sessions.close("abc123")

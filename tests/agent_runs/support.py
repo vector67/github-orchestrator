@@ -73,3 +73,10 @@ def ledger_file(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+
+
+def unhooked(argv: list[str]) -> list[str]:
+    if "--settings" not in argv:
+        return argv
+    at = argv.index("--settings")
+    return [*argv[:at], *argv[at + 2:]]

@@ -40,6 +40,10 @@ TAKE_THE_TERMINAL = ("import fcntl, os, sys, termios; fcntl.ioctl(0, termios.TIO
 RECORD = ".json"
 SOCKET = ".sock"
 LOG = ".log"
+OUTPUT_MARK = ".output"
+TURN = ".turn"
+TURN_FILE = "GITHUB_ORCHESTRATOR_TURN_FILE"
+MARK_SECONDS = 1.0
 KEPT = "kept"
 
 
@@ -62,6 +66,14 @@ class _Held:
         self._hung_up = False
         self._handlers: list[threading.Thread] = []
         self._ended, self._ending = os.pipe()
+        self._marked = -MARK_SECONDS
+
+    def _mark_output(self) -> None:
+        now = time.monotonic()
+        if now - self._marked < MARK_SECONDS:
+            return
+        self._marked = now
+        (self._directory / f"{self._session}{OUTPUT_MARK}").touch()
 
     def _pump(self) -> None:
         while True:
@@ -78,11 +90,12 @@ class _Held:
                     del self._kept[:excess]
                     self._dropped += excess
                 self._changed.notify_all()
+            self._mark_output()
         exit_code = self._process.wait()
         with self._io:
             self._closed = True
             os.close(self._master)
-        for suffix in (SOCKET, RECORD):
+        for suffix in (SOCKET, RECORD, OUTPUT_MARK, TURN):
             (self._directory / f"{self._session}{suffix}").unlink(missing_ok=True)
         with self._changed:
             self._exit_code = exit_code
@@ -240,7 +253,8 @@ def _held(directory: Path, session: str, worktree: str, argv: list[str]) -> _Hel
         process = subprocess.Popen(
             [sys.executable, "-c", TAKE_THE_TERMINAL, *argv],
             stdin=slave, stdout=slave, stderr=slave, cwd=worktree,
-            env={**os.environ, **TERMINAL}, start_new_session=True, close_fds=True)
+            env={**os.environ, **TERMINAL, TURN_FILE: str(directory / f"{session}{TURN}")},
+            start_new_session=True, close_fds=True)
     except OSError:
         os.close(master)
         raise

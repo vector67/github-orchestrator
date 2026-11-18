@@ -13,6 +13,7 @@ from tests.agent_runs.support import (
     PYTHON,
     finish,
     real_agent_runs,
+    unhooked,
 )
 from tests.builders import a_pr
 
@@ -141,7 +142,7 @@ def _fixing(runs, claude, worktree):
 def _in_session(world, runs, fix, steer=None):
     runs.open_session(fix, steer)
     [session] = world.pr_processes.sessions[fix.pr]
-    return shlex.join(session.argv)
+    return shlex.join(unhooked(session.argv))
 
 
 def _line_with(prompt, phrase):
@@ -271,7 +272,7 @@ def test_answering_a_question_continues_the_agent_s_last_conversation_in_the_wor
     assert runs.answer_in_session(_fix(worktree), None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
-    assert (session.worktree, session.argv) == (worktree, ["claude", "--continue"])
+    assert (session.worktree, unhooked(session.argv)) == (worktree, ["claude", "--continue"])
     assert session.kept
 
 
@@ -285,7 +286,7 @@ def test_answering_a_question_resumes_the_session_that_thread_s_run_started(
     assert runs.answer_in_session(_fix(worktree), None) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
-    assert session.argv == ["claude", "--resume", "asked"]
+    assert unhooked(session.argv) == ["claude", "--resume", "asked"]
 
 
 def test_a_reply_while_asking_continues_the_agent_s_conversation_with_the_reply(
@@ -319,7 +320,7 @@ def test_an_answer_in_a_session_resumes_the_conversation_with_the_answer_as_its_
     assert runs.answer_in_session(_fix(worktree), ANSWER) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
-    *argv, message = session.argv
+    *argv, message = unhooked(session.argv)
     assert argv == ["claude", "--continue"]
     assert ANSWER in message
     assert "now watching" in message

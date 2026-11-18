@@ -40,6 +40,7 @@ from github_orchestrator.domain import (
     IgnoreFor,
     Side,
 )
+from github_orchestrator.terminal_sessions import Activity
 
 
 class ErrorCode(StrEnum):
@@ -2385,6 +2386,34 @@ class TerminalSessionList(BaseModel):
     sessions: list[TerminalSession] = Field(description="Oldest first.")
 
 
+class WatchedSession(BaseModel):
+    """A terminal session of a pull request the watcher holds, as the Terminals
+    page lists it."""
+
+    repo: str
+    number: int
+    board_url: str = Field(description="`/pr/<owner>/<name>/<number>` on the hub. The "
+                                       "session's websocket is under it, at "
+                                       "`/api/terminal/sessions/{id}`.")
+    id: str
+    argv: list[str] = Field(description="The command the session runs.")
+    worktree: str
+    started_at: str = Field(description="When the session started, ISO 8601.")
+    activity: Activity = Field(
+        description="`working` while the agent's hooks say a prompt is in hand, or, "
+                    "with no hook, while output arrived in the last 30 seconds. "
+                    "`waiting` once the agent's hooks say it stopped, or once a git "
+                    "session or one the agent runs in went quiet. `idle` for a quiet "
+                    "shell.")
+    waiting_since: str | None = Field(
+        description="When it began waiting, ISO 8601; null unless `waiting`.")
+
+
+class WatchedSessions(BaseModel):
+    sessions: list[WatchedSession] = Field(
+        description="Waiting first, the longest wait at the top, then working, then idle.")
+
+
 class SessionCheck(BaseModel):
     session: str | None = Field(
         description="The id of the terminal session still running in the "
@@ -2424,6 +2453,9 @@ class HeldPullRequest(BaseModel):
                     "request's stored summary, as `/api/summary` on its board "
                     "serves it. Read from disk; nothing runs. Null when no "
                     "summary is stored or its judge's output would not read.")
+    terminals_waiting: int = Field(
+        description="How many of its terminal sessions are waiting for you, as "
+                    "`/api/terminal-sessions` lists them.")
 
 
 class HeldPullRequests(BaseModel):

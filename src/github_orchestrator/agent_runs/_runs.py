@@ -453,8 +453,9 @@ class AgentRuns:
 
     def _session_command(self, pr: Pr, worktree: str, *, yours: bool) -> list[str]:
         if self._project_settings(pr, worktree, yours=yours):
-            return self._command
-        return [*self._command, *self._lines.user_settings_only(worktree)]
+            return [*self._command, *self._lines.turn_hooks()]
+        return [*self._command, *self._lines.user_settings_only(worktree),
+                *self._lines.turn_hooks()]
 
     def rebase_in_session(self, pr: Pr, worktree: str, *, yours: bool) -> str | None:
         if self._held(pr, worktree, yours=yours):

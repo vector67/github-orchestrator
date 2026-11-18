@@ -245,3 +245,20 @@ def test_a_connection_addressed_to_another_name_is_refused(web, sessions):
 
     assert refused.value.code == 1008
     assert sessions.sessions[session].connected_once is False
+
+
+def test_closing_a_session_ends_it_and_leaves_the_others(web, sessions):
+    closed = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
+    kept = sessions.start(WORKTREE, ["git", "add", "-p"])
+
+    answer = web.post(f"/api/terminal/sessions/{closed}:close")
+
+    assert answer.status_code == 204
+    assert [session.id for session in sessions.listed()] == [kept]
+
+
+def test_closing_a_session_that_is_not_running_is_not_found(web):
+    answer = web.post("/api/terminal/sessions/abc123:close")
+
+    assert answer.status_code == 404
+    assert answer.json()["errors"][0]["code"] == "not-found"

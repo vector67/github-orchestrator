@@ -52,6 +52,7 @@ def test_each_row_carries_the_dashboard_built_from_what_is_on_disk():
     assert rows(web) == [{
         "repo": REPO, "number": 54, "manager": "exited", "board_url": "/pr/acme/widgets/54",
         "dashboard": served_as_a_board_serves(rebuilt), "mismatches": None,
+        "terminals_waiting": 0,
     }]
 
 

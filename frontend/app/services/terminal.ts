@@ -1,7 +1,7 @@
 import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
-import type { TerminalSession } from 'frontend/data/api';
+import type { TerminalSession, WatchedSession } from 'frontend/data/api';
 import { reportError } from 'frontend/data/report';
 import { keep, recall } from 'frontend/data/site-data';
 import { Session } from 'frontend/data/terminal';
@@ -320,20 +320,35 @@ export default class TerminalService extends Service {
     return fresh.map((one) => one.id);
   }
 
+  watch(one: WatchedSession): Session {
+    const key = keyOf(one);
+    const known = (this.held[key] ?? []).find(
+      (held) => held.id === one.id && !held.leaving,
+    );
+    if (known) return known;
+    const { id, argv, worktree } = one;
+    const fresh = new Session(
+      { id, argv, worktree },
+      this.addressOf(one.board_url, id),
+      schemeOf(this.scheme),
+      this.lost,
+    );
+    this.held = { ...this.held, [key]: [...(this.held[key] ?? []), fresh] };
+    return fresh;
+  }
+
   private connect(listed: TerminalSession): Session {
     return new Session(
       listed,
-      this.addressOf(listed.id),
+      this.addressOf(this.here.api(''), listed.id),
       schemeOf(this.scheme),
       this.lost,
     );
   }
 
-  private addressOf(id: string): string {
+  private addressOf(prefix: string, id: string): string {
     const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
-    const path = this.here.api(
-      `/api/terminal/sessions/${encodeURIComponent(id)}`,
-    );
+    const path = `${prefix}/api/terminal/sessions/${encodeURIComponent(id)}`;
     return `${scheme}://${location.host}${path}`;
   }
 }

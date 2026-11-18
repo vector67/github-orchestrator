@@ -2068,6 +2068,14 @@
     }
    }
   },
+  "/api/terminal-sessions": {
+   "get": {
+    "200": {
+     "$ref": "#/components/schemas/WatchedSessions"
+    },
+    "304": null
+   }
+  },
   "/api/terminal/questions": {
    "post": {
     "200": {
@@ -2095,6 +2103,17 @@
      "$ref": "#/components/schemas/Errors"
     },
     "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/terminal/sessions/{session}:close": {
+   "post": {
+    "204": null,
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "404": {
      "$ref": "#/components/schemas/Errors"
     }
    }
@@ -2147,6 +2166,14 @@
   }
  },
  "schemas": {
+  "Activity": {
+   "enum": [
+    "working",
+    "waiting",
+    "idle"
+   ],
+   "type": "string"
+  },
   "AddToWallRequest": {
    "properties": {
     "number": {
@@ -5600,6 +5627,9 @@
     },
     "repo": {
      "type": "string"
+    },
+    "terminals_waiting": {
+     "type": "integer"
     }
    },
    "required": [
@@ -5608,7 +5638,8 @@
     "manager",
     "board_url",
     "dashboard",
-    "mismatches"
+    "mismatches",
+    "terminals_waiting"
    ],
    "type": "object"
   },
@@ -9817,6 +9848,73 @@
     "parked"
    ],
    "type": "string"
+  },
+  "WatchedSession": {
+   "properties": {
+    "activity": {
+     "$ref": "#/components/schemas/Activity"
+    },
+    "argv": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "board_url": {
+     "type": "string"
+    },
+    "id": {
+     "type": "string"
+    },
+    "number": {
+     "type": "integer"
+    },
+    "repo": {
+     "type": "string"
+    },
+    "started_at": {
+     "type": "string"
+    },
+    "waiting_since": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "worktree": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "repo",
+    "number",
+    "board_url",
+    "id",
+    "argv",
+    "worktree",
+    "started_at",
+    "activity",
+    "waiting_since"
+   ],
+   "type": "object"
+  },
+  "WatchedSessions": {
+   "properties": {
+    "sessions": {
+     "items": {
+      "$ref": "#/components/schemas/WatchedSession"
+     },
+     "type": "array"
+    }
+   },
+   "required": [
+    "sessions"
+   ],
+   "type": "object"
   },
   "WatcherHealth": {
    "properties": {
