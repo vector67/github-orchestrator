@@ -1,4 +1,6 @@
+import enum
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Protocol
 
 from github_orchestrator.domain import Pr
@@ -9,6 +11,20 @@ class Session:
     id: str
     argv: tuple[str, ...]
     worktree: str
+
+
+class Activity(enum.StrEnum):
+    WORKING = "working"
+    WAITING = "waiting"
+    IDLE = "idle"
+
+
+@dataclass(frozen=True)
+class Watched:
+    session: Session
+    started_at: datetime
+    activity: Activity
+    waiting_since: datetime | None
 
 
 class Connection(Protocol):
@@ -30,7 +46,11 @@ class TerminalSessions(Protocol):
 
     def listed(self) -> list[Session]: ...
 
+    def watched(self, now: datetime, agent: str) -> list[Watched]: ...
+
     def attach(self, session: str, after: int = 0) -> Connection | None: ...
+
+    def close(self, session: str) -> bool: ...
 
     def hang_up(self) -> None: ...
 

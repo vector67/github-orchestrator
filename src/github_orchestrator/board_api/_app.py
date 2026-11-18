@@ -1306,6 +1306,18 @@ def ask_the_agent(board: Serving, asked: QuestionRequest) -> TerminalSessionList
     return _sessions(board)
 
 
+@writes.post("/terminal/sessions/{session}:close", status_code=204, tags=["terminal"],
+             operation_id="closeTerminalSession", responses={404: NOT_FOUND},
+             summary="End one live terminal session.")
+def close_terminal_session(board: Serving, session: str) -> None:
+    """The Terminals page's Close. The session's command is hung up as when its
+    pull request closes; the others keep running.
+    """
+    if not board.terminals.close(session):
+        raise Refusal(404, ErrorCode.NOT_FOUND,
+                      f"no terminal session {session} is running for this pull request")
+
+
 IfMatch = Annotated[str, Header(
     alias="If-Match",
     description="The `etag` field of the conversation being acted on, as the "

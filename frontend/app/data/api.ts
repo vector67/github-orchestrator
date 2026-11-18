@@ -1,3 +1,5 @@
+export type Activity = 'working' | 'waiting' | 'idle';
+
 export interface AddToWallRequest {
   repo: string;
   number: number;
@@ -598,6 +600,7 @@ export interface HeldPullRequest {
   board_url: string;
   dashboard: Dashboard;
   mismatches: number | null;
+  terminals_waiting: number;
 }
 
 export interface HeldPullRequests {
@@ -1345,6 +1348,22 @@ export interface UnpushedCommit {
 }
 
 export type WallGroup = 'needs-you' | 'agent-working' | 'waiting-on-others' | 'parked';
+
+export interface WatchedSession {
+  repo: string;
+  number: number;
+  board_url: string;
+  id: string;
+  argv: string[];
+  worktree: string;
+  started_at: string;
+  activity: Activity;
+  waiting_since: string | null;
+}
+
+export interface WatchedSessions {
+  sessions: WatchedSession[];
+}
 
 export interface WatcherHealth {
   polled_at: string | null;

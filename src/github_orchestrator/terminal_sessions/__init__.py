@@ -2,13 +2,17 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from github_orchestrator.terminal_sessions.interface import (
+        Activity,
         Terminals,
         TerminalSessions,
+        Watched,
     )
 
 __all__ = [
+    "Activity",
     "TerminalSessions",
     "Terminals",
+    "Watched",
 ]
 
 

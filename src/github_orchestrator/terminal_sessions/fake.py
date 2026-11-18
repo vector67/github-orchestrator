@@ -1,10 +1,17 @@
 import itertools
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 from github_orchestrator.domain import Pr
-from github_orchestrator.terminal_sessions.interface import Session, TerminalSessions
+from github_orchestrator.terminal_sessions.interface import (
+    Activity,
+    Session,
+    TerminalSessions,
+    Watched,
+)
 
 HUNG_UP = 128 + 1
+STARTED = datetime(2026, 11, 19, 9, 0, tzinfo=timezone.utc)
 
 
 @dataclass
@@ -17,6 +24,9 @@ class FakeSession:
     connections: int = 0
     connected_once: bool = False
     kept: bool = False
+    started_at: datetime = STARTED
+    activity: Activity = Activity.WORKING
+    waiting_since: datetime | None = None
 
 
 class FakeConnection:
@@ -69,6 +79,22 @@ class FakeTerminalSessions:
 
     def listed(self) -> list[Session]:
         return [held.session for held in self.sessions.values() if held.exit_code is None]
+
+    def watched(self, now: datetime, agent: str) -> list[Watched]:
+        return [Watched(held.session, held.started_at, held.activity, held.waiting_since)
+                for held in self.sessions.values() if held.exit_code is None]
+
+    def mark(self, session: str, activity: Activity, *, since: datetime | None = None,
+             started_at: datetime = STARTED) -> None:
+        held = self.sessions[session]
+        held.activity, held.waiting_since, held.started_at = activity, since, started_at
+
+    def close(self, session: str) -> bool:
+        held = self.sessions.get(session)
+        if held is None or held.exit_code is not None:
+            return False
+        held.exit_code = HUNG_UP
+        return True
 
     def attach(self, session: str, after: int = 0) -> FakeConnection | None:
         held = self.sessions.get(session)

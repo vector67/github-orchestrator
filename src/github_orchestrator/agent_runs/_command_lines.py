@@ -8,6 +8,16 @@ from github_orchestrator.agent_runs._agents import Agent
 from github_orchestrator.agent_runs._pr_prompts import REBASE_ON_MAIN
 
 READ_ONLY_TOOLS = "Read,Grep,Glob"
+TURN_FILE = "GITHUB_ORCHESTRATOR_TURN_FILE"
+
+
+def _telling_the_turn_file(turn: str) -> list[dict[str, list[dict[str, str]]]]:
+    return [{"hooks": [{"type": "command",
+                        "command": f'[ -z "${TURN_FILE}" ] || printf {turn} > "${TURN_FILE}"'}]}]
+
+
+TURN_HOOKS = json.dumps({"hooks": {"UserPromptSubmit": _telling_the_turn_file("working"),
+                                   "Stop": _telling_the_turn_file("waiting")}})
 
 
 class CommandLines(Protocol):
@@ -23,6 +33,8 @@ class CommandLines(Protocol):
     def rebase_session(self) -> list[str]: ...
 
     def answering(self, session: str | None, first: str | None) -> list[str]: ...
+
+    def turn_hooks(self) -> list[str]: ...
 
     def env(self) -> dict[str, str]: ...
 
@@ -56,6 +68,9 @@ class ClaudeCommandLines:
     def answering(self, session: str | None, first: str | None) -> list[str]:
         resumed = ["--resume", session] if session else ["--continue"]
         return resumed if first is None else [*resumed, first]
+
+    def turn_hooks(self) -> list[str]:
+        return ["--settings", TURN_HOOKS]
 
     def env(self) -> dict[str, str]:
         return _without("ANTHROPIC_API_KEY")
@@ -109,6 +124,9 @@ class CodexCommandLines:
     def answering(self, session: str | None, first: str | None) -> list[str]:
         resumed = ["resume", session or "--last"]
         return resumed if first is None else [*resumed, first]
+
+    def turn_hooks(self) -> list[str]:
+        return []
 
     def env(self) -> dict[str, str]:
         return _without("OPENAI_API_KEY")

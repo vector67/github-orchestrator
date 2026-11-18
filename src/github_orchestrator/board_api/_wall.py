@@ -3,6 +3,7 @@ from collections.abc import Collection
 from github_orchestrator.board_api import _contract as contract
 from github_orchestrator.board_api._pages import pr_page
 from github_orchestrator.board_api._projection import dashboard_of
+from github_orchestrator.board_api._watched import WatchedSessions
 from github_orchestrator.board_api.interface import (
     Dashboards,
     Held,
@@ -14,9 +15,10 @@ from github_orchestrator.pr_summaries import PrSummaries
 
 class Wall:
     def __init__(self, dashboards: Dashboards, watching: Collection[Repo],
-                 summaries: PrSummaries) -> None:
+                 summaries: PrSummaries, sessions: WatchedSessions) -> None:
         self._dashboards = dashboards
         self._summaries = summaries
+        self._sessions = sessions
         self._watching = sorted(str(repo) for repo in watching)
 
     def read(self, held: Held) -> contract.HeldPullRequests:
@@ -31,7 +33,7 @@ class Wall:
             repo=str(pr.repo), number=pr.number, manager=manager,
             board_url=pr_page(pr),
             dashboard=dashboard_of(self._dashboards.dashboard(pr)),
-            mismatches=self._mismatches(pr))
+            mismatches=self._mismatches(pr), terminals_waiting=self._sessions.waiting(pr))
 
     def _mismatches(self, pr: Pr) -> int | None:
         summary = self._summaries.load(pr)

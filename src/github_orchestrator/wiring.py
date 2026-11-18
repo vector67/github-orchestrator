@@ -1188,6 +1188,7 @@ class ManagerPanelsProvider(Provider):
 @dataclass(frozen=True)
 class ServerAppWiring(Wiring):
     _: KW_ONLY
+    agent_program: str
     app_root: Path
     font_dir: str | None
     watching: Collection[Repo]
@@ -1214,7 +1215,8 @@ class ServerAppProvider(Provider):
                    lane: SummaryLane, shelves: ThreadRecords,
                    migration: NamesMigration) -> ServerApp:
         from github_orchestrator.board_api._one_server import OneServer
-        return OneServer(app_root=wiring.app_root, font_dir=wiring.font_dir,
+        return OneServer(agent_program=wiring.agent_program, app_root=wiring.app_root,
+                         font_dir=wiring.font_dir,
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
@@ -1873,7 +1875,8 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
         PreviewNamesProvider,
         TerminalSessionsWiring(subprocess.Popen, settings.child_environment(),
                                terminal_sessions_dir(settings), None),
-        ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
+        ServerAppWiring(agent_program=command_program(settings.config.agent_command),
+                        app_root=APP_ROOT, font_dir=board_font_dir(settings),
                         watching=(repo,), version=installed_version(), check_presence=False,
                         first_names_only=settings.config.first_names_only),
         dashboard_source_wiring(settings),
@@ -1947,7 +1950,8 @@ def make_container(env: Mapping[str, str], home: Path,
                                  env.get("DISPLAY") or env.get("WAYLAND_DISPLAY"))),
                   subprocess.run, input, which, hub_health),
         OtherInstancesWiring(env, home, lambda environment: make_container(environment, home)),
-        ServerAppWiring(app_root=APP_ROOT, font_dir=board_font_dir(settings),
+        ServerAppWiring(agent_program=command_program(settings.config.agent_command),
+                        app_root=APP_ROOT, font_dir=board_font_dir(settings),
                         watching=tuple(settings.repos), version=installed_version(),
                         check_presence=check_presence,
                         first_names_only=settings.config.first_names_only),

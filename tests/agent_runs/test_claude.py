@@ -235,7 +235,8 @@ def test_a_rebase_session_runs_the_configured_command(work_runs, world):
     assert work_runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True) is None
 
     [session] = world.pr_processes.sessions[THE_PR]
-    assert session.argv == [*WORK_ARGV, "/rebase-on-main"]
+    assert session.argv[:len(WORK_ARGV)] == WORK_ARGV
+    assert session.argv[-1] == "/rebase-on-main"
 
 
 def test_a_rework_session_runs_the_configured_command(work_runs, world):
@@ -736,3 +737,34 @@ def test_a_transcript_that_cannot_be_written_does_not_stop_the_run(runs, world, 
 
     assert run.last_action == "working"
     assert "could not write the transcript" in caplog.text
+
+
+def _hooked(argv: list[str], event: str, tmp_path) -> str:
+    settings = json.loads(argv[argv.index("--settings") + 1])
+    turn = tmp_path / "abc.turn"
+    for matched in settings["hooks"][event]:
+        for hook in matched["hooks"]:
+            ran = subprocess.Popen(["sh", "-c", hook["command"]],
+                                   env={**os.environ, "GITHUB_ORCHESTRATOR_TURN_FILE": str(turn)})
+            assert ran.wait(10) == 0
+    return turn.read_text()
+
+
+AGENT_SESSIONS = [
+    *THREAD_SESSIONS,
+    pytest.param(lambda runs, fix: runs.rebase_in_session(fix.pr, fix.worktree, yours=True),
+                 id="rebase"),
+    pytest.param(lambda runs, fix: runs.ask_in_session(fix.pr, fix.worktree, "why?", yours=True),
+                 id="ask"),
+]
+
+
+@pytest.mark.parametrize("opened", AGENT_SESSIONS)
+@pytest.mark.parametrize("reviewing", [True, False])
+def test_an_agent_session_tells_its_turn_file_when_a_prompt_is_sent_and_when_claude_stops(
+        runs, world, tmp_path, opened, reviewing):
+    assert opened(runs, _thread_fix(tmp_path, reviewing=reviewing)) is None
+
+    [session] = world.pr_processes.sessions[THE_PR]
+    assert _hooked(session.argv, "UserPromptSubmit", tmp_path) == "working"
+    assert _hooked(session.argv, "Stop", tmp_path) == "waiting"

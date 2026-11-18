@@ -367,7 +367,7 @@ PACKAGES = {
         wiring_skips=frozenset({"_paths"}),
     ),
     "terminal_sessions": Package(
-        pinned=frozenset({"TerminalSessions", "Terminals"}),
+        pinned=frozenset({"Activity", "TerminalSessions", "Terminals", "Watched"}),
         may_import=(),
         role="a terminal session is a command on a pty in a worktree it is handed, and knows nothing of who starts or serves it",
     ),
@@ -634,17 +634,19 @@ def test_pr_processes_offer_only_manager_and_session_operations():
     )
 
 
-TERMINAL_SESSIONS_MEMBERS = frozenset({"start", "start_kept", "listed", "attach", "hang_up"})
+TERMINAL_SESSIONS_MEMBERS = frozenset({"start", "start_kept", "listed", "watched", "attach", "close",
+                                       "hang_up"})
 TERMINALS_MEMBERS = frozenset({"of", "everywhere"})
 
 
-def test_terminal_sessions_start_list_attach_and_hang_up_and_nothing_more():
+def test_terminal_sessions_start_list_watch_attach_close_and_hang_up_and_nothing_more():
     interface = importlib.import_module(TERMINAL_SESSIONS).TerminalSessions
     members = {name for name in vars(interface) if not name.startswith("_")}
     assert members == TERMINAL_SESSIONS_MEMBERS, (
         f"TerminalSessions gained {sorted(members - TERMINAL_SESSIONS_MEMBERS)} and lost "
         f"{sorted(TERMINAL_SESSIONS_MEMBERS - members)}; a session ends when its command "
-        f"does or when its pull request's sessions are hung up together, never one by one"
+        f"does, when the operator closes it, or when its pull request's sessions are hung up "
+        f"together"
     )
 
 

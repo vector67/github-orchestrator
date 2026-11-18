@@ -653,6 +653,7 @@ export function heldPr(over: HeldOver = {}): HeldPullRequest {
     manager: 'running',
     board_url: `/pr/${repo}/${number}`,
     mismatches: null,
+    terminals_waiting: 0,
     ...rest,
     dashboard: dashboard({
       ...shown,
