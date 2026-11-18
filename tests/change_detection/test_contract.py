@@ -157,6 +157,17 @@ def test_a_check_ignored_until_the_push_fails_the_pr_again_on_the_next_head(igno
     assert detection.facts(THE_PR).ci_status is CiStatus.FAILING
 
 
+def test_the_stored_list_counts_a_check_ignored_after_the_poll_as_the_facts_do(ignoring):
+    detection, ignores = ignoring
+    detection.advance(THE_PR, VERCEL_BLOCKED, set())
+
+    ignores.ignore(THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR, "sha1")
+
+    [stored] = detection.stored()
+    assert stored.facts == detection.facts(THE_PR)
+    assert stored.facts.ci_status is CiStatus.PASSING
+
+
 def test_a_review_request_seen_for_the_first_time_asks_for_the_review(detection):
     events = detection.advance(THE_PR, poll(pr_state(author="alice"), review_requested=True),
                                set())

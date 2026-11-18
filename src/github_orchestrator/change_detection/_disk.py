@@ -127,7 +127,9 @@ class DiskChangeDetection:
             except CorruptSnapshot as exc:
                 listed.append(Stored(pr, None, str(exc)))
                 continue
-            listed.append(Stored(pr, facts_of(snapshot, self._account), None))
+            facts = facts_of(snapshot, self._account)
+            listed.append(Stored(pr, counting(facts, self._ci_ignores.ignored(pr, facts.head_sha)),
+                                 None))
         return listed
 
     def closing(self, pr: Pr) -> bool:
