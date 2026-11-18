@@ -260,7 +260,8 @@ def diff_state(old: dict[str, Any],
     was, now = words_of(old), words_of(new)
 
     if was.ci is not CiStatus.PASSING and now.ci is CiStatus.PASSING:
-        events.append(CiSucceeded(tuple(check["name"] for check in new.get("checks", []))))
+        events.append(CiSucceeded(tuple(
+            check["name"] for check in new.get("checks", []) if not check.get("ignored"))))
 
     left_good_state = (
         was.mergeability not in UNMERGEABLE and now.mergeability in UNMERGEABLE

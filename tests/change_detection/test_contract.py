@@ -4,6 +4,7 @@ from github_orchestrator.change_detection import (
     BecameUnmergeable,
     CiFailed,
     CiStatus,
+    CiSucceeded,
     HeadChanged,
     PrClosed,
     PushedSinceReview,
@@ -155,6 +156,16 @@ def test_a_check_ignored_until_the_push_fails_the_pr_again_on_the_next_head(igno
 
     assert events.count(CiFailed(check="Vercel", summary="Vercel failed")) == 1
     assert detection.facts(THE_PR).ci_status is CiStatus.FAILING
+
+
+def test_ci_passing_once_a_failing_check_is_ignored_names_only_the_checks_still_counted(ignoring):
+    detection, ignores = ignoring
+    detection.advance(THE_PR, VERCEL_BLOCKED, set())
+    ignores.ignore(THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR, "sha1")
+
+    events = detection.advance(THE_PR, VERCEL_BLOCKED, set())
+
+    assert [e for e in events if e.kind == "ci-succeeded"] == [CiSucceeded(("tests",))]
 
 
 def test_the_stored_list_counts_a_check_ignored_after_the_poll_as_the_facts_do(ignoring):
