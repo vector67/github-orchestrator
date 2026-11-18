@@ -798,7 +798,11 @@ module('Acceptance | next move', function (hooks) {
         facts: CAROL_ASKED_FOR_CHANGES,
         threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
       },
-      ['request-reviewers', 'needs-you', 'Request reviewers'],
+      [
+        'await-deferred',
+        'waiting-on-others',
+        'Waiting on a deferred comment from carol',
+      ],
     ],
     [
       'commented, every thread closed but one deferred',
@@ -806,7 +810,11 @@ module('Acceptance | next move', function (hooks) {
         facts: CAROL_COMMENTED,
         threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
       },
-      ['request-reviewers', 'needs-you', 'Request reviewers'],
+      [
+        'await-deferred',
+        'waiting-on-others',
+        'Waiting on a deferred comment from carol',
+      ],
     ],
     [
       'changes requested with no comment at all',
@@ -933,7 +941,31 @@ module('Acceptance | next move', function (hooks) {
       },
       ['rerequest-queued', 'waiting-on-others', 'Re-request queued for carol'],
     ],
+    [
+      'a deferred comment comes before ready to merge',
+      {
+        facts: { ...READY_TO_MERGE, ...CAROL_COMMENTED, merge_state: 'clean' },
+        threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
+      },
+      [
+        'await-deferred',
+        'waiting-on-others',
+        'Waiting on a deferred comment from carol',
+      ],
+    ],
   ];
+
+  test('the Dashboard says a re-request waits on a deferred comment', async function (assert) {
+    const shown = await onTheDashboard({
+      facts: CAROL_COMMENTED,
+      threads: [...ALL_CLOSED, carols('PRRT_3', 'deferred', 'deferred')],
+    });
+
+    assert.strictEqual(
+      shown.computed,
+      "PR state: Waiting on a deferred comment · Re-request waits until carol's deferred comment is closed",
+    );
+  });
 
   const COMPUTED: [string, DashboardOver['system'], string][] = [
     [

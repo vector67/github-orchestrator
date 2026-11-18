@@ -347,6 +347,31 @@ def test_the_thread_prompt_skips_only_what_needs_neither_code_nor_an_answer(
     assert "outside this pull request" in prompt
 
 
+def test_the_thread_prompt_names_the_pr_author_and_skips_a_comment_meant_for_someone_else(
+        runs, claude, worktree):
+    prompt = _fixed(runs, claude, worktree, pr_author="octocat")
+
+    assert "- PR author: octocat" in prompt
+    skipping = prompt[prompt.index("Classification rules:"):prompt.index("thread skip")]
+    assert "not addressed to the PR author" in skipping
+
+
+def test_the_thread_prompt_shows_what_the_opener_said_on_the_prs_other_threads(
+        runs, claude, worktree):
+    elsewhere = (FixComment("reviewer", "what does this file do?", "2026-08-28T09:59:00Z"),)
+
+    prompt = _fixed(runs, claude, worktree, said_elsewhere=elsewhere)
+
+    shown = prompt[prompt.index("What reviewer said on this PR's other threads"):]
+    assert "what does this file do?" in shown
+    assert "only implies a question" in prompt
+
+
+def test_a_thread_prompt_with_nothing_said_elsewhere_says_so(runs, claude, worktree):
+    assert ("reviewer said nothing on this PR's other threads"
+            in _fixed(runs, claude, worktree))
+
+
 def test_a_rework_from_a_reply_starts_from_the_reply_it_proposed(runs, claude, worktree):
     prompt = _reworked(runs, claude, worktree, note="say why it runs once",
                        reply="It runs once per poll.")

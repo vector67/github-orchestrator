@@ -53,7 +53,8 @@ the prompt, and while any comment in a reviewer's round is deferred, closing
 their others does not open it, the Dashboard owes them no re-request, and a
 queued re-request is not sent. A deferred comment alone does not make the
 next move "Address changes from <reviewer>" either: there is nothing to do
-until it wakes.
+until it wakes. The next move reads "Waiting on a deferred comment from
+<reviewer>" instead, in Waiting on others.
 
 A reviewer's comments are their **round**: every board thread they opened
 since they were last asked to review (section "Data"), the review body
@@ -334,17 +335,21 @@ in `frontend/app/data/summaries.ts`.
   **Done** (`d00168ee`, and the commit that records this for
   the list).
 
-- **Next move.** `ofAuthor` gains two moves and narrows one:
+- **Next move.** `ofAuthor` gains three moves and narrows one:
 
   - `address-feedback` ("Address changes from X") only while a reviewer who
-    requested changes has an open thread in their round;
+    requested changes has an open thread in their round that is not
+    deferred;
   - `rerequest-review` ("Re-request review from X"), Needs you, for an owed
     reviewer, changes requested or commented;
   - `rerequest-queued` ("Re-request queued for X"), Waiting on others, while
-    `rerequest_queued` is not empty.
+    `rerequest_queued` is not empty;
+  - `await-deferred` ("Waiting on a deferred comment from X"), Waiting on
+    others, for a reviewer not pending and not queued whose round holds a
+    deferred thread and nothing else open.
 
   The order is `address-feedback`, `rerequest-review`, `fix-ci`, `rebase`,
-  `rerequest-queued`, then the rest as today. `onYourPr` lets waiting
+  `rerequest-queued`, `await-deferred`, then the rest as today. `onYourPr` lets waiting
   comments and agents come before `rerequest-review`, as for every move but
   `address-feedback`. **Done** (the commit that records this).
 

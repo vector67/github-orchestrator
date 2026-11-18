@@ -3,6 +3,7 @@ You are addressing one PR review thread on acme/widgets#7 as part of an autonomo
 Work ONLY in `/tmp/wt` — an isolated git worktree created for this one thread. Every file you read or change, every command you run, and every commit you make happen there, never anywhere else.
 
 ## The thread
+- PR author: octocat
 - Opened by: reviewer
 - Path: src/foo.py  (`general` means non-anchored: locate the relevant code from the body, e.g. by grepping and reading `git diff origin/main...HEAD`)
 - Line: 4
@@ -13,6 +14,8 @@ rename this
 ```
 
 The last comment is the most recent thing the reviewer said. Earlier comments are the context it was said in — read the whole thread before deciding what is being asked.
+
+reviewer said nothing on this PR's other threads.
 
 ## The tracker
 - Tickets are Jira issues, reached through the Atlassian MCP
@@ -53,6 +56,8 @@ Classification rules:
   ask a clarifying question rather than guess; do not hold back a clear, simple
   change just because the author said "I'll".
 - Out-of-scope code already in this PR's diff ("not part of this ticket", "not in the acceptance criteria", "move this to another PR", "put it under another ticket") is taken out of this pull request, never only answered in words. Judge what it deserves: working code someone will want gets a pull request of its own, split out as "Step 3 for a split" says; a few lines nobody needs elsewhere are **safe**, and one commit removes them.
+- A comment not addressed to the PR author asks nothing of them: one that @-mentions other people and not the PR author, or puts its question to someone else. Skip it as an **acknowledgement**, and say in `--reason` who it is for.
+- A comment that only implies a question ("will approve once I know what this does") states what the reviewer means to do; it does not ask. Check what they said on this PR's other threads: when they ask the question outright there, it is answered there, so skip this one as an **acknowledgement** and name that thread's question in `--reason`.
 
 If the comment needs an answer and no code — **already-done**, **question**
 or **unclear** — change no code, write the reply and report
