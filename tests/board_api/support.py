@@ -37,6 +37,7 @@ from github_orchestrator.board_api.fake import (
 )
 from github_orchestrator.board_api.interface import (
     Dashboards,
+    Descriptions,
     Emojis,
     HarvestSetup,
     Held,
@@ -144,6 +145,7 @@ class Serving(TypedDict, total=False):
     summaries: list[Part]
     records: ThreadRecords
     mentionable: Mentionable
+    descriptions: Descriptions
 
 
 class NoHeads:
@@ -197,7 +199,8 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
               **serving: Unpack[Serving]) -> ASGIApp:
     server: ServerApp = wire(
         fake_provider(Told, holding(serving.get("pr", THE_PR))),
-        *_hub_parts(records=serving.get("records"), mentionable=serving.get("mentionable")),
+        *_hub_parts(records=serving.get("records"), mentionable=serving.get("mentionable"),
+                    descriptions=serving.get("descriptions")),
         fake_provider(ConversationManagerFactory, conversation_managers),
         fake_provider(WorkingCopies, working_copies),
         fake_provider(Terminals, OneTerminal(serving.get("sessions") or FakeTerminalSessions())),
@@ -268,8 +271,10 @@ def _hub_parts(*, dashboards: Dashboards | None = None, ledger: History | None =
                records: ThreadRecords | None = None,
                mentions: MentionsList | None = None,
                mentionable: Mentionable | None = None,
+               descriptions: Descriptions | None = None,
                migration: NamesMigration | None = None) -> list[Part]:
     return [
+        fake_provider(Descriptions, descriptions or FakeGitHub()),
         fake_provider(NamesMigration, migration or FakeNamesMigration()),
         fake_provider(MentionsList, mentions or FakeMentionsList()),
         fake_provider(Mentionable, mentionable or FakeMentionable()),
@@ -334,6 +339,7 @@ def _placed(working_copies: FakeWorkingCopies) -> None:
 def _served(conversation_managers: ConversationManagerFactory, stage: Stage, threads: Any,
             **serving: Unpack[Serving]) -> Served:
     manager = serving["manager"] = serving.get("manager") or FakeManagerPanel()
+    serving.setdefault("descriptions", stage.github)
     client = served_board(conversation_managers, stage.working_copies, **serving)
     return Served(threads=threads, client=client, stage=stage, manager=manager)
 
@@ -342,12 +348,12 @@ def board_on(fake: FakeConversationManagerFactory, *, is_author: bool = True, ti
              base_branch: str | None = "main", head_sha: str | None = None,
              branch: str | None = None, created_at: str | None = None,
              commits: int | None = None, additions: int | None = None,
-             deletions: int | None = None,
+             deletions: int | None = None, body: str = "",
              **serving: Unpack[Serving]) -> Served:
     _placed(fake.working_copies)
     fake.watch(THE_PR, is_author=is_author, title=title, base_branch=base_branch,
                head_sha=head_sha, branch=branch, created_at=created_at, commits=commits,
-               additions=additions, deletions=deletions)
+               additions=additions, deletions=deletions, body=body)
     threads = fake.of(THE_PR)
     hear(threads)
     return _served(fake, fake, threads, **serving)

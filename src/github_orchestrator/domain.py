@@ -74,6 +74,11 @@ class ReviewerPick:
 
 
 @dataclass(frozen=True)
+class DescriptionMoved:
+    body: str
+
+
+@dataclass(frozen=True)
 class Clone:
     path: Path
     new_worktree_command: str

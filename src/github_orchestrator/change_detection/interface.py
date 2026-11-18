@@ -171,6 +171,7 @@ class SinceReview:
 @dataclass(frozen=True)
 class Facts:
     title: str | None
+    body: str
     url: str | None
     author: str | None
     branch: str | None

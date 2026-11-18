@@ -3,7 +3,7 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 
-from github_orchestrator.domain import Pr, Repo, fork_pr_branch
+from github_orchestrator.domain import DescriptionMoved, Pr, Repo, fork_pr_branch
 from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github._gh_cli import Gh
 from github_orchestrator.github.interface import (
@@ -384,6 +384,16 @@ def assign_reviewers(gh: Gh, pr: Pr, reviewers: Sequence[str], detailed: str | N
         return
     body = gh.api(path).get("body") or ""
     gh.api_json(path, {"body": with_detailed_reviewer(body, detailed)}, method="PATCH")
+
+
+def edit_description(gh: Gh, pr: Pr, title: str, body: str,
+                     started_from: str) -> DescriptionMoved | None:
+    path = f"repos/{pr.repo}/pulls/{pr.number}"
+    on_github = gh.api(path).get("body") or ""
+    if on_github != started_from:
+        return DescriptionMoved(on_github)
+    gh.api_json(path, {"title": title, "body": body}, method="PATCH")
+    return None
 
 
 def relevance(gh: Gh, pr: Pr) -> Relevance | None:

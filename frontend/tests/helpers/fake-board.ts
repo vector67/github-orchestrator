@@ -308,6 +308,9 @@ export const PULL_REQUEST: PullRequest = {
   commits: null,
   additions: 0,
   deletions: 0,
+  body: '',
+  description_checked: false,
+  description_saved_at: null,
 };
 
 export function prSummary(over: Partial<PrSummary> = {}): PrSummary {

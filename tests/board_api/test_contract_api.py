@@ -27,6 +27,9 @@ def test_the_pull_request_read_answers_the_contracts_fields():
         "commits": None,
         "additions": 0,
         "deletions": 0,
+        "body": "",
+        "description_checked": False,
+        "description_saved_at": None,
     }
 
 

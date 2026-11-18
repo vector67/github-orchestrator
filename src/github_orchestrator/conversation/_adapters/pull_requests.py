@@ -52,6 +52,14 @@ class PullRequests:
         facts = self._facts()
         return (facts.title if facts else None) or None
 
+    def body(self) -> str:
+        facts = self._facts()
+        return facts.body if facts else ""
+
+    def polled_at(self) -> str | None:
+        facts = self._facts()
+        return facts.polled_at if facts else None
+
     def role(self) -> str | None:
         facts = self._facts()
         if facts is None or facts.is_author is None:

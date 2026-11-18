@@ -26,6 +26,8 @@ from github_orchestrator.notifications import ThreadNews
 @dataclass(frozen=True)
 class PrFacts:
     title: str | None
+    body: str
+    polled_at: str | None
     url: str
     base_branch: str | None
     branch: str | None

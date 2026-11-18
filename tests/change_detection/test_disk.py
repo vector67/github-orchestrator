@@ -22,6 +22,7 @@ THE_PR = a_pr(PR, REPO)
 
 EXPECTED = (
     '{"repo": "acme/widgets", "pr": 42, "title": "Add widgets", '
+    '"body": "Detailed reviewer: @octocat", '
     '"url": "https://github.com/acme/widgets/pull/42", "branch": "PROJ-1-widgets", '
     '"base_branch": "main", "pr_author": "alice", "changed_files": 3, '
     '"additions": 10, "deletions": 2, "commits": 2, '

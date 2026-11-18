@@ -306,6 +306,42 @@ class PullRequest(BaseModel):
         description="How many commits the branch holds. Null where GitHub did not say.")
     additions: int = Field(description="Lines the pull request adds.")
     deletions: int = Field(description="Lines the pull request removes.")
+    body: str = Field(
+        description="The pull request's description, as the last poll read it, or as the "
+                    "board's editor saved it until a poll newer than the save reads it. "
+                    "Empty where it has none.")
+    description_checked: bool = Field(
+        description="Whether someone checked this description on the board: pressed the "
+                    "Mark ready dialog's button that shows it, clicked into the editor, or "
+                    "saved it from the editor. Any change to it from elsewhere, the board's "
+                    "own reviewer assignment included, makes it false again.")
+    description_saved_at: str | None = Field(
+        description="When the board's editor last saved the title and description. Null "
+                    "where it never has.")
+
+
+class DescriptionSaveRequest(BaseModel):
+    title: str = Field(min_length=1)
+    body: str
+    started_from: str = Field(
+        description="The description the editor opened on. The save is refused when "
+                    "GitHub's no longer matches it.")
+
+
+class DescriptionCheckRequest(BaseModel):
+    body: str = Field(description="The description the page showed when it was checked.")
+
+
+class DescriptionSave(BaseModel):
+    """What came of a save of the title and description."""
+
+    saved: bool = Field(
+        description="False when GitHub's description changed since `started_from`: "
+                    "nothing was written.")
+    on_github: str = Field(
+        description="The description GitHub holds after the call: the one saved, or the "
+                    "one that changed under the edit.")
+    pull_request: PullRequest
 
 
 class ErrorDetail(BaseModel):

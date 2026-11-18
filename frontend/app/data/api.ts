@@ -335,6 +335,22 @@ export interface DeferRequest {
   note?: string | null;
 }
 
+export interface DescriptionCheckRequest {
+  body: string;
+}
+
+export interface DescriptionSave {
+  saved: boolean;
+  on_github: string;
+  pull_request: PullRequest;
+}
+
+export interface DescriptionSaveRequest {
+  title: string;
+  body: string;
+  started_from: string;
+}
+
 export interface Diff {
   base: string;
   head: string;
@@ -907,6 +923,9 @@ export interface PullRequest {
   commits: number | null;
   additions: number;
   deletions: number;
+  body: string;
+  description_checked: boolean;
+  description_saved_at: string | null;
 }
 
 export interface PullRequestCommit {

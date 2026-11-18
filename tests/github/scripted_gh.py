@@ -464,8 +464,8 @@ class _World:
         elif request.payload == {"state": "open"}:
             self.world.reopen(record.pr)
         else:
-            assert list(request.payload) == ["body"], request.payload
-            record.state = replace(record.state, body=request.payload["body"])
+            assert set(request.payload) <= {"title", "body"}, request.payload
+            record.state = replace(record.state, **request.payload)
         return self._pull(request, repo, number)
 
     def _request_reviewers(self, request: GhRequest, repo: str, number: str) -> Any:

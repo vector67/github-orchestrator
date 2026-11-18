@@ -43,6 +43,9 @@ from github_orchestrator.board_api._contract import (
     ConversationList,
     Dashboard,
     DeferRequest,
+    DescriptionCheckRequest,
+    DescriptionSave,
+    DescriptionSaveRequest,
     Diff,
     DiffAnchors,
     DiffSource,
@@ -102,6 +105,7 @@ from github_orchestrator.board_api._contract import (
     side_of,
     verdict_of,
 )
+from github_orchestrator.board_api._description import DescriptionRecord, digest, served
 from github_orchestrator.board_api._errors import (
     BAD_RANGE,
     DIFF_FAILED,
@@ -149,6 +153,7 @@ from github_orchestrator.board_api._terminal import carried
 from github_orchestrator.board_api.interface import (
     RESET_STATE,
     RESET_TO_ORIGIN,
+    Descriptions,
     ManagerPanel,
     ManagerRefusal,
     ManagerStanding,
@@ -168,6 +173,7 @@ from github_orchestrator.conversation import (
     EditableConversation,
 )
 from github_orchestrator.domain import (
+    DescriptionMoved,
     IgnoredChecks,
     Location,
     Pr,
@@ -219,6 +225,7 @@ class Board:
     lane: SummaryLane
     shelf: Shelf
     mentionable: Mentionable
+    descriptions: Descriptions
     fonts: routes.Fonts = routes.NO_FONTS
     check_presence: bool = True
     prefix: str = ""
@@ -292,11 +299,17 @@ def read_pull_request(request: Request, board: Serving) -> Response:
     a member of a collection. It carries an `ETag`; a poll that sends it back
     as `If-None-Match` is answered `304`.
     """
+    return etag.answered(request, _pull_request(board))
+
+
+def _pull_request(board: Board) -> PullRequest:
     facts = board.conversations.facts()
-    return etag.answered(request, PullRequest(
+    description = served(DescriptionRecord.kept(board.shelf), facts.title, facts.body,
+                         facts.polled_at)
+    return PullRequest(
         repo=str(board.pr.repo),
         number=board.pr.number,
-        title=facts.title,
+        title=description.title,
         html_url=facts.url,
         base_branch=facts.base_branch,
         branch=facts.branch,
@@ -306,7 +319,10 @@ def read_pull_request(request: Request, board: Serving) -> Response:
         commits=facts.commits,
         additions=facts.additions,
         deletions=facts.deletions,
-    ))
+        body=description.body,
+        description_checked=description.checked,
+        description_saved_at=description.saved_at,
+    )
 
 
 def _merge_base(board: Board, base_branch: str | None, head_sha: str | None) -> str | None:
@@ -1223,6 +1239,48 @@ def mark_nudged(board: Serving) -> RankedPullRequest:
     kept = dataclasses.replace(PrImportance.kept(board.shelf), nudged_at=board.clock().isoformat())
     kept.keep(board.shelf)
     return _ranked(kept)
+
+
+GITHUB_REFUSED_THE_EDIT = {"description": "GitHub would not read or write the description; "
+                                          "the detail is what it said.",
+                           "model": Errors}
+
+
+@writes.post("/pull-request/description:save", response_model=DescriptionSave,
+             tags=["pull request"], operation_id="saveDescription",
+             responses={502: GITHUB_REFUSED_THE_EDIT},
+             summary="Save the pull request's title and description on GitHub together.")
+def save_description(board: Serving, asked: DescriptionSaveRequest) -> DescriptionSave:
+    """GitHub's description is read just before the write. When it no longer
+    matches `started_from`, nothing is written and `saved` is false, with
+    GitHub's description in `on_github`. A save counts as checking the
+    description, and `GET /pull-request` serves what was saved until a poll
+    newer than the save reads it.
+    """
+    edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
+                                                 started_from=asked.started_from)
+    if isinstance(edited, str):
+        raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
+    if isinstance(edited, DescriptionMoved):
+        return DescriptionSave(saved=False, on_github=edited.body,
+                               pull_request=_pull_request(board))
+    dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
+                        saved_title=asked.title, saved_body=asked.body,
+                        saved_at=board.clock().isoformat()).keep(board.shelf)
+    return DescriptionSave(saved=True, on_github=asked.body, pull_request=_pull_request(board))
+
+
+@writes.post("/pull-request/description:check", response_model=PullRequest,
+             tags=["pull request"], operation_id="checkDescription",
+             summary="Say you checked the pull request's description.")
+def check_description(board: Serving, asked: DescriptionCheckRequest) -> PullRequest:
+    """Kept on the server, per pull request, until the description changes
+    from anywhere but the board's editor. A `body` that is no longer the one
+    served checks nothing that is shown.
+    """
+    dataclasses.replace(DescriptionRecord.kept(board.shelf),
+                        checked=digest(asked.body)).keep(board.shelf)
+    return _pull_request(board)
 
 
 @writes.post("/manager/git", response_model=GitRun, tags=["manager"],

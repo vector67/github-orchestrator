@@ -5,7 +5,13 @@ from dataclasses import dataclass, field, replace
 from datetime import datetime
 from pathlib import Path
 
-from github_orchestrator.domain import Location, Pr, Repo, fork_pr_branch
+from github_orchestrator.domain import (
+    DescriptionMoved,
+    Location,
+    Pr,
+    Repo,
+    fork_pr_branch,
+)
 from github_orchestrator.github import _pages
 from github_orchestrator.github._description import with_detailed_reviewer
 from github_orchestrator.github.interface import (
@@ -296,6 +302,17 @@ class FakeGitHub:
         record.state = replace(
             state, pending_reviewers=(*state.pending_reviewers, *asked),
             body=state.body if detailed is None else with_detailed_reviewer(state.body, detailed))
+        return None
+
+    def edit_description(self, pr: Pr, title: str, body: str, *,
+                         started_from: str) -> DescriptionMoved | str | None:
+        record = self.prs.get(pr)
+        if record is None:
+            return (f"gh api repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
+                    "gh: Not Found (HTTP 404)")
+        if record.state.body != started_from:
+            return DescriptionMoved(record.state.body)
+        record.state = replace(record.state, title=title, body=body)
         return None
 
     def url(self, pr: Pr) -> str:

@@ -652,7 +652,8 @@ class _ConversationManager:
 
     def facts(self) -> PrFacts:
         ports = self._pr.ports
-        return PrFacts(title=ports.pull_requests.title(), url=ports.github.page(),
+        return PrFacts(title=ports.pull_requests.title(), body=ports.pull_requests.body(),
+                       polled_at=ports.pull_requests.polled_at(), url=ports.github.page(),
                        base_branch=ports.pull_requests.base_branch(),
                        branch=ports.pull_requests.branch(),
                        head_sha=ports.pull_requests.head_sha(),

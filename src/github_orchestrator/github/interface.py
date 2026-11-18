@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Literal, Protocol
 
-from github_orchestrator.domain import Location, Pr, Repo, Side
+from github_orchestrator.domain import DescriptionMoved, Location, Pr, Repo, Side
 
 _PASSED = frozenset({"success", "skipped", "neutral"})
 _FAILED = frozenset({"failure", "cancelled", "timed_out", "action_required", "stale",
@@ -271,6 +271,9 @@ class PullRequests(Protocol):
     def set_draft(self, pr: Pr, draft: bool) -> str | None: ...
 
     def assign_reviewers(self, pr: Pr, reviewers: Sequence[str], detailed: str | None) -> str | None: ...
+
+    def edit_description(self, pr: Pr, title: str, body: str, *,
+                         started_from: str) -> DescriptionMoved | str | None: ...
 
     def relevance(self, pr: Pr) -> Relevance | None: ...
 

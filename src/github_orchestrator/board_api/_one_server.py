@@ -15,6 +15,7 @@ from github_orchestrator.board_api._pages import pr_page
 from github_orchestrator.board_api._wall import Wall
 from github_orchestrator.board_api.interface import (
     Dashboards,
+    Descriptions,
     Emojis,
     HarvestSetup,
     Holdings,
@@ -97,6 +98,7 @@ class OneServer:
                  watching: Collection[Repo], version: str | None,
                  problem: Callable[[], str | None], setup: SetupDesk, releases: ReleaseRecord,
                  tour: TourMarker, emojis: Emojis, mentionable: Mentionable,
+                 descriptions: Descriptions,
                  harvest: HarvestSetup, told: Told,
                  holdings: Holdings, mentions: MentionsList,
                  conversation_managers: ConversationManagerFactory,
@@ -117,6 +119,7 @@ class OneServer:
         self._tour = tour
         self._emojis = emojis
         self._mentionable = mentionable
+        self._descriptions = descriptions
         self._harvest = harvest
         self._told = told
         self._holdings = holdings
@@ -157,6 +160,7 @@ class OneServer:
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),
                 clock=self._clock, summaries=self._summaries, lane=self._lane,
                 shelf=self._shelves.of(pr), mentionable=self._mentionable,
+                descriptions=self._descriptions,
                 prefix=pr_page(pr)))
 
         hub = hub_app(desk, port)

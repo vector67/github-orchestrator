@@ -80,6 +80,7 @@ def facts_of(snapshot: dict[str, Any], account: str) -> Facts:
     words = words_of(snapshot)
     return Facts(
         title=_text(snapshot, "title"),
+        body=_text(snapshot, "body") or "",
         url=_text(snapshot, "url"),
         author=_text(snapshot, "pr_author"),
         branch=_text(snapshot, "branch"),

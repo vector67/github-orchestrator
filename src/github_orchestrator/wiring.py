@@ -46,6 +46,7 @@ from github_orchestrator.board_api.interface import (
     BranchNotRenamed,
     Dashboard,
     Dashboards,
+    Descriptions,
     Emojis,
     FolderInUse,
     HarvestSetup,
@@ -449,6 +450,10 @@ class GitHubProvider(Provider):
     @provide
     def mentionable(self, client: GhCliGitHub) -> Mentionable:
         return FetchedMentionable(client.assignees, client.asked_to_review)
+
+    @provide
+    def descriptions(self, client: GhCliGitHub) -> Descriptions:
+        return client
 
 
 @dataclass(frozen=True)
@@ -1207,7 +1212,8 @@ class ServerAppProvider(Provider):
     def server_app(self, wiring: ServerAppWiring, clock: UtcClock, dashboards: Dashboards,
                    history: History, watcher_health: WatcherHealth, config_file: ConfigFile,
                    setup: SetupDesk, releases: Releases, tour: TourMarker, emojis: Emojis,
-                   mentionable: Mentionable, harvest: HarvestSetup, told: Told, mentions: MentionsList,
+                   mentionable: Mentionable, descriptions: Descriptions, harvest: HarvestSetup,
+                   told: Told, mentions: MentionsList,
                    holdings: Holdings, conversation_managers: ConversationManagerFactory,
                    working_copies: WorkingCopies, terminals: Terminals,
                    panels: ManagerPanels, summaries: PrSummaries,
@@ -1218,7 +1224,8 @@ class ServerAppProvider(Provider):
                          dashboards=dashboards, ledger=history, pulse=watcher_health,
                          clock=clock, watching=wiring.watching, version=wiring.version,
                          problem=config_file.check, setup=setup, releases=releases, tour=tour,
-                         emojis=emojis, mentionable=mentionable, harvest=harvest,
+                         emojis=emojis, mentionable=mentionable, descriptions=descriptions,
+                         harvest=harvest,
                          told=told, holdings=holdings, mentions=mentions,
                          conversation_managers=conversation_managers,
                          working_copies=working_copies, terminals=terminals, panels=panels,
@@ -1805,6 +1812,10 @@ class PreviewHubProvider(Provider):
     @provide
     def mentionable(self, access: Access) -> Mentionable:
         return FetchedMentionable(access.assignees, access.asked_to_review)
+
+    @provide
+    def descriptions(self, pull_requests: PullRequests) -> Descriptions:
+        return pull_requests
 
     @provide
     def watcher_health(self) -> WatcherHealth:

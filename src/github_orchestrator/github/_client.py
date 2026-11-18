@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.domain import Location, Pr, Repo, UtcClock
+from github_orchestrator.domain import DescriptionMoved, Location, Pr, Repo, UtcClock
 from github_orchestrator.github import _fetch_ahead, _pages, _pull_requests, _threads
 from github_orchestrator.github._gh_cli import Gh, Run
 from github_orchestrator.github._traffic import Traffic
@@ -175,6 +175,13 @@ class GhCliGitHub:
         except GhError as refused:
             return str(refused)
         return None
+
+    def edit_description(self, pr: Pr, title: str, body: str, *,
+                         started_from: str) -> DescriptionMoved | str | None:
+        try:
+            return _pull_requests.edit_description(self._gh, pr, title, body, started_from)
+        except GhError as refused:
+            return str(refused)
 
     def url(self, pr: Pr) -> str:
         return _pages.pr_url(pr)

@@ -44,11 +44,11 @@ class FakeConversationManagerFactory:
               base_branch: str | None = "main", head_sha: str | None = None,
               branch: str | None = None, created_at: str | None = None,
               commits: int | None = None, additions: int | None = None,
-              deletions: int | None = None) -> None:
+              deletions: int | None = None, body: str = "") -> None:
         author = self.github.account if is_author else f"not-{self.github.account}"
         state = PullRequestState(title=title, author=author, base_branch=base_branch,
                                  head_sha=head_sha, branch=branch, commits=commits,
-                                 additions=additions, deletions=deletions)
+                                 additions=additions, deletions=deletions, body=body)
         record = self.github.prs.get(pr)
         if record is None:
             self.github.add_pr(pr, state, created_at=created_at)

@@ -1691,6 +1691,29 @@
     }
    }
   },
+  "/api/pull-request/description:check": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/PullRequest"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/pull-request/description:save": {
+   "post": {
+    "200": {
+     "$ref": "#/components/schemas/DescriptionSave"
+    },
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "502": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/pull-request/diff": {
    "get": {
     "200": {
@@ -4081,6 +4104,56 @@
    },
    "required": [
     "until"
+   ],
+   "type": "object"
+  },
+  "DescriptionCheckRequest": {
+   "properties": {
+    "body": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "body"
+   ],
+   "type": "object"
+  },
+  "DescriptionSave": {
+   "properties": {
+    "on_github": {
+     "type": "string"
+    },
+    "pull_request": {
+     "$ref": "#/components/schemas/PullRequest"
+    },
+    "saved": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "saved",
+    "on_github",
+    "pull_request"
+   ],
+   "type": "object"
+  },
+  "DescriptionSaveRequest": {
+   "properties": {
+    "body": {
+     "type": "string"
+    },
+    "started_from": {
+     "type": "string"
+    },
+    "title": {
+     "minLength": 1,
+     "type": "string"
+    }
+   },
+   "required": [
+    "title",
+    "body",
+    "started_from"
    ],
    "type": "object"
   },
@@ -7483,6 +7556,9 @@
       }
      ]
     },
+    "body": {
+     "type": "string"
+    },
     "branch": {
      "anyOf": [
       {
@@ -7515,6 +7591,19 @@
     },
     "deletions": {
      "type": "integer"
+    },
+    "description_checked": {
+     "type": "boolean"
+    },
+    "description_saved_at": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
     },
     "head_sha": {
      "anyOf": [
@@ -7570,7 +7659,10 @@
     "created_at",
     "commits",
     "additions",
-    "deletions"
+    "deletions",
+    "body",
+    "description_checked",
+    "description_saved_at"
    ],
    "type": "object"
   },

@@ -12,6 +12,7 @@ from starlette.types import ASGIApp
 from github_orchestrator.domain import (
     Cause,
     CiCheck,
+    DescriptionMoved,
     DismissUntil,
     Fault,
     HubState,
@@ -602,6 +603,11 @@ class Mentionable(Protocol):
     def of(self, repo: Repo) -> list[str]: ...
 
     def asked_to_review(self, repo: Repo) -> dict[str, int]: ...
+
+
+class Descriptions(Protocol):
+    def edit_description(self, pr: Pr, title: str, body: str, *,
+                         started_from: str) -> DescriptionMoved | str | None: ...
 
 
 class HarvestSetup(Protocol):
