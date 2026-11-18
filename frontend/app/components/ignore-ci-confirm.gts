@@ -24,7 +24,7 @@ const HOW_LONG: { for: IgnoreFor; label: string }[] = [
 const SQUARE: Record<IgnorableCheck['state'], string> = {
   failed: 'sq alarm',
   running: 'sq wait',
-  passed: 'sq',
+  passed: 'sq done',
 };
 
 export default class IgnoreCiConfirm extends Component<IgnoreCiConfirmSignature> {

@@ -84,6 +84,15 @@ module('Acceptance | ignore CI', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
+  test('each check in the dialog carries the square for how it stands: done when passed, alarm when failed', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+
+    await click('[data-test-ignore-ci]');
+
+    assert.dom('[data-test-ignore-check="Vercel"] .sq').hasClass('alarm');
+    assert.dom('[data-test-ignore-check="tests"] .sq').hasClass('done');
+  });
+
   test('Ignore posts the ticked checks and how long, and CI then counts only the rest', async function (assert) {
     await onTheDashboard(VERCEL_FAILING);
     await click('[data-test-ignore-ci]');

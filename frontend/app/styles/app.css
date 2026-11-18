@@ -3860,7 +3860,7 @@ kbd {
   padding: 6px 0;
 }
 
-.setup-clones .sq.done {
+.sq.done {
   background: var(--green);
   border-color: var(--green);
 }
