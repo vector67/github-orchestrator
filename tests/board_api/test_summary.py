@@ -183,9 +183,9 @@ def test_each_operation_says_whether_the_run_reads_over_the_github_api(tmp_path)
     client = client_for(summaries=summary_parts(tmp_path))
 
     summarised(client, "summarise")
-    plain = json.loads((folder(tmp_path) / "call.json").read_text())["use_github_api"]
+    plain = json.loads(folder(tmp_path).with_suffix(".call.json").read_text())["use_github_api"]
     summarised(client, "summarise-with-github-api")
-    over_the_api = json.loads((folder(tmp_path) / "call.json").read_text())["use_github_api"]
+    over_the_api = json.loads(folder(tmp_path).with_suffix(".call.json").read_text())["use_github_api"]
 
     assert (plain, over_the_api) == (False, True)
 
@@ -214,7 +214,7 @@ def test_summarise_while_another_summary_runs_queues_it_and_answers_it_queued(tm
     served = answer.json()
     assert (served["running"], served["asked"]) == (False, STARTED)
     assert client.get("/api/summary").json()["asked"] == STARTED
-    assert not folder(tmp_path).exists()
+    assert not folder(tmp_path).with_suffix(".call.json").exists()
 
 
 def test_summarise_with_agents_disabled_is_refused_and_runs_nothing(tmp_path):
@@ -224,7 +224,7 @@ def test_summarise_with_agents_disabled_is_refused_and_runs_nothing(tmp_path):
 
     assert answer.status_code == 409
     assert answer.json()["errors"][0]["code"] == "agents-disabled"
-    assert not folder(tmp_path).exists()
+    assert not folder(tmp_path).with_suffix(".call.json").exists()
 
 
 def test_summarise_with_a_tag_from_before_the_summary_moved_is_refused(tmp_path):
@@ -246,4 +246,4 @@ def test_summarise_without_the_precondition_is_malformed(tmp_path):
 
     assert answer.status_code == 400
     assert answer.json()["errors"][0]["code"] == "malformed-request"
-    assert not folder(tmp_path).exists()
+    assert not folder(tmp_path).with_suffix(".call.json").exists()

@@ -1,6 +1,7 @@
 import fcntl
 import json
 import os
+import shutil
 from collections.abc import Iterator, Set
 from contextlib import contextmanager
 from dataclasses import replace
@@ -61,6 +62,14 @@ def working_folder(summaries_dir: Path, pr: Pr) -> Path:
     return summaries_dir / pr.repo.owner / pr.repo.name / str(pr.number)
 
 
+def run_outputs(pr_folder: Path) -> Path:
+    return pr_folder.with_suffix(".run")
+
+
+def kept_primer(pr_folder: Path) -> Path:
+    return pr_folder.with_suffix(".primer.json")
+
+
 class DiskPrSummaries:
     def __init__(self, summaries_dir: Path, clock: UtcClock) -> None:
         self._dir = summaries_dir
@@ -85,14 +94,14 @@ class DiskPrSummaries:
             write_atomically(self._file(pr), _encoded(replace(
                 stored, asked=None, asked_over_github_api=False)))
 
-    def unwant(self, pr: Pr) -> bool:
-        if not self._file(pr).exists():
-            return True
+    def forget(self, pr: Pr) -> bool:
+        folder = working_folder(self._dir, pr)
         try:
-            with self._locked(pr):
-                stored = self.load(pr) or Summary()
-                write_atomically(self._file(pr), _encoded(replace(
-                    stored, wanted=None, asked=None, asked_over_github_api=False)))
+            for tree in (folder, run_outputs(folder)):
+                if tree.exists():
+                    shutil.rmtree(tree)
+            for file in (kept_primer(folder), self._file(pr), self._file(pr).with_suffix(".lock")):
+                file.unlink(missing_ok=True)
         except OSError:
             return False
         return True

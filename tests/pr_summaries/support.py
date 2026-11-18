@@ -72,8 +72,12 @@ class Lane:
     def folder(self) -> Path:
         return self.summaries_dir / "acme" / "widgets" / "7"
 
+    @property
+    def called(self) -> Path:
+        return self.folder.with_suffix(".call.json")
+
     def call(self) -> dict[str, object]:
-        called: dict[str, object] = json.loads((self.folder / "call.json").read_text())
+        called: dict[str, object] = json.loads(self.called.read_text())
         return called
 
 

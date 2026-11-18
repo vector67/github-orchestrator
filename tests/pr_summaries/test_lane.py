@@ -1,5 +1,4 @@
 import fcntl
-import json
 import os
 import signal
 import sys
@@ -11,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from github_orchestrator.domain import Pr
 from github_orchestrator.pr_summaries import Summary, SummaryRefusal
 from tests.builders import a_pr
 from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
@@ -34,14 +34,24 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
     assert lane.summaries.due(set()) == []
 
 
+def test_a_finished_run_leaves_no_working_folder_behind(tmp_path):
+    lane = Lane(tmp_path, "clean")
+
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    assert lane.summaries.load(THE_PR).mismatches == 2
+    assert not lane.folder.exists()
+
+
 def test_a_rerun_hands_the_plugin_the_primer_the_last_run_wrote(tmp_path):
     lane = Lane(tmp_path, "clean")
     lane.lane.start(THE_PR, use_github_api=False)
-    written = json.loads((lane.folder / "primer" / "output.json").read_text())
 
     lane.lane.start(THE_PR, use_github_api=False)
 
-    assert lane.call()["earlier_primer"] == written
+    assert lane.call()["earlier_primer"] == {
+        "witness": "primer",
+        "concepts": [{"name": "Toolbar", "explanation": "The row of buttons.", "concepts": []}]}
 
 
 def test_a_run_that_wrote_no_primer_leaves_the_one_before_for_the_next(tmp_path):
@@ -87,7 +97,6 @@ def test_a_run_empties_the_working_folder_before_the_plugin_writes_into_it(tmp_p
     lane.lane.poll()
 
     assert lane.summaries.load(THE_PR).exit_status == 0
-    assert (lane.folder / "alignment" / "output.json").exists()
 
 
 def _with_an_earlier_summary(lane: Lane) -> None:
@@ -369,7 +378,7 @@ def test_with_agents_disabled_the_lane_runs_nothing(tmp_path):
     refused = lane.lane.start(THE_PR, use_github_api=False)
 
     assert refused == SummaryRefusal.AGENTS_DISABLED
-    assert not lane.folder.exists()
+    assert not lane.called.exists()
     assert lane.summaries.due(set()) == [THE_PR]
 
 
@@ -403,8 +412,22 @@ def test_a_pr_the_watcher_is_tearing_down_is_not_summarised(tmp_path):
 
     lane.lane.poll()
 
-    assert not lane.folder.exists()
+    assert not lane.called.exists()
     assert lane.summaries.load(THE_PR).started is None
+
+
+def test_a_run_that_ends_after_its_pr_was_torn_down_leaves_nothing_behind(tmp_path):
+    held = Held()
+    closing: list[Pr] = []
+    lane = Lane(tmp_path, "clean", run_in=held, closing=closing)
+    lane.summaries.want(THE_PR)
+    lane.lane.start(THE_PR, use_github_api=False)
+    closing.append(THE_PR)
+    lane.summaries.forget(THE_PR)
+
+    held.finish()
+
+    assert [left for left in lane.folder.parent.iterdir() if left != lane.called] == []
 
 
 def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):

@@ -13,7 +13,11 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.domain import Pr, Repo, UtcClock
-from github_orchestrator.pr_summaries._disk import working_folder
+from github_orchestrator.pr_summaries._disk import (
+    kept_primer,
+    run_outputs,
+    working_folder,
+)
 from github_orchestrator.pr_summaries.interface import (
     Progress,
     PrSummaries,
@@ -62,7 +66,7 @@ class SummaryPlugin:
     clamp: tuple[str, ...]
 
     def argv(self, url: str, folder: Path, outputs: Path, *, use_github_api: bool) -> list[str]:
-        kept = _kept_primer(folder)
+        kept = kept_primer(folder)
         command = [*self.command, url, "--config", str(self.config_path),
                    "--work-dir", str(folder), "--gh-account", self.gh_account,
                    *(["--mcp-config", self.mcp_config] if self.mcp_config else []),
@@ -101,14 +105,6 @@ def _done(folder: Path) -> dict[str, bool]:
             for witness in WITNESSES if (folder / witness).is_dir()}
 
 
-def _outputs(pr_folder: Path) -> Path:
-    return pr_folder.with_suffix(".run")
-
-
-def _kept_primer(pr_folder: Path) -> Path:
-    return pr_folder.with_suffix(".primer.json")
-
-
 def _keep_primer(pr_folder: Path) -> None:
     written = pr_folder / "primer" / "output.json"
     try:
@@ -116,7 +112,7 @@ def _keep_primer(pr_folder: Path) -> None:
     except (OSError, ValueError):
         return
     if isinstance(primer, dict) and "concepts" in primer:
-        shutil.copy(written, _kept_primer(pr_folder))
+        shutil.copy(written, kept_primer(pr_folder))
 
 
 def _read(path: Path) -> str:
@@ -203,9 +199,8 @@ class LocalSummaryLane:
             run = _Run(pr, self._clock(), self._head_of(pr),
                        (self._summaries.load(pr) or Summary()).wanted)
             folder = working_folder(self._dir, pr)
-            _keep_primer(folder)
             shutil.rmtree(folder, ignore_errors=True)
-            shutil.rmtree(_outputs(folder), ignore_errors=True)
+            shutil.rmtree(run_outputs(folder), ignore_errors=True)
             os.ftruncate(slot, 0)
             os.pwrite(slot, _in_flight(run), 0)
             self._run_in(lambda: self._run(pr, slot, use_github_api=use_github_api))
@@ -282,8 +277,12 @@ class LocalSummaryLane:
         run = _named(os.pread(slot, 4096, 0))
         if run is None:
             return
+        if not self._holds(run.pr):
+            self._summaries.forget(run.pr)
+            os.ftruncate(slot, 0)
+            return
         folder = working_folder(self._dir, run.pr)
-        outputs = _outputs(folder)
+        outputs = run_outputs(folder)
         ended, exit_status = _exit_status(outputs)
         stderr = _read(outputs / "stderr") + ("" if ended else LOST)
         previous = self._summaries.load(run.pr) or Summary()
@@ -294,11 +293,13 @@ class LocalSummaryLane:
         self._summaries.save(run.pr, replace(
             report, answered=run.wanted if ended else previous.answered, started=run.since,
             finished=self._clock(), exit_status=exit_status, stderr=stderr))
+        _keep_primer(folder)
+        shutil.rmtree(folder, ignore_errors=True)
         os.ftruncate(slot, 0)
 
     def _plugin_run(self, pr: Pr, slot: int, *, use_github_api: bool) -> None:
         folder = working_folder(self._dir, pr)
-        outputs = _outputs(folder)
+        outputs = run_outputs(folder)
         outputs.mkdir(parents=True)
         argv = self._plugin.argv(self._url_of(pr), folder, outputs, use_github_api=use_github_api)
         with open(outputs / "stdout", "w") as stdout, open(outputs / "stderr", "w") as stderr:
