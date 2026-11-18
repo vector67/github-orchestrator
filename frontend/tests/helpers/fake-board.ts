@@ -43,6 +43,7 @@ import type {
   RunLedger,
   RunsToday,
   TerminalSession,
+  WatchedSession,
   ThreadRow,
   WallGroup,
   WatcherHealth,
@@ -721,6 +722,7 @@ const ENCODER = new TextEncoder();
 const SOCKET =
   /(?:^\/pr\/[^/]+\/[^/]+\/\d+)?\/api\/terminal\/sessions\/([^/]+)$/;
 const DECODER = new TextDecoder();
+const CLOSE_SESSION = /\/api\/terminal\/sessions\/([^/]+):close$/;
 
 export class FakeSocket {
   static readonly OPEN = 1;
@@ -889,6 +891,7 @@ export class FakeBoard {
   walledPrs: AddToWallRequest[] = [];
   watching = ['o/r'];
   terminalSessions: TerminalSession[] = [];
+  watchedSessions: WatchedSession[] = [];
   sessionGoneTo: Conversation | null = null;
   opensOutside = false;
   opensLater = false;
@@ -1483,6 +1486,9 @@ export class FakeBoard {
     }
     if (side === 'hub') {
       if (path === '/api/runs') return this.ledger;
+      if (path === '/api/terminal-sessions') {
+        return { sessions: this.watchedSessions };
+      }
       if (path === '/api/mentions') return this.mentions;
       if (path === '/api/tour') return { due: this.tourDue };
       if (path === '/api/thread-names-migration') return this.migration;
@@ -1677,6 +1683,8 @@ export class FakeBoard {
     if (url.endsWith('/api/terminal/sessions')) {
       return this.openTerminal(url, init, headers);
     }
+    const closing = CLOSE_SESSION.exec(url);
+    if (closing) return this.closeSession(url, decodeURIComponent(closing[1]!));
     if (url.endsWith('/api/terminal/questions')) {
       return this.askTheAgent(url, init, headers);
     }
@@ -2211,6 +2219,23 @@ export class FakeBoard {
         truncated: false,
       },
     );
+  }
+
+  private closeSession(url: string, session: string): Response {
+    this.posted.push({
+      url,
+      key: '',
+      verb: 'close-terminal',
+      ifMatch: null,
+      body: null,
+    });
+    this.watchedSessions = this.watchedSessions.filter(
+      (one) => one.id !== session,
+    );
+    this.terminalSessions = this.terminalSessions.filter(
+      (one) => one.id !== session,
+    );
+    return respond(null, { status: 204 });
   }
 
   private openTerminal(

@@ -154,6 +154,7 @@ export interface Summaries {
   atWork: AtWork;
   move: NextMove;
   mismatches: string | null;
+  terminalsWaiting: string | null;
   openMentions: string[];
   pressing: Pressings;
   opening: Pressed;
@@ -1074,6 +1075,7 @@ function summarised(
       openMentions: openMentions.length,
     }),
     mismatches: mismatchesOf(pr?.mismatches ?? null),
+    terminalsWaiting: terminalsWaitingOf(pr?.terminals_waiting ?? 0),
     openMentions,
     pressing: pressedOn(pr, operations),
     opening: openingOf(all.flatMap((one) => operationsOf(one, operations))),
@@ -1103,6 +1105,11 @@ function answeringOf(
       ? [{ key: one.key, comment: reply.id, author: reply.author }]
       : [];
   });
+}
+
+function terminalsWaitingOf(count: number): string | null {
+  if (!count) return null;
+  return count === 1 ? '1 terminal waiting' : `${count} terminals waiting`;
 }
 
 function mismatchesOf(count: number | null): string | null {

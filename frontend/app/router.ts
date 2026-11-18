@@ -8,6 +8,7 @@ export default class Router extends EmberRouter {
 
 Router.map(function () {
   this.route('runs');
+  this.route('terminals');
   this.route('setup');
   this.route('pr', { path: '/pr/:owner/:name/:number' }, function () {
     this.route('conversations', { resetNamespace: true }, function () {

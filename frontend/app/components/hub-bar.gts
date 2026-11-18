@@ -14,7 +14,7 @@ import type StoreService from 'frontend/services/store';
 import eq from 'frontend/helpers/eq';
 
 interface HubBarSignature {
-  Args: { on: 'wall' | 'runs' | 'setup' };
+  Args: { on: 'wall' | 'runs' | 'terminals' | 'setup' };
 }
 
 export default class HubBar extends Component<HubBarSignature> {
@@ -96,6 +96,11 @@ export default class HubBar extends Component<HubBarSignature> {
           data-test-nav="runs"
           aria-current={{if (eq @on "runs") "page"}}
         >Runs</LinkTo>
+        <LinkTo
+          @route="terminals"
+          data-test-nav="terminals"
+          aria-current={{if (eq @on "terminals") "page"}}
+        >Terminals</LinkTo>
         <LinkTo
           @route="setup"
           data-test-nav="setup"

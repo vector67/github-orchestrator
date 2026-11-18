@@ -96,6 +96,7 @@ export default class PollService extends Service {
   readonly wall: Polled;
   readonly runs: Polled;
   readonly mentions: Polled;
+  readonly terminals: Polled;
 
   private located: Promise<void> | null = null;
   private walling: Promise<void> | null = null;
@@ -106,6 +107,7 @@ export default class PollService extends Service {
   private secondTimer: ReturnType<typeof setInterval> | null = null;
   private summaryTimer: ReturnType<typeof setInterval> | null = null;
   private restartTimer: ReturnType<typeof setInterval> | null = null;
+  private terminalsTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(owner: Owner) {
     super(owner);
@@ -122,6 +124,9 @@ export default class PollService extends Service {
     );
     this.mentions = this.reachability.polled('mentions', (tag) =>
       this.store.ask({ kind: 'mentions' }, tag),
+    );
+    this.terminals = this.reachability.polled('terminals', (tag) =>
+      this.store.ask({ kind: 'terminals' }, tag),
     );
   }
 
@@ -213,6 +218,23 @@ export default class PollService extends Service {
     this.secondTimer = null;
   }
 
+  startTerminals(): Promise<void> {
+    this.terminalsTimer ??= setInterval(
+      () => void waitForPromise(this.readTerminals()),
+      LIST_MS,
+    );
+    return this.readTerminals();
+  }
+
+  stopTerminals(): void {
+    if (this.terminalsTimer) clearInterval(this.terminalsTimer);
+    this.terminalsTimer = null;
+  }
+
+  private async readTerminals(): Promise<void> {
+    await this.terminals.poll().catch(() => undefined);
+  }
+
   followRestart(): void {
     this.restartTimer ??= setInterval(
       () => void waitForPromise(this.tickRestart()),
@@ -245,6 +267,7 @@ export default class PollService extends Service {
     this.stopDashboard();
     this.stopHub();
     this.stopSummary();
+    this.stopTerminals();
   }
 
   private async tick(): Promise<void> {

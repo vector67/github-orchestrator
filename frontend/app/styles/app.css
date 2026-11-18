@@ -3877,7 +3877,8 @@ kbd {
   }
 }
 
-#runs {
+#runs,
+#terminals {
   display: flex;
   flex-direction: column;
   height: 100dvh;
@@ -4732,6 +4733,41 @@ kbd {
 .sess[data-leaving] {
   pointer-events: none;
   animation: fade-out var(--motion-in) ease forwards;
+}
+
+.terminals-split {
+  display: grid;
+  flex: 1;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 0;
+}
+
+.watched {
+  display: flex;
+  align-items: flex-start;
+}
+
+.watched > .sess {
+  flex: 1;
+  min-width: 0;
+}
+
+.watched-head {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.watched-close {
+  flex: none;
+  margin: 7px 12px 0 0;
+}
+
+#terminals .note {
+  margin: 0;
+  padding: 12px 16px;
+  font-size: var(--fs-s);
+  color: var(--muted);
 }
 
 .actionband {
