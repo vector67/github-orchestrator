@@ -1,5 +1,4 @@
 import fcntl
-import json
 import os
 import signal
 import sys
@@ -34,14 +33,24 @@ def test_a_due_summary_runs_the_plugin_on_the_next_poll_and_stores_its_report(tm
     assert lane.summaries.due(set()) == []
 
 
+def test_a_finished_run_leaves_no_working_folder_behind(tmp_path):
+    lane = Lane(tmp_path, "clean")
+
+    lane.lane.start(THE_PR, use_github_api=False)
+
+    assert lane.summaries.load(THE_PR).mismatches == 2
+    assert not lane.folder.exists()
+
+
 def test_a_rerun_hands_the_plugin_the_primer_the_last_run_wrote(tmp_path):
     lane = Lane(tmp_path, "clean")
     lane.lane.start(THE_PR, use_github_api=False)
-    written = json.loads((lane.folder / "primer" / "output.json").read_text())
 
     lane.lane.start(THE_PR, use_github_api=False)
 
-    assert lane.call()["earlier_primer"] == written
+    assert lane.call()["earlier_primer"] == {
+        "witness": "primer",
+        "concepts": [{"name": "Toolbar", "explanation": "The row of buttons.", "concepts": []}]}
 
 
 def test_a_run_that_wrote_no_primer_leaves_the_one_before_for_the_next(tmp_path):
@@ -87,7 +96,6 @@ def test_a_run_empties_the_working_folder_before_the_plugin_writes_into_it(tmp_p
     lane.lane.poll()
 
     assert lane.summaries.load(THE_PR).exit_status == 0
-    assert (lane.folder / "alignment" / "output.json").exists()
 
 
 def _with_an_earlier_summary(lane: Lane) -> None:
@@ -369,7 +377,7 @@ def test_with_agents_disabled_the_lane_runs_nothing(tmp_path):
     refused = lane.lane.start(THE_PR, use_github_api=False)
 
     assert refused == SummaryRefusal.AGENTS_DISABLED
-    assert not lane.folder.exists()
+    assert not lane.called.exists()
     assert lane.summaries.due(set()) == [THE_PR]
 
 
@@ -403,7 +411,7 @@ def test_a_pr_the_watcher_is_tearing_down_is_not_summarised(tmp_path):
 
     lane.lane.poll()
 
-    assert not lane.folder.exists()
+    assert not lane.called.exists()
     assert lane.summaries.load(THE_PR).started is None
 
 

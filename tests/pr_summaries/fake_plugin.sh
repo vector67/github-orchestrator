@@ -39,7 +39,7 @@ done
 mkdir -p "$@"
 
 printf '{"pr": "%s", "config": "%s", "cwd": "%s", "use_github_api": %s, "gh_account": %s, "mcp_config": %s, "earlier_primer": %s}' \
-    "$pr" "$config" "$cwd" "$use_github_api" "$gh_account" "$mcp_config" "$earlier_primer" > "$out/call.json"
+    "$pr" "$config" "$cwd" "$use_github_api" "$gh_account" "$mcp_config" "$earlier_primer" > "$out.call.json"
 
 finish() {
     printf '%s' "$2" > "$out/$1/output.json"

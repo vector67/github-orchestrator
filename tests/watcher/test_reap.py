@@ -153,11 +153,16 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.write_text("")
     _summaries(settings).want(THE_PR)
+    summaries_of_the_repo = settings.summaries_dir / "acme" / "widgets"
+    (summaries_of_the_repo / str(PR) / "critic" / "repo").mkdir(parents=True)
+    (summaries_of_the_repo / f"{PR}.run").mkdir()
+    (summaries_of_the_repo / f"{PR}.run" / "stdout").write_text("# Summary\n")
+    (summaries_of_the_repo / f"{PR}.primer.json").write_text("{}")
 
     _cycle(settings, world, copies)
 
     assert "1 torn down" in capsys.readouterr().out
-    assert _summaries(settings).due(set()) == []
+    assert list(summaries_of_the_repo.iterdir()) == []
     assert world.managers == {}
     assert disk_event_queue(settings.queues_dir).queues() == []
     assert copies.branch_at(worktree) is None
