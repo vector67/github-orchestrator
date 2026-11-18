@@ -277,6 +277,10 @@ class LocalSummaryLane:
         run = _named(os.pread(slot, 4096, 0))
         if run is None:
             return
+        if not self._holds(run.pr):
+            self._summaries.forget(run.pr)
+            os.ftruncate(slot, 0)
+            return
         folder = working_folder(self._dir, run.pr)
         outputs = run_outputs(folder)
         ended, exit_status = _exit_status(outputs)

@@ -10,6 +10,7 @@ from pathlib import Path
 
 import pytest
 
+from github_orchestrator.domain import Pr
 from github_orchestrator.pr_summaries import Summary, SummaryRefusal
 from tests.builders import a_pr
 from tests.pr_summaries.support import HEAD, THE_PR, Held, Lane, three_commits
@@ -413,6 +414,20 @@ def test_a_pr_the_watcher_is_tearing_down_is_not_summarised(tmp_path):
 
     assert not lane.called.exists()
     assert lane.summaries.load(THE_PR).started is None
+
+
+def test_a_run_that_ends_after_its_pr_was_torn_down_leaves_nothing_behind(tmp_path):
+    held = Held()
+    closing: list[Pr] = []
+    lane = Lane(tmp_path, "clean", run_in=held, closing=closing)
+    lane.summaries.want(THE_PR)
+    lane.lane.start(THE_PR, use_github_api=False)
+    closing.append(THE_PR)
+    lane.summaries.forget(THE_PR)
+
+    held.finish()
+
+    assert [left for left in lane.folder.parent.iterdir() if left != lane.called] == []
 
 
 def test_a_run_shows_as_in_flight_from_the_moment_it_takes_the_slot(tmp_path):
