@@ -97,7 +97,9 @@ records that body's digest. A save records the saved body's digest.
 - `summaries.ts`'s `outstandingOf` adds the `description` group first when the
   body starts with 🤖 and is not checked. `ready-confirm.gts` gives it a
   button, "Show the description", that shows the rendered description in the
-  dialog and checks it.
+  dialog and checks it. The group names the agent from the dashboard's
+  `system.agent.name` ("Description written by Claude" where Claude runs the
+  agents), since the front end never names an agent of its own.
 - On the wall, opening Mark ready also reads the pull request, so the dialog
   knows the description.
 

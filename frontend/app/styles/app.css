@@ -4327,6 +4327,10 @@ kbd {
   box-sizing: border-box;
   width: 100%;
   margin: 0 0 6px;
+  padding: 4px 8px;
+  color: var(--text);
+  background: var(--page);
+  border: 1px solid var(--hairline);
   font: inherit;
   font-size: var(--fs-xl);
   font-weight: 600;
@@ -4340,6 +4344,10 @@ kbd {
   box-sizing: border-box;
   width: 100%;
   margin-top: 8px;
+  padding: 6px 8px;
+  color: var(--text);
+  background: var(--page);
+  border: 1px solid var(--hairline);
   font-family: var(--mono, ui-monospace, monospace);
   resize: vertical;
 }
