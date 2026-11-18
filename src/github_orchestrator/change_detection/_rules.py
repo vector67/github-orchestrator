@@ -1,7 +1,8 @@
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, Protocol
 
 from github_orchestrator.change_detection._review_activity import (
     compute_review_activity,
@@ -33,7 +34,7 @@ from github_orchestrator.change_detection.interface import (
     ReviewerStatus,
     ReviewRequested,
 )
-from github_orchestrator.domain import Pr
+from github_orchestrator.domain import IgnoredChecks, Pr
 from github_orchestrator.github import PullRequestState, ReviewState
 
 _STATUS_OF = {
@@ -53,8 +54,22 @@ class Step:
     events: list[PrEvent]
 
 
-def _ci_status(poll: Poll) -> CiStatus:
-    checks = poll.state.checks
+class _Outcome(Protocol):
+    @property
+    def name(self) -> str: ...
+
+    @property
+    def passed(self) -> bool: ...
+
+    @property
+    def failed(self) -> bool: ...
+
+    @property
+    def done(self) -> bool: ...
+
+
+def ci_status_of(all_checks: Sequence[_Outcome], ignored: IgnoredChecks) -> CiStatus:
+    checks = [c for c in all_checks if not ignored.covers(c.name)]
     if not checks:
         return CiStatus.NONE
     done = [c for c in checks if c.done]
@@ -111,7 +126,7 @@ def _stamped_requests(old: dict[str, Any], poll: Poll) -> dict[str, str]:
 
 
 def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
-                account: str, taken_over: bool) -> dict[str, Any]:
+                account: str, taken_over: bool, ignored: IgnoredChecks) -> dict[str, Any]:
     state = poll.state
 
     latest_reviewer = None
@@ -175,7 +190,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
         "closed": state.closed,
         "merged": state.merged,
         "last_poll_timestamp": poll.polled_at,
-        "ci_status": _ci_status(poll).value,
+        "ci_status": ci_status_of(state.checks, ignored).value,
         "had_checks": bool(state.checks) or had_checks(old or {}),
         "review_ready_at": state.ready_for_review_at,
         "checks": [
@@ -186,6 +201,7 @@ def snapshot_of(pr: Pr, poll: Poll, old: dict[str, Any] | None, *,
                 "done": c.done,
                 "html_url": c.html_url,
                 "summary": c.summary,
+                "ignored": ignored.covers(c.name),
             }
             for c in state.checks
         ],
@@ -307,7 +323,7 @@ def diff_ci_failures(
 
     events: list[PrEvent] = []
     for check in checks:
-        if not check.get("failed"):
+        if not check.get("failed") or check.get("ignored"):
             continue
         name = check["name"]
         if handled.get(name) == head:
@@ -344,9 +360,9 @@ def _carry_known_mergeability(old: dict[str, Any] | None, current: dict[str, Any
 
 def advance(
     pr: Pr, old: dict[str, Any] | None, poll: Poll, pending_ci_checks: set[str],
-    now: str, *, account: str, poll_interval: int, taken_over: bool,
+    now: str, *, account: str, poll_interval: int, taken_over: bool, ignored: IgnoredChecks,
 ) -> Step:
-    current = snapshot_of(pr, poll, old, account=account, taken_over=taken_over)
+    current = snapshot_of(pr, poll, old, account=account, taken_over=taken_over, ignored=ignored)
     _carry_known_mergeability(old, current)
 
     if old is None:

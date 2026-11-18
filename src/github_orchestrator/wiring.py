@@ -399,7 +399,7 @@ class SwitchesProvider(Provider):
 
     @provide
     def ci_ignores(self, wiring: SwitchesWiring) -> CiIgnores:
-        return JsonFileCiIgnores(wiring.data_dir / "ci_ignored")
+        return JsonFileCiIgnores(wiring.data_dir / CI_IGNORED)
 
     @provide
     def told_files(self, wiring: SwitchesWiring) -> ToldFiles:
@@ -769,6 +769,7 @@ class ChangeDetectionWiring(Wiring):
     state_dir: Path
     account: str
     poll_interval: int
+    ci_ignored_dir: Path
 
 
 class SnapshotTitles:
@@ -789,7 +790,7 @@ class ChangeDetectionProvider(Provider):
     def change_detection(self, wiring: ChangeDetectionWiring,
                          clock: UtcClock) -> ChangeDetection:
         return DiskChangeDetection(wiring.state_dir, wiring.account, wiring.poll_interval,
-                                   clock)
+                                   clock, JsonFileCiIgnores(wiring.ci_ignored_dir))
 
     @provide
     def pr_titles(self, change_detection: ChangeDetection) -> PrTitles:
@@ -864,6 +865,7 @@ class AgentChangesProvider(Provider):
 
 
 MENTIONS_FILE = "mentions.json"
+CI_IGNORED = "ci_ignored"
 
 
 class MentionsProvider(Provider):
@@ -1069,7 +1071,8 @@ class WouldSaveProvider(Provider):
     def change_detection(self, wiring: WouldSaveWiring, detection: ChangeDetectionWiring,
                          clock: UtcClock) -> ChangeDetection:
         return WouldSaveChangeDetection(detection.state_dir, detection.account,
-                                        detection.poll_interval, clock, wiring.say)
+                                        detection.poll_interval, clock,
+                                        JsonFileCiIgnores(detection.ci_ignored_dir), wiring.say)
 
 
 @dataclass(frozen=True)
@@ -1661,7 +1664,8 @@ def summary_lane_wiring(settings: Settings, clamp: tuple[str, ...]) -> SummaryLa
 
 def change_detection_wiring(settings: Settings) -> ChangeDetectionWiring:
     return ChangeDetectionWiring(settings.state_dir, settings.config.gh_account,
-                                 settings.config.watcher_poll_interval)
+                                 settings.config.watcher_poll_interval,
+                                 settings.data_dir / CI_IGNORED)
 
 
 def conversation_wiring(settings: Settings) -> ConversationWiring:

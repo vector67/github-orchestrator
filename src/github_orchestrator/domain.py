@@ -187,6 +187,7 @@ class CiCheck:
     done: bool
     url: str | None
     summary: str | None
+    ignored: bool = False
 
 
 @dataclass(frozen=True)

@@ -1,6 +1,8 @@
+from dataclasses import replace
 from typing import Any
 
 from github_orchestrator.change_detection._rules import (
+    ci_status_of,
     had_checks,
     is_closing,
     pending_reviewers,
@@ -14,7 +16,7 @@ from github_orchestrator.change_detection.interface import (
     ReviewerStatus,
     SinceReview,
 )
-from github_orchestrator.domain import CiCheck
+from github_orchestrator.domain import CiCheck, IgnoredChecks
 
 
 def _reviewers_who(words: Words, status: ReviewerStatus) -> tuple[str, ...]:
@@ -42,7 +44,8 @@ def _since_review(snapshot: dict[str, Any]) -> SinceReview | None:
 def _check(check: dict[str, Any]) -> CiCheck:
     return CiCheck(name=check["name"], passed=bool(check.get("passed")),
                    failed=bool(check.get("failed")), done=bool(check.get("done")),
-                   url=check.get("html_url"), summary=check.get("summary"))
+                   url=check.get("html_url"), summary=check.get("summary"),
+                   ignored=bool(check.get("ignored")))
 
 
 def _text(snapshot: dict[str, Any], key: str) -> str | None:
@@ -63,6 +66,13 @@ def _mergeable(snapshot: dict[str, Any], words: Words) -> bool | None:
     if "mergeable" not in snapshot or words.mergeability is Mergeability.UNKNOWN:
         return None
     return bool(snapshot["mergeable"])
+
+
+def counting(facts: Facts, ignored: IgnoredChecks) -> Facts:
+    checks = tuple(replace(check, ignored=ignored.covers(check.name)) for check in facts.checks)
+    if checks == facts.checks:
+        return facts
+    return replace(facts, checks=checks, ci_status=ci_status_of(checks, ignored))
 
 
 def facts_of(snapshot: dict[str, Any], account: str) -> Facts:

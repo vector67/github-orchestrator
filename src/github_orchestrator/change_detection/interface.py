@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import ClassVar, Protocol
 
-from github_orchestrator.domain import CiCheck, Mention, Pr, Repo
+from github_orchestrator.domain import CiCheck, IgnoredChecks, Mention, Pr, Repo
 from github_orchestrator.github import PullRequestState
 
 
@@ -223,7 +223,7 @@ class Facts:
 
     @property
     def failed_checks(self) -> tuple[str, ...]:
-        return tuple(check.name for check in self.checks if check.failed)
+        return tuple(check.name for check in self.checks if check.failed and not check.ignored)
 
     @property
     def checks_done(self) -> int:
@@ -244,6 +244,10 @@ class Stored:
     pr: Pr
     facts: Facts | None
     problem: str | None
+
+
+class CiIgnoresSource(Protocol):
+    def ignored(self, pr: Pr, head_sha: str | None) -> IgnoredChecks: ...
 
 
 class ChangeDetection(Protocol):

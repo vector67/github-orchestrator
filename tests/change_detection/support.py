@@ -10,6 +10,7 @@ from github_orchestrator.change_detection.fake import FakeChangeDetection
 from github_orchestrator.domain import Pr
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.github.fake import Check
+from github_orchestrator.settings.fake import FakeCiIgnores
 from github_orchestrator.wiring import ChangeDetectionWiring, WouldSaveWiring, wire
 from tests.builders import a_pr
 from tests.conftest import clocks_of
@@ -33,7 +34,7 @@ def now() -> datetime:
 def disk_change_detection(state_dir: Path, *, clock: Callable[[], datetime] = now,
                           poll_interval: int = 60) -> ChangeDetection:
     change_detection: ChangeDetection = wire(
-        ChangeDetectionWiring(state_dir, ACCOUNT, poll_interval),
+        ChangeDetectionWiring(state_dir, ACCOUNT, poll_interval, state_dir.parent / "ci_ignored"),
         clocks_of(clock),
     ).get(ChangeDetection)
     return change_detection
@@ -41,16 +42,16 @@ def disk_change_detection(state_dir: Path, *, clock: Callable[[], datetime] = no
 
 def would_save_change_detection(state_dir: Path, said: list[str]) -> ChangeDetection:
     change_detection: ChangeDetection = wire(
-        ChangeDetectionWiring(state_dir, ACCOUNT, 60),
+        ChangeDetectionWiring(state_dir, ACCOUNT, 60, state_dir.parent / "ci_ignored"),
         clocks_of(now),
         WouldSaveWiring(said.append),
     ).get(ChangeDetection)
     return change_detection
 
 
-def fake_change_detection(*, clock: Callable[[], datetime] = now,
-                          poll_interval: int = 60) -> FakeChangeDetection:
-    return FakeChangeDetection(ACCOUNT, poll_interval, clock)
+def fake_change_detection(*, clock: Callable[[], datetime] = now, poll_interval: int = 60,
+                          ci_ignores: FakeCiIgnores | None = None) -> FakeChangeDetection:
+    return FakeChangeDetection(ACCOUNT, poll_interval, clock, ci_ignores or FakeCiIgnores())
 
 
 def passing(name: str = "tests") -> Check:

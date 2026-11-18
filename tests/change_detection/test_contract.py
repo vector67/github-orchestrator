@@ -3,14 +3,17 @@ import pytest
 from github_orchestrator.change_detection import (
     BecameUnmergeable,
     CiFailed,
+    CiStatus,
     HeadChanged,
     PrClosed,
     PushedSinceReview,
     ReviewRequested,
 )
 from github_orchestrator.change_detection.fake import Stored, UnmergeableReason
+from github_orchestrator.domain import IgnoredChecks, IgnoreFor
 from github_orchestrator.github import ReviewState
 from github_orchestrator.github.fake import PushEvent, Review
+from github_orchestrator.settings.fake import FakeCiIgnores
 from tests.builders import a_pr
 from tests.change_detection.support import (
     ACCOUNT,
@@ -25,6 +28,7 @@ from tests.change_detection.support import (
     pr_state,
     types,
 )
+from tests.settings.support import disk_ci_ignores
 
 THE_PR = a_pr(PR, REPO)
 CLOSED = PrClosed(merged=False)
@@ -104,6 +108,53 @@ def test_a_check_already_waiting_in_the_event_queue_raises_nothing_and_stays_han
 
     assert "ci-failed" not in types(waiting)
     assert "ci-failed" not in types(after)
+
+
+@pytest.fixture(params=["fake", "disk"])
+def ignoring(request, tmp_path):
+    if request.param == "fake":
+        ignores = FakeCiIgnores()
+        return fake_change_detection(ci_ignores=ignores), ignores
+    return disk_change_detection(tmp_path / "state"), disk_ci_ignores(tmp_path)
+
+
+VERCEL_BLOCKED = poll(pr_state(head_sha="sha1", checks=(failing("Vercel"), passing("tests"))))
+
+
+def test_an_ignored_failing_check_asks_for_no_fix_and_leaves_ci_passing(ignoring):
+    detection, ignores = ignoring
+    detection.advance(THE_PR, poll(), set())
+    ignores.ignore(THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR, "sha1")
+
+    events = detection.advance(THE_PR, VERCEL_BLOCKED, set())
+
+    assert "ci-failed" not in types(events)
+    assert detection.facts(THE_PR).ci_status is CiStatus.PASSING
+
+
+def test_a_check_ignored_after_the_poll_stops_counting_without_waiting_for_another(ignoring):
+    detection, ignores = ignoring
+    detection.advance(THE_PR, VERCEL_BLOCKED, set())
+
+    ignores.ignore(THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PUSH, "sha1")
+
+    facts = detection.facts(THE_PR)
+    assert facts.ci_status is CiStatus.PASSING
+    assert facts.failed_checks == ()
+    assert [(check.name, check.failed, check.ignored) for check in facts.checks] == [
+        ("Vercel", True, True), ("tests", False, False)]
+
+
+def test_a_check_ignored_until_the_push_fails_the_pr_again_on_the_next_head(ignoring):
+    detection, ignores = ignoring
+    detection.advance(THE_PR, VERCEL_BLOCKED, set())
+    ignores.ignore(THE_PR, IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PUSH, "sha1")
+
+    events = detection.advance(
+        THE_PR, poll(pr_state(head_sha="sha2", checks=(failing("Vercel"),))), set())
+
+    assert events.count(CiFailed(check="Vercel", summary="Vercel failed")) == 1
+    assert detection.facts(THE_PR).ci_status is CiStatus.FAILING
 
 
 def test_a_review_request_seen_for_the_first_time_asks_for_the_review(detection):

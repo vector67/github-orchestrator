@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from github_orchestrator.atomic_write import write_atomically
-from github_orchestrator.change_detection._facts import facts_of
+from github_orchestrator.change_detection._facts import counting, facts_of
 from github_orchestrator.change_detection._rules import (
     advance,
     closing,
@@ -18,6 +18,7 @@ from github_orchestrator.change_detection._rules import (
 )
 from github_orchestrator.change_detection._stored import current_form
 from github_orchestrator.change_detection.interface import (
+    CiIgnoresSource,
     Facts,
     Poll,
     PrClosed,
@@ -53,8 +54,9 @@ def _write(target: Path, snapshot: dict[str, Any]) -> None:
 
 class DiskChangeDetection:
     def __init__(self, state_dir: Path, account: str, poll_interval: int,
-                 clock: UtcClock) -> None:
+                 clock: UtcClock, ci_ignores: CiIgnoresSource) -> None:
         self._state_dir = state_dir
+        self._ci_ignores = ci_ignores
         self._account = account
         self._poll_interval = poll_interval
         self._clock = clock
@@ -80,7 +82,8 @@ class DiskChangeDetection:
         step = advance(pr, self._last(pr), poll, pending_ci_checks,
                        self._clock().isoformat(), account=self._account,
                        poll_interval=self._poll_interval,
-                       taken_over=self._taken_over_marker(pr).exists())
+                       taken_over=self._taken_over_marker(pr).exists(),
+                       ignored=self._ci_ignores.ignored(pr, poll.state.head_sha))
         self._save(pr, step.snapshot)
         return step.events
 
@@ -92,7 +95,10 @@ class DiskChangeDetection:
 
     def facts(self, pr: Pr) -> Facts | None:
         snapshot = self._last(pr)
-        return None if snapshot is None else facts_of(snapshot, self._account)
+        if snapshot is None:
+            return None
+        facts = facts_of(snapshot, self._account)
+        return counting(facts, self._ci_ignores.ignored(pr, facts.head_sha))
 
     def _last(self, pr: Pr) -> dict[str, Any] | None:
         path = self._file(pr)

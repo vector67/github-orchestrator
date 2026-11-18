@@ -4,7 +4,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from github_orchestrator.change_detection._facts import facts_of
+from github_orchestrator.change_detection._facts import counting, facts_of
 from github_orchestrator.change_detection._rules import (
     advance,
     closing,
@@ -16,6 +16,7 @@ from github_orchestrator.change_detection._rules import (
     taking_over,
 )
 from github_orchestrator.change_detection.interface import (
+    CiIgnoresSource,
     Facts,
     Poll,
     PrClosed,
@@ -34,13 +35,19 @@ from github_orchestrator.change_detection.interface import (
 from github_orchestrator.change_detection.interface import (
     UnmergeableReason as UnmergeableReason,
 )
-from github_orchestrator.domain import Pr, Repo
+from github_orchestrator.domain import IgnoredChecks, Pr, Repo
+
+
+class NoCiIgnores:
+    def ignored(self, pr: Pr, head_sha: str | None) -> IgnoredChecks:
+        return IgnoredChecks()
 
 
 class FakeChangeDetection:
     def __init__(self, account: str, poll_interval: int,
-                 clock: Callable[[], datetime]) -> None:
+                 clock: Callable[[], datetime], ci_ignores: CiIgnoresSource) -> None:
         self._account = account
+        self._ci_ignores = ci_ignores
         self._poll_interval = poll_interval
         self._clock = clock
         self._held: dict[Pr, str] = {}
@@ -51,7 +58,8 @@ class FakeChangeDetection:
         step = advance(pr, self._last(pr), poll, pending_ci_checks,
                        self._clock().isoformat(), account=self._account,
                        poll_interval=self._poll_interval,
-                       taken_over=pr in self._taken_over)
+                       taken_over=pr in self._taken_over,
+                       ignored=self._ci_ignores.ignored(pr, poll.state.head_sha))
         self._held[pr] = json.dumps(step.snapshot)
         return step.events
 
@@ -65,7 +73,7 @@ class FakeChangeDetection:
         known = self._facts.get(pr)
         if known is None or known[0] != held:
             known = self._facts[pr] = (held, facts_of(json.loads(held), self._account))
-        return known[1]
+        return counting(known[1], self._ci_ignores.ignored(pr, known[1].head_sha))
 
     def _last(self, pr: Pr) -> dict[str, Any] | None:
         held = self._held.get(pr)
