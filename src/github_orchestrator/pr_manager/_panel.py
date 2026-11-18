@@ -8,7 +8,13 @@ from github_orchestrator.atomic_write import locked
 from github_orchestrator.board_api import Dashboard, ManagerPanel, ManagerWorktree
 from github_orchestrator.board_api.interface import ManagerRefusal
 from github_orchestrator.change_detection import ChangeDetection, CiFailed
-from github_orchestrator.domain import DismissUntil, Monotonic, Pr
+from github_orchestrator.domain import (
+    DismissUntil,
+    IgnoredChecks,
+    IgnoreFor,
+    Monotonic,
+    Pr,
+)
 from github_orchestrator.pr_manager._command_file import Command, CommandFiles
 from github_orchestrator.pr_manager._dashboard_source import ConfigOf, DashboardSource
 from github_orchestrator.pr_manager._git_palette import (
@@ -111,6 +117,13 @@ class FilePanel(ManagerPanel, ManagerWorktree):
 
     def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None:
         return self._hand(Command.SEND_REREQUEST_NOW, {"reviewer": reviewer})
+
+    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> ManagerRefusal | None:
+        return self._hand(Command.IGNORE_CI, {"checks": sorted(checks.names), "every": checks.every,
+                                              "ignore_for": ignore_for.value})
+
+    def stop_ignoring_ci(self) -> ManagerRefusal | None:
+        return self._hand(Command.STOP_IGNORING_CI)
 
     def take_over(self) -> ManagerRefusal | None:
         return self._hand(Command.TAKE_OVER, pushes=True)

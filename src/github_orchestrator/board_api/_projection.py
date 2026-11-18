@@ -622,7 +622,8 @@ def _facts_of(dashboard: Dashboard) -> contract.PrFacts:
         pending_reviewers=list(dashboard.pending_reviewers),
         review_requested_at=dict(dashboard.review_requested_at), ci_status=dashboard.ci,
         checks=[contract.CiCheck(name=check.name, passed=check.passed, failed=check.failed,
-                                 done=check.done, url=check.url, summary=check.summary)
+                                 done=check.done, url=check.url, summary=check.summary,
+                                 ignored=check.ignored)
                 for check in dashboard.checks],
         merge_state=None if dashboard.merge_state is None
         else contract.MergeState(dashboard.merge_state),

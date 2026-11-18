@@ -8,7 +8,13 @@ from github_orchestrator.domain import Pr
 from github_orchestrator.pr_event_queue import Worklist
 from github_orchestrator.pr_processes import ManagerPane, PrProcesses
 from github_orchestrator.pr_summaries import PrSummaries
-from github_orchestrator.settings import Dismissals, Holds, Rerequests, ReviewerPicks
+from github_orchestrator.settings import (
+    CiIgnores,
+    Dismissals,
+    Holds,
+    Rerequests,
+    ReviewerPicks,
+)
 from github_orchestrator.thread_records import ThreadRecords
 from github_orchestrator.watcher._config import WatcherConfig
 from github_orchestrator.working_copies import CleanUp, WorkingCopies
@@ -42,8 +48,9 @@ class PrTeardown:
                  change_detection: ChangeDetection, holds: Holds,
                  dismissals: Dismissals, manager_leftovers: ManagerLeftovers,
                  summaries: PrSummaries, picks: ReviewerPicks,
-                 rerequests: Rerequests) -> None:
+                 rerequests: Rerequests, ci_ignores: CiIgnores) -> None:
         self._repos = config.repos
+        self._ci_ignores = ci_ignores
         self._worklist = worklist
         self._pr_processes = pr_processes
         self._working_copies = working_copies
@@ -79,7 +86,7 @@ class PrTeardown:
                      self._summaries.unwant(pr)]
         if reason is Reason.CLOSED:
             forgotten += [self._dismissals.forget(pr), self._picks.forget(pr),
-                          self._rerequests.forget(pr)]
+                          self._rerequests.forget(pr), self._ci_ignores.forget(pr)]
         if not all(forgotten):
             ok = False
 

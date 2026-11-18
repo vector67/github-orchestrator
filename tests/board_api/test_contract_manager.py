@@ -19,7 +19,14 @@ from github_orchestrator.board_api.interface import (
     UnpushedCommit,
     WorktreeCleanUp,
 )
-from github_orchestrator.domain import AuthorKind, Mention, ThreadRow
+from github_orchestrator.domain import (
+    AuthorKind,
+    CiCheck,
+    IgnoredChecks,
+    IgnoreFor,
+    Mention,
+    ThreadRow,
+)
 from tests.board_api.support import BOARD_PATH, board_contract, client_for
 
 WORKING = replace(
@@ -84,7 +91,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                   "pending_reviewers": ["carol"], "review_requested_at": {},
                   "ci_status": "passing",
                   "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
-                              "url": "https://ci/tests", "summary": "tests passed"}],
+                              "url": "https://ci/tests", "summary": "tests passed", "ignored": False}],
                   "merge_state": "clean", "draft": False,
                   "review_decision": None, "my_review": None, "my_review_at": None,
                   "my_review_sha": None, "force_pushed_at": None,
@@ -126,7 +133,7 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
         "pending_reviewers": ["carol"],
         "review_requested_at": {"carol": "2026-10-07T09:00:00Z"}, "ci_status": "passing",
         "checks": [{"name": "tests", "passed": True, "failed": False, "done": True,
-                    "url": "https://ci/tests", "summary": "tests passed"}],
+                    "url": "https://ci/tests", "summary": "tests passed", "ignored": False}],
         "merge_state": "behind", "draft": True, "review_decision": "changes-requested",
         "my_review": "approved", "my_review_at": "2026-10-07T12:00:00Z",
         "my_review_sha": "c0ffee1", "force_pushed_at": "2026-10-07T13:00:00Z",
@@ -432,6 +439,50 @@ def test_sending_a_re_request_now_hands_the_reviewer_to_the_manager():
     assert client.get("/api/dashboard").json()["system"]["rerequest_queued"] == []
 
 
+def test_ignoring_ci_hands_the_checks_and_how_long_to_the_manager():
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post(
+        "/api/manager:ignore-ci", json={"checks": ["Vercel"], "every": False, "for": "this-pr"})
+
+    assert answer.status_code == 202
+    assert panel.ci_ignored == [(IgnoredChecks(frozenset({"Vercel"})), IgnoreFor.THIS_PR)]
+
+
+@pytest.mark.parametrize("body", [
+    {"checks": [], "every": False, "for": "this-pr"},
+    {"checks": ["Vercel"], "every": False, "for": "forever"},
+    {"checks": ["Vercel"], "every": False},
+])
+def test_an_ignore_ci_that_names_no_check_or_no_known_reach_is_malformed(body):
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post("/api/manager:ignore-ci", json=body)
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
+    assert panel.ci_ignored == []
+
+
+def test_stopping_ignoring_ci_is_handed_to_the_manager():
+    panel = FakeManagerPanel()
+
+    answer = client_for(manager=panel).post("/api/manager:stop-ignoring-ci")
+
+    assert answer.status_code == 202
+    assert panel.stopped_ignoring_ci == 1
+
+
+def test_the_dashboard_marks_each_check_the_pr_ignores():
+    ignored = CiCheck("Vercel", passed=False, failed=True, done=True, url=None,
+                      summary="Deployment was blocked", ignored=True)
+    panel = FakeManagerPanel(now=replace(WORKING, checks=(ignored,)))
+
+    checks = client_for(manager=panel).get("/api/dashboard").json()["facts"]["checks"]
+
+    assert [(check["name"], check["ignored"]) for check in checks] == [("Vercel", True)]
+
+
 @pytest.mark.parametrize("path", ["/api/manager:rerequest-review",
                                   "/api/manager:cancel-rerequest",
                                   "/api/manager:send-rerequest"])
@@ -491,7 +542,9 @@ def test_every_manager_command_declares_the_hand_over_and_where_to_poll():
                              "/api/manager:assign-when-ready",
                              "/api/manager:rerequest-review",
                              "/api/manager:cancel-rerequest",
-                             "/api/manager:send-rerequest"}
+                             "/api/manager:send-rerequest",
+                             "/api/manager:ignore-ci",
+                             "/api/manager:stop-ignoring-ci"}
     assert all(command["responses"]["202"]["headers"]["Location"]
                for command in commands.values())
 

@@ -83,6 +83,10 @@ def rerequest_file(data_dir: Path, pr: Pr) -> Path:
     return _repo_dir(Path(data_dir) / "rerequest_review", pr) / f"{pr.number}.json"
 
 
+def ci_ignored_file(data_dir: Path, pr: Pr) -> Path:
+    return _repo_dir(Path(data_dir) / "ci_ignored", pr) / f"{pr.number}.json"
+
+
 def status_file(data_dir: Path, pr: Pr) -> Path:
     return _repo_dir(Path(data_dir) / "status", pr) / f"{pr.number}.json"
 

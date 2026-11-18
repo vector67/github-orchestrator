@@ -26,6 +26,8 @@ from github_orchestrator.domain import (
     CiCheck,
     DismissUntil,
     HubState,
+    IgnoredChecks,
+    IgnoreFor,
     Pr,
     Repo,
     ReviewerPick,
@@ -72,6 +74,8 @@ class FakeManagerPanel:
     marked_ready: int = 0
     converted_to_draft: int = 0
     assigned: list[tuple[tuple[str, ...], str | None]] = field(default_factory=list)
+    ci_ignored: list[tuple[IgnoredChecks, IgnoreFor]] = field(default_factory=list)
+    stopped_ignoring_ci: int = 0
     taken_over: int = 0
     handed_back: int = 0
     agent_settings_answers: list[tuple[str, bool]] = field(default_factory=list)
@@ -158,6 +162,16 @@ class FakeManagerPanel:
         if self.refusal is None:
             self.assigned.append(((reviewer,), None))
             self._unqueue(reviewer)
+        return self.refusal
+
+    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.ci_ignored.append((checks, ignore_for))
+        return self.refusal
+
+    def stop_ignoring_ci(self) -> ManagerRefusal | None:
+        if self.refusal is None:
+            self.stopped_ignoring_ci += 1
         return self.refusal
 
     def _unqueue(self, reviewer: str) -> None:

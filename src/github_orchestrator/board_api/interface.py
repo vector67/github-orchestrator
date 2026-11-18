@@ -15,6 +15,8 @@ from github_orchestrator.domain import (
     DismissUntil,
     Fault,
     HubState,
+    IgnoredChecks,
+    IgnoreFor,
     Mention,
     Pr,
     Repo,
@@ -311,6 +313,10 @@ class ManagerPanel(Protocol):
     def cancel_rerequest(self, reviewer: str) -> ManagerRefusal | None: ...
 
     def send_rerequest_now(self, reviewer: str) -> ManagerRefusal | None: ...
+
+    def ignore_ci(self, checks: IgnoredChecks, ignore_for: IgnoreFor) -> ManagerRefusal | None: ...
+
+    def stop_ignoring_ci(self) -> ManagerRefusal | None: ...
 
     def take_over(self) -> ManagerRefusal | None: ...
 

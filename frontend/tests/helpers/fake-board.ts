@@ -376,6 +376,7 @@ export function check(
     done: state !== 'running',
     url: `https://ci.example/${name}`,
     summary: null,
+    ignored: false,
   };
 }
 

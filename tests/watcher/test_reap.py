@@ -23,6 +23,7 @@ from tests.conversation.support import (
     said,
 )
 from tests.disk_layout import (
+    ci_ignored_file,
     command_file,
     dismissed_file,
     on_hold_file,
@@ -148,6 +149,7 @@ def test_a_reaped_pr_leaves_nothing_behind(settings, capsys):
                  status_file(settings.data_dir, THE_PR),
                  reviewer_pick_file(settings.data_dir, THE_PR),
                  rerequest_file(settings.data_dir, THE_PR),
+                 ci_ignored_file(settings.data_dir, THE_PR),
                  command_file(settings.data_dir, THE_PR, "00000000000000000001-1"))
     for flag in left_over:
         flag.parent.mkdir(parents=True, exist_ok=True)

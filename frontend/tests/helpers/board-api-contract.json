@@ -1076,6 +1076,17 @@
     }
    }
   },
+  "/api/manager:ignore-ci": {
+   "post": {
+    "202": {},
+    "400": {
+     "$ref": "#/components/schemas/Errors"
+    },
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
   "/api/manager:mark-ready": {
    "post": {
     "202": {},
@@ -1123,6 +1134,14 @@
    }
   },
   "/api/manager:start-review": {
+   "post": {
+    "202": {},
+    "409": {
+     "$ref": "#/components/schemas/Errors"
+    }
+   }
+  },
+  "/api/manager:stop-ignoring-ci": {
    "post": {
     "202": {},
     "409": {
@@ -2918,6 +2937,9 @@
     "failed": {
      "type": "boolean"
     },
+    "ignored": {
+     "type": "boolean"
+    },
     "name": {
      "type": "string"
     },
@@ -2951,7 +2973,8 @@
     "failed",
     "done",
     "url",
-    "summary"
+    "summary",
+    "ignored"
    ],
    "type": "object"
   },
@@ -5549,6 +5572,36 @@
     "setup",
     "watching",
     "broken"
+   ],
+   "type": "string"
+  },
+  "IgnoreCiRequest": {
+   "properties": {
+    "checks": {
+     "items": {
+      "type": "string"
+     },
+     "type": "array"
+    },
+    "every": {
+     "type": "boolean"
+    },
+    "for": {
+     "$ref": "#/components/schemas/IgnoreFor"
+    }
+   },
+   "required": [
+    "checks",
+    "every",
+    "for"
+   ],
+   "type": "object"
+  },
+  "IgnoreFor": {
+   "enum": [
+    "this-push",
+    "this-pr",
+    "this-repo"
    ],
    "type": "string"
   },

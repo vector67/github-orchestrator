@@ -152,6 +152,7 @@ export interface CiCheck {
   done: boolean;
   url: string | null;
   summary: string | null;
+  ignored: boolean;
 }
 
 export type Classification = 'risky' | 'unclear' | 'out-of-scope' | 'already-done' | 'acknowledgement' | 'question' | 'needs-human';
@@ -606,6 +607,14 @@ export interface HeldPullRequests {
 }
 
 export type HubState = 'setup' | 'watching' | 'broken';
+
+export interface IgnoreCiRequest {
+  checks: string[];
+  every: boolean;
+  for: IgnoreFor;
+}
+
+export type IgnoreFor = 'this-push' | 'this-pr' | 'this-repo';
 
 export type Importance = 'important' | 'normal' | 'someday';
 

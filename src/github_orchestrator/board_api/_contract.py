@@ -4,6 +4,7 @@ from typing import Annotated, Literal, Self
 from pydantic import (
     AwareDatetime,
     BaseModel,
+    ConfigDict,
     Field,
     RootModel,
     StringConstraints,
@@ -36,6 +37,7 @@ from github_orchestrator.domain import (
     DismissUntil,
     Fault,
     HubState,
+    IgnoreFor,
     Side,
 )
 
@@ -1911,6 +1913,26 @@ class RerequestReviewRequest(BaseModel):
                     "first request went to a team.")
 
 
+class IgnoreCiRequest(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    checks: list[str] = Field(
+        description="The names of the checks to ignore, as `facts.checks` lists them.")
+    every: bool = Field(
+        description="Ignore every check, those that first appear later included. "
+                    "`checks` may then be empty.")
+    ignore_for: IgnoreFor = Field(
+        alias="for",
+        description="How long: `this-push` until the next push, `this-pr` on every commit "
+                    "of this pull request, `this-repo` on every pull request of its repo.")
+
+    @model_validator(mode="after")
+    def _names_something(self) -> Self:
+        if not self.every and not self.checks:
+            raise ValueError("name at least one check, or ignore every check")
+        return self
+
+
 class DashboardSystem(BaseModel):
     agent: AgentActivity
     last_run: LastRun | None = Field(
@@ -2003,6 +2025,9 @@ class CiCheck(BaseModel):
     url: str | None = Field(description="Its page on the CI. Null where GitHub did not say.")
     summary: str | None = Field(
         description="What the check said of its run. Null where it said nothing.")
+    ignored: bool = Field(
+        description="You chose to ignore it on this pull request: it counts for nothing in "
+                    "`ci_status` and asks for no CI fix, whatever its outcome.")
 
 
 class MentionFact(BaseModel):
