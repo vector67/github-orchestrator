@@ -472,6 +472,10 @@ export default class PrControlsService extends Service {
         .ask({ kind: 'conversations', pr }, null)
         .catch(() => null);
       if (asked?.changed) asked.take();
+      const pulled = await this.store
+        .ask({ kind: 'pull-request', pr }, null)
+        .catch(() => null);
+      if (pulled?.changed) pulled.take();
     }
   }
 

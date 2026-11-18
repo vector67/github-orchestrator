@@ -12,6 +12,8 @@ import type {
   Dashboard,
   DashboardStatus,
   DashboardSystem,
+  DescriptionSave,
+  DescriptionSaveRequest,
   Diff,
   DiffAnchors,
   AddToWallRequest,
@@ -246,6 +248,9 @@ export interface PrEntity {
   commits: number | null;
   additions: number;
   deletions: number;
+  body: string | null;
+  description_checked: boolean;
+  description_saved_at: string | null;
   ticket: string | null;
   author: string | null;
   board_url: string | null;
@@ -325,6 +330,8 @@ const READ_MARKS = '/api/pull-request/read-marks';
 
 const IMPORTANCE = '/api/pull-request/importance';
 
+const DESCRIPTION = '/api/pull-request/description';
+
 const UNREAD_HEAD = 'the page has not read the worktree’s commits yet';
 
 const NO_MANAGER: Manager = { notes: null, output: [], sessions: [] };
@@ -392,6 +399,15 @@ function listsOf(facts: PrFacts): PrFacts {
     mentions: list(facts.mentions),
     checks: list(facts.checks),
   };
+}
+
+function titleSavedSince(
+  held: PrEntity,
+  polledAt: string | null | undefined,
+): boolean {
+  const saved = held.description_saved_at;
+  if (saved === null) return false;
+  return !polledAt || Date.parse(polledAt) < Date.parse(saved);
 }
 
 function under(key: string): string {
@@ -687,7 +703,8 @@ export default class StoreService extends Service {
     const held = this.prSummaries[key];
     const role = this.summary(repo, number)?.role ?? null;
     const head = this.prs[key]?.head_sha ?? null;
-    return held ? summaryTabOf(held, head, role) : null;
+    const saved = this.prs[key]?.description_saved_at ?? null;
+    return held ? summaryTabOf(held, head, role, saved) : null;
   }
 
   async summarise(
@@ -1367,6 +1384,38 @@ export default class StoreService extends Service {
     return { done: true, body: undefined };
   }
 
+  async saveDescription(
+    pr: Numbered,
+    asked: DescriptionSaveRequest,
+  ): Promise<Tried<DescriptionSave>> {
+    const taken = await tried(
+      'save the description',
+      write<DescriptionSave>(
+        `${this.here.prefixOf(pr)}${DESCRIPTION}:save`,
+        null,
+        asked,
+      ),
+    );
+    if (taken.done) this.takePullRequest(pr, taken.body.pull_request);
+    return taken;
+  }
+
+  async checkDescription(pr: Numbered, body: string): Promise<Tried<void>> {
+    const taken = await tried(
+      'check the description',
+      write<PullRequest>(
+        `${this.here.prefixOf(pr)}${DESCRIPTION}:check`,
+        null,
+        {
+          body,
+        },
+      ),
+    );
+    if (!taken.done) return taken;
+    this.takePullRequest(pr, taken.body);
+    return { done: true, body: undefined };
+  }
+
   async markRead(pr: Numbered, sha: string, marked: boolean): Promise<void> {
     const verb = marked ? 'mark-read' : 'mark-unread';
     const { taken, local } = await this.sendOn(
@@ -1943,6 +1992,9 @@ export default class StoreService extends Service {
       commits: pull.commits,
       additions: pull.additions,
       deletions: pull.deletions,
+      body: pull.body,
+      description_checked: pull.description_checked,
+      description_saved_at: pull.description_saved_at,
     }));
   }
 
@@ -2326,7 +2378,9 @@ export default class StoreService extends Service {
         ...(stale
           ? {}
           : {
-              title: pr.title ?? held.title,
+              title: titleSavedSince(held, dashboard.facts?.polled_at)
+                ? held.title
+                : (pr.title ?? held.title),
               url: pr.url ?? held.url,
               branch: pr.branch ?? held.branch,
               base_branch: pr.base_branch ?? held.base_branch,
@@ -2442,6 +2496,9 @@ export default class StoreService extends Service {
       commits: null,
       additions: 0,
       deletions: 0,
+      body: null,
+      description_checked: false,
+      description_saved_at: null,
       ticket: null,
       author: null,
       board_url: null,

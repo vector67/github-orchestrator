@@ -1133,6 +1133,7 @@ export function summaryOf(
 }
 
 export type OutstandingKind =
+  | 'description'
   | 'reviewers'
   | 'drafts'
   | 'board'
@@ -1162,6 +1163,7 @@ export interface Outstanding {
 }
 
 const OUTSTANDING_LABELS: Record<OutstandingKind, string> = {
+  description: 'Description written by an agent',
   reviewers: 'No reviewers requested',
   drafts: 'Unsent draft comments',
   board: 'Board threads waiting on you',
@@ -1171,6 +1173,20 @@ const OUTSTANDING_LABELS: Record<OutstandingKind, string> = {
   unpushed: 'Unpushed commits',
   agent: 'Agent still working',
 };
+
+const WRITTEN_BY_AN_AGENT = '🤖';
+
+function descriptionUnchecked(pr: PrEntity): boolean {
+  return (
+    Boolean(pr.body?.startsWith(WRITTEN_BY_AN_AGENT)) && !pr.description_checked
+  );
+}
+
+function labelOf(kind: OutstandingKind, pr: PrEntity): string {
+  const agent = pr.drawn?.system.agent.name;
+  if (kind === 'description' && agent) return `Description written by ${agent}`;
+  return OUTSTANDING_LABELS[kind];
+}
 
 function whereOf(one: Thread): string {
   const path = one.anchor?.path;
@@ -1276,6 +1292,15 @@ function outstandingFrom(
       : [];
   const unresolved = unresolvedOf(all, board, facts);
   const items: Record<OutstandingKind, OutstandingItem[]> = {
+    description: descriptionUnchecked(pr)
+      ? [
+          {
+            key: 'description',
+            where: 'description',
+            what: 'starts with 🤖 and nobody checked it on the board',
+          },
+        ]
+      : [],
     reviewers:
       facts && !reviewersAsked(pr, operations)
         ? [
@@ -1310,7 +1335,7 @@ function outstandingFrom(
     .filter((kind) => items[kind].length)
     .map((kind) => ({
       kind,
-      label: OUTSTANDING_LABELS[kind],
+      label: labelOf(kind, pr),
       count:
         kind === 'unresolved'
           ? unresolved.count
@@ -1367,6 +1392,8 @@ export type Square = 'added' | 'deleted' | 'neutral';
 
 export interface PrHeader {
   title: string | null;
+  body: string | null;
+  unchecked: boolean;
   createdAt: string | null;
   commits: string | null;
   additions: number;
@@ -1392,9 +1419,11 @@ const headed = new WeakMap<PrEntity, PrHeader>();
 export function prHeaderOf(pr: PrEntity): PrHeader {
   const known = headed.get(pr);
   if (known) return known;
-  const { title, created_at, commits, additions, deletions } = pr;
+  const { title, body, created_at, commits, additions, deletions } = pr;
   const header = {
     title,
+    body,
+    unchecked: descriptionUnchecked(pr),
     createdAt: created_at,
     commits:
       commits === null ? null : `${commits} commit${commits === 1 ? '' : 's'}`,
@@ -1593,6 +1622,7 @@ export interface SummaryTab {
   reason: string | null;
   calls: number | null;
   markdown: string | null;
+  beforeDescription: boolean;
 }
 
 const SHORT_SHA = 7;
@@ -1642,10 +1672,19 @@ function behindOf(count: number | null): string | null {
   return count === 1 ? '1 commit behind' : `${count} commits behind`;
 }
 
+function writtenBefore(
+  finished: string | null,
+  descriptionSavedAt: string | null,
+): boolean {
+  if (finished === null || descriptionSavedAt === null) return false;
+  return Date.parse(finished) < Date.parse(descriptionSavedAt);
+}
+
 function summaryTabBuilt(
   summary: PrSummaryEntity,
   head: string | null,
   role: Role | null,
+  descriptionSavedAt: string | null,
 ): SummaryTab {
   const state = stateOf(summary, head, role);
   const calls = API_CALLS.exec(summary.stderr ?? '')?.[1];
@@ -1664,23 +1703,35 @@ function summaryTabBuilt(
     reason: reasonOf(state, summary.stderr),
     calls: calls === undefined ? null : Number(calls),
     markdown: summary.markdown,
+    beforeDescription: writtenBefore(summary.finished, descriptionSavedAt),
   };
 }
 
 const lastTabs = new WeakMap<
   PrSummaryEntity,
-  { head: string | null; role: Role | null; tab: SummaryTab }
+  {
+    head: string | null;
+    role: Role | null;
+    descriptionSavedAt: string | null;
+    tab: SummaryTab;
+  }
 >();
 
 export function summaryTabOf(
   summary: PrSummaryEntity,
   head: string | null,
   role: Role | null,
+  descriptionSavedAt: string | null,
 ): SummaryTab {
   const last = lastTabs.get(summary);
-  if (last?.head === head && last.role === role) return last.tab;
-  const tab = summaryTabBuilt(summary, head, role);
-  lastTabs.set(summary, { head, role, tab });
+  if (
+    last?.head === head &&
+    last.role === role &&
+    last.descriptionSavedAt === descriptionSavedAt
+  )
+    return last.tab;
+  const tab = summaryTabBuilt(summary, head, role, descriptionSavedAt);
+  lastTabs.set(summary, { head, role, descriptionSavedAt, tab });
   return tab;
 }
 

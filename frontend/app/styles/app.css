@@ -4310,6 +4310,53 @@ kbd {
   color: var(--muted);
 }
 
+.summary-pr-description,
+.description-preview,
+.description-on-github,
+.ready-description {
+  max-height: 40vh;
+  margin-top: 10px;
+  overflow: auto;
+}
+
+.summary-pr-edit {
+  margin-top: 8px;
+}
+
+.summary-pr-title-field {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 6px;
+  font: inherit;
+  font-size: var(--fs-xl);
+  font-weight: 600;
+}
+
+.description-editor {
+  margin-top: 10px;
+}
+
+.description-text {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  font-family: var(--mono, ui-monospace, monospace);
+  resize: vertical;
+}
+
+.description-moved {
+  margin-top: 10px;
+}
+
+.summary-before-description {
+  flex: none;
+  margin: 0;
+  padding: 8px 24px;
+  font-size: var(--fs-m);
+  color: var(--ready-text);
+  border-bottom: 1px solid var(--hairline);
+}
+
 .diffstat {
   display: inline-flex;
   gap: 6px;

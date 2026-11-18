@@ -11,6 +11,8 @@ import type { Outstanding, ReviewerGroup } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 import AssignReviewers from 'frontend/components/assign-reviewers';
 import Glyphs from 'frontend/components/glyphs';
+import CommentBody from 'frontend/components/comment-body';
+import { waitForPromise } from '@ember/test-waiters';
 
 interface ReadyConfirmSignature {
   Args: {
@@ -39,6 +41,8 @@ const isFirst = (index: number): boolean => index === 0;
 
 const isReviewers = (kind: string): boolean => kind === 'reviewers';
 
+const isDescription = (kind: string): boolean => kind === 'description';
+
 const threadAt = (repo: string, number: number, key: string): string[] => [
   ...repo.split('/'),
   String(number),
@@ -55,6 +59,7 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
   @service declare store: StoreService;
 
   @tracked picking = false;
+  @tracked describing = false;
 
   constructor(owner: Owner, args: ReadyConfirmSignature['Args']) {
     super(owner, args);
@@ -74,6 +79,22 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
       ? 'Mark ready anyway'
       : 'Mark it ready';
   }
+
+  get description(): string | null {
+    return this.store.prHeader(this.args.repo, this.args.number)?.body ?? null;
+  }
+
+  showDescription = () => {
+    this.describing = true;
+    const body = this.description;
+    if (body === null) return;
+    void waitForPromise(
+      this.store.checkDescription(
+        { repo: this.args.repo, number: this.args.number },
+        body,
+      ),
+    );
+  };
 
   openPicker = () => {
     this.picking = true;
@@ -138,7 +159,36 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
           <p class="note">{{sentenceOf @outstanding}}</p>
           <div class="outstanding">
             {{#each @outstanding.groups key="kind" as |group index|}}
-              {{#if (isReviewers group.kind)}}
+              {{#if (isDescription group.kind)}}
+                <section
+                  class="outstanding-kind outstanding-open"
+                  data-test-outstanding={{group.kind}}
+                >
+                  <p class="outstanding-head"><span
+                      aria-hidden="true"
+                    >▼</span><span
+                      class="outstanding-count"
+                    >{{group.count}}</span>
+                    {{group.label}}</p>
+                  <ul class="outstanding-items">
+                    {{#each group.items key="key" as |item|}}
+                      <li
+                        class="outstanding-item"
+                        data-test-outstanding-item={{item.key}}
+                      >
+                        <span class="outstanding-where">{{item.where}}</span>
+                        <span class="outstanding-what">{{item.what}}</span>
+                      </li>
+                    {{/each}}
+                  </ul>
+                  <button
+                    type="button"
+                    class="btn outstanding-assign"
+                    data-test-ready-show-description
+                    {{on "click" this.showDescription}}
+                  >Show the description</button>
+                </section>
+              {{else if (isReviewers group.kind)}}
                 <section
                   class="outstanding-kind outstanding-open"
                   data-test-outstanding={{group.kind}}
@@ -212,6 +262,15 @@ export default class ReadyConfirm extends Component<ReadyConfirmSignature> {
           </div>
         {{else}}
           <p class="note">Nothing outstanding.</p>
+        {{/if}}
+        {{#if this.describing}}
+          {{#if this.description}}
+            <CommentBody
+              class="ready-description"
+              @body={{this.description}}
+              data-test-ready-description
+            />
+          {{/if}}
         {{/if}}
         <div class="dialog-actions">
           <button

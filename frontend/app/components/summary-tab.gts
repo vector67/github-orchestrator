@@ -14,6 +14,7 @@ import type StoreService from 'frontend/services/store';
 import type ThemeService from 'frontend/services/theme';
 import type { PrHeader, SummaryTab as Tab } from 'frontend/services/store';
 import eq from 'frontend/helpers/eq';
+import PrDescription from 'frontend/components/pr-description';
 
 const QUEUED = 'Waiting for another summary to finish';
 
@@ -74,10 +75,11 @@ export default class SummaryTab extends Component {
   <template>
     <div id="summary-tab" data-test-summary-tab>
       {{#if this.header}}
-        <header class="summary-pr" data-test-summary-pr>
-          <h2 class="summary-pr-title" data-test-summary-title>
-            {{this.header.title}}
-          </h2>
+        <PrDescription
+          @title={{this.header.title}}
+          @body={{this.header.body}}
+          @unchecked={{this.header.unchecked}}
+        >
           <div class="summary-pr-facts">
             {{#if this.header.createdAt}}
               <span
@@ -108,7 +110,7 @@ export default class SummaryTab extends Component {
               </span>
             </span>
           </div>
-        </header>
+        </PrDescription>
       {{/if}}
       {{#if this.tab}}
         <div
@@ -254,6 +256,12 @@ export default class SummaryTab extends Component {
           {{/if}}
         </div>
         {{#if this.tab.markdown}}
+          {{#if this.tab.beforeDescription}}
+            <p
+              class="summary-before-description"
+              data-test-summary-before-description
+            >Written before the description changed</p>
+          {{/if}}
           <div
             class="summary-body comment-body"
             data-test-summary-markdown

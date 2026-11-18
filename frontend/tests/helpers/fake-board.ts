@@ -57,6 +57,8 @@ import type {
   QueuedEvent,
   SetImportanceRequest,
   UnpushedCommit,
+  DescriptionSave,
+  DescriptionSaveRequest,
 } from 'frontend/data/api';
 import { driftOf } from 'frontend/tests/helpers/contract';
 import { FakeSetup, type Answer } from 'frontend/tests/helpers/fake-setup';
@@ -678,6 +680,8 @@ const READ_MARK =
 const HUB_VERB = /\/api\/pull-requests\/([^/]+\/[^/]+)\/(\d+):([a-z-]+)$/;
 const RANKING = /\/api\/pull-request\/importance\/operations:(set|nudged)$/;
 export const NUDGED_AT = '2026-09-12T09:00:00+00:00';
+export const DESCRIPTION_SAVED_AT = '2026-09-12T09:30:00+00:00';
+const DESCRIBING = /\/api\/pull-request\/description:(save|check)$/;
 export const ONE_PR_READ =
   /^\/api\/(?!health$|pull-requests$|runs$|mentions$|tour$|emojis$|client-errors$)/;
 const THROUGH_THE_HUB = /^\/pr\/([^/]+\/[^/]+)\/(\d+)(\/api\/.*)$/;
@@ -819,6 +823,7 @@ export class FakeBoard {
   reviews: Record<string, Operation> = {};
   fixChecks: FixChecks = { asked: [], skipped: [] };
   summary: PrSummary = prSummary();
+  onGithub: string | null = null;
   anotherSummaryRunning = false;
 
   private countChecks(ignores: (one: CiCheck) => boolean): void {
@@ -1349,7 +1354,9 @@ export class FakeBoard {
       ...this.pullRequest,
       repo: shown.repo,
       number: shown.number,
-      title: shown.title ?? this.pullRequest.title,
+      title: this.pullRequest.description_saved_at
+        ? this.pullRequest.title
+        : (shown.title ?? this.pullRequest.title),
       html_url: shown.url ?? this.pullRequest.html_url,
       branch: shown.branch,
     };
@@ -1695,6 +1702,8 @@ export class FakeBoard {
     if (marking) return this.mark(url, marking[1]!, init);
     const ranking = RANKING.exec(url);
     if (ranking) return this.rank(url, ranking[1]!, init);
+    const describing = DESCRIBING.exec(url);
+    if (describing) return this.describe(url, describing[1]!, init);
     const told = MANAGER_VERB.exec(url);
     if (told) return this.tell(url, told[1]!, init, headers);
     const summarised = SUMMARISE.exec(url);
@@ -1922,6 +1931,53 @@ export class FakeBoard {
       importance: flags.importance ?? null,
       nudged_at: verb === 'nudged' ? NUDGED_AT : null,
     });
+  }
+
+  private describe(url: string, verb: string, init: RequestInit): Response {
+    const body = JSON.parse(init.body as string) as DescriptionSaveRequest;
+    this.posted.push({
+      url,
+      key: '',
+      verb: `${verb}-description`,
+      ifMatch: null,
+      body,
+    });
+    if (this.refusal) {
+      const refusal = this.refusal;
+      this.refusal = null;
+      return this.json(refusal.status, { errors: [refusal] });
+    }
+    const held = this.pullRequest;
+    if (verb === 'check') {
+      this.pullRequest = {
+        ...held,
+        description_checked: body.body === held.body,
+      };
+      return this.json(200, this.pullRequestOf(url));
+    }
+    const onGithub = this.onGithub ?? held.body;
+    if (onGithub !== body.started_from) {
+      const moved: DescriptionSave = {
+        saved: false,
+        on_github: onGithub,
+        pull_request: this.pullRequestOf(url),
+      };
+      return this.json(200, moved);
+    }
+    this.onGithub = null;
+    this.pullRequest = {
+      ...held,
+      title: body.title,
+      body: body.body,
+      description_checked: true,
+      description_saved_at: DESCRIPTION_SAVED_AT,
+    };
+    const saved: DescriptionSave = {
+      saved: true,
+      on_github: body.body,
+      pull_request: this.pullRequestOf(url),
+    };
+    return this.json(200, saved);
   }
 
   private mark(url: string, verb: string, init: RequestInit): Response {
