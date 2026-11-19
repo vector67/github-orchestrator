@@ -94,6 +94,22 @@ module('Acceptance | pull request description', function (hooks) {
     assert.dom('[data-test-description-show]').doesNotExist();
   });
 
+  test('scrolling the summary back to the top brings the description back', async function (assert) {
+    described();
+    longSummary();
+    await visit('/pr/o/r/7/summary');
+    await scrollSummaryDown();
+    const body = document.querySelector<HTMLElement>(
+      '[data-test-summary-markdown]',
+    )!;
+
+    body.scrollTop = 0;
+    await triggerEvent(body, 'scroll');
+
+    assert.dom('[data-test-description]').hasText('🤖 Renames the helper.');
+    assert.dom('[data-test-description-show]').doesNotExist();
+  });
+
   test('Hide folds the description to Show description', async function (assert) {
     described();
     await visit('/pr/o/r/7/summary');

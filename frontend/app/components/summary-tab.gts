@@ -36,9 +36,10 @@ export default class SummaryTab extends Component {
     this.descriptionShown = false;
   };
 
-  foldDescriptionOnScrollDown = (event: Event): void => {
+  foldDescriptionOnScroll = (event: Event): void => {
     const top = (event.target as HTMLElement).scrollTop;
-    if (top > this.summaryTop) this.descriptionShown = false;
+    if (top === 0) this.descriptionShown = true;
+    else if (top > this.summaryTop) this.descriptionShown = false;
     this.summaryTop = top;
   };
 
@@ -286,7 +287,7 @@ export default class SummaryTab extends Component {
           <div
             class="summary-body comment-body"
             data-test-summary-markdown
-            {{on "scroll" this.foldDescriptionOnScrollDown}}
+            {{on "scroll" this.foldDescriptionOnScroll}}
             {{drawn summaryOf this.tab.markdown}}
             {{diagrams this.tab.markdown this.theme.dark}}
           ></div>
