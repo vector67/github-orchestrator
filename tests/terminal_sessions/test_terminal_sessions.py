@@ -118,6 +118,41 @@ def test_a_started_session_is_listed_with_its_command_and_worktree(any_sessions,
     assert (listed.id, listed.argv, listed.worktree) == (started, tuple(FOREVER), str(worktree))
 
 
+def test_a_session_remembers_the_branch_its_worktree_had_checked_out_when_it_started(any_sessions, worktree):
+    (worktree / ".git").mkdir()
+    (worktree / ".git" / "HEAD").write_text("ref: refs/heads/feature/seven\n")
+    any_sessions.start(str(worktree), FOREVER)
+
+    (worktree / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+
+    [listed] = any_sessions.listed()
+    assert listed.branch == "feature/seven"
+
+
+def test_a_session_in_a_linked_worktree_remembers_its_branch(any_sessions, worktree, tmp_path):
+    linked = tmp_path / "repo.git" / "worktrees" / "seven"
+    linked.mkdir(parents=True)
+    (linked / "HEAD").write_text("ref: refs/heads/feature-7\n")
+    (worktree / ".git").write_text(f"gitdir: {linked}\n")
+
+    any_sessions.start(str(worktree), FOREVER)
+
+    [listed] = any_sessions.listed()
+    assert listed.branch == "feature-7"
+
+
+def test_a_session_on_a_detached_head_or_outside_git_has_no_branch(any_sessions, worktree, tmp_path):
+    outside = tmp_path / "plain"
+    outside.mkdir()
+    (worktree / ".git").mkdir()
+    (worktree / ".git" / "HEAD").write_text("9fceb02d0ae598e95dc970b74767f19372d61af8\n")
+
+    any_sessions.start(str(worktree), FOREVER)
+    any_sessions.start(str(outside), FOREVER)
+
+    assert [listed.branch for listed in any_sessions.listed()] == [None, None]
+
+
 def test_sessions_are_listed_in_the_order_they_started(any_sessions, worktree):
     first = any_sessions.start(str(worktree), FOREVER)
     second = any_sessions.start(str(worktree), ["sh", "-c", "sleep 30"])

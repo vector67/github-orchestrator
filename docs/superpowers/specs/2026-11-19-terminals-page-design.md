@@ -14,8 +14,9 @@ idle, plus a chip on the Wall rows of pull requests with a session waiting.
    screen connects to the session's own pull request's websocket, as its
    Terminal tab does.
 3. **Order**: waiting first, the longest wait at the top, then working, then
-   idle. Each row names its pull request and program, says how long the session
-   has been open, and has a Close button that asks once and then ends that live
+   idle. Each row names its pull request, its program and the branch its
+   worktree had checked out when it started, says how long the session has
+   been open, and has a Close button that asks once and then ends that live
    session.
 4. **Working or waiting**:
    - Claude sessions the board starts get hooks through `--settings`:
@@ -42,8 +43,10 @@ idle, plus a chip on the Wall rows of pull requests with a session waiting.
 
 ## Shape
 
-- `terminal_sessions`: `TerminalSessions.watched(now, agent)` answers each
-  session with when it started, its activity and, when waiting, since when.
+- `terminal_sessions`: the holder records the branch the worktree's `HEAD`
+  names when the session starts (none on a detached head or outside git), read
+  from the files, without running git. `TerminalSessions.watched(now, agent)`
+  answers each session with that branch, when it started, its activity and, when waiting, since when.
   `TerminalSessions.close(session)` ends one live session as hanging up ends
   them all.
 - The hub serves `GET /api/terminal-sessions`, every held pull request's

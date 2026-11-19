@@ -9863,6 +9863,16 @@
     "board_url": {
      "type": "string"
     },
+    "branch": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "id": {
      "type": "string"
     },
@@ -9896,6 +9906,7 @@
     "id",
     "argv",
     "worktree",
+    "branch",
     "started_at",
     "activity",
     "waiting_since"

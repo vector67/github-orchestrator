@@ -208,7 +208,8 @@ class PtySessions:
                 self._forget(session)
                 continue
             found.append((fields["started"], fields["pid"],
-                          Session(session, tuple(fields["argv"]), fields["worktree"])))
+                          Session(session, tuple(fields["argv"]), fields["worktree"],
+                                  fields.get("branch"))))
         return [(started, pid, held) for started, pid, held in sorted(found, key=lambda one: one[0])]
 
     def _held(self) -> list[tuple[int, Session]]:

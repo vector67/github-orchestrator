@@ -124,13 +124,13 @@ export default class TerminalsPage extends Component {
         <aside class="term-side">
           {{#each this.rows key="key" as |row|}}
             <div
-              class="watched"
+              class="watched {{if (this.isSelected row) 'on'}}"
               data-test-watched={{row.one.id}}
               data-test-activity={{row.one.activity}}
             >
               <button
                 type="button"
-                class="sess {{if (this.isSelected row) 'on'}}"
+                class="sess"
                 aria-current={{if (this.isSelected row) "true"}}
                 {{on "click" (fn this.open row)}}
               ><span class="watched-head"><span
@@ -141,7 +141,10 @@ export default class TerminalsPage extends Component {
                     data-test-watched-pr
                   >{{row.pr}}</span></span><b
                   data-test-watched-command
-                >{{row.command}}</b><span
+                >{{row.command}}</b>{{#if row.one.branch}}<span
+                    class="where"
+                    data-test-watched-branch
+                  >{{row.one.branch}}</span>{{/if}}<span
                   class="where"
                   data-test-watched-open
                 >{{row.open}}</span></button>

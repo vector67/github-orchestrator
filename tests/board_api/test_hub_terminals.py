@@ -27,10 +27,19 @@ def test_each_session_names_its_pull_request_its_program_and_when_it_started():
 
     assert _listed(_hub(terminals)) == [{
         "repo": REPO, "number": 55, "board_url": "/pr/acme/widgets/55", "id": started,
-        "argv": ["git", "commit"], "worktree": "/w/55",
+        "argv": ["git", "commit"], "worktree": "/w/55", "branch": None,
         "started_at": (NOW - timedelta(minutes=5)).isoformat(), "activity": "working",
         "waiting_since": None,
     }]
+
+
+def test_each_session_names_the_branch_it_started_on(tmp_path):
+    (tmp_path / ".git").mkdir()
+    (tmp_path / ".git" / "HEAD").write_text("ref: refs/heads/feature-55\n")
+    terminals = FakeTerminals()
+    terminals.of(THIRD).start(str(tmp_path), ["zsh", "-l"])
+
+    assert [one["branch"] for one in _listed(_hub(terminals))] == ["feature-55"]
 
 
 def test_waiting_sessions_come_first_with_the_longest_wait_at_the_top_then_working_then_idle():

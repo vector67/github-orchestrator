@@ -11,6 +11,7 @@ class Session:
     id: str
     argv: tuple[str, ...]
     worktree: str
+    branch: str | None
 
 
 class Activity(enum.StrEnum):

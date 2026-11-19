@@ -15,6 +15,7 @@ from pathlib import Path
 
 from github_orchestrator.atomic_write import write_atomically
 from github_orchestrator.log_stamps import OffsetStampedFormatter
+from github_orchestrator.terminal_sessions._branch import branch_of
 from github_orchestrator.terminal_sessions._frames import (
     EXIT,
     INPUT,
@@ -265,6 +266,7 @@ def _held(directory: Path, session: str, worktree: str, argv: list[str]) -> _Hel
     server.listen()
     write_atomically(directory / f"{session}{RECORD}",
                      json.dumps({"pid": os.getpid(), "argv": argv, "worktree": worktree,
+                                 "branch": branch_of(worktree),
                                  "started": time.time_ns()}).encode())
     log.info("terminal session %s started in %s: %s", session, worktree, argv)
     return _Held(directory, session, process, master, server)

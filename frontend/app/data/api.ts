@@ -1375,6 +1375,7 @@ export interface WatchedSession {
   id: string;
   argv: string[];
   worktree: string;
+  branch: string | null;
   started_at: string;
   activity: Activity;
   waiting_since: string | null;

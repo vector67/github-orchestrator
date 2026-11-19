@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 
 from github_orchestrator.domain import Pr
+from github_orchestrator.terminal_sessions._branch import branch_of
 from github_orchestrator.terminal_sessions.interface import (
     Activity,
     Session,
@@ -73,7 +74,7 @@ class FakeTerminalSessions:
     def _started(self, worktree: str, argv: list[str], *, kept: bool) -> str:
         if self.refusal is not None:
             raise FileNotFoundError(2, self.refusal, worktree)
-        session = Session(f"session-{next(self._ids)}", tuple(argv), worktree)
+        session = Session(f"session-{next(self._ids)}", tuple(argv), worktree, branch_of(worktree))
         self.sessions[session.id] = FakeSession(session, kept=kept)
         return session.id
 

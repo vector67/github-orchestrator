@@ -18,6 +18,22 @@ import type { WatchedSession } from 'frontend/data/api';
 
 const NOW = new Date(2026, 10, 19, 14, 0, 0).getTime();
 
+function groundAt(x: number, y: number): string {
+  const under = [...document.querySelectorAll('[data-test-terminals] *')]
+    .filter((one) => {
+      const box = one.getBoundingClientRect();
+      return box.left <= x && x < box.right && box.top <= y && y < box.bottom;
+    })
+    .at(-1);
+  let at: Element | null = under ?? null;
+  while (at) {
+    const ground = getComputedStyle(at).backgroundColor;
+    if (ground !== 'rgba(0, 0, 0, 0)') return ground;
+    at = at.parentElement;
+  }
+  return 'none';
+}
+
 function minutesAgo(minutes: number): string {
   return new Date(NOW - minutes * 60_000).toISOString();
 }
@@ -30,6 +46,7 @@ function watched(over: Partial<WatchedSession> = {}): WatchedSession {
     id: 'shell-1',
     argv: ['/bin/zsh', '-l'],
     worktree: '/Users/me/repositories/o/r',
+    branch: 'feature-7',
     started_at: minutesAgo(5),
     activity: 'idle',
     waiting_since: null,
@@ -123,6 +140,22 @@ module('Acceptance | terminals', function (hooks) {
     ]);
   });
 
+  test('each session names the branch it started on, and one on no branch names none', async function (assert) {
+    onTheHub(
+      { ...WAITING, branch: 'fix/the-cache' },
+      { ...IDLE, branch: null },
+    );
+
+    await visit('/terminals');
+
+    assert
+      .dom('[data-test-watched="claude-1"] [data-test-watched-branch]')
+      .hasText('fix/the-cache');
+    assert
+      .dom('[data-test-watched="shell-1"] [data-test-watched-branch]')
+      .doesNotExist();
+  });
+
   test('the list follows the sessions as the hub sees them', async function (assert) {
     onTheHub(WORKING);
     await visit('/terminals');
@@ -168,6 +201,39 @@ module('Acceptance | terminals', function (hooks) {
         .socketsOf('claude-1')[0]!
         .url.endsWith('/pr/o/r/8/api/terminal/sessions/claude-1'),
     );
+  });
+
+  test('a chosen session’s highlight spans its whole row, out to the far edge past its buttons', async function (assert) {
+    onTheHub(WAITING, IDLE);
+    document.documentElement.style.setProperty('--selected', 'rgb(1, 2, 3)');
+    await visit('/terminals');
+
+    await click('[data-test-watched="claude-1"] .sess');
+
+    const chosen = find(
+      '[data-test-watched="claude-1"]',
+    )!.getBoundingClientRect();
+    const other = find(
+      '[data-test-watched="shell-1"]',
+    )!.getBoundingClientRect();
+    const nearEdge = chosen.right - 3;
+    const highlight = groundAt(chosen.left + 20, chosen.top + 3);
+    assert.notStrictEqual(
+      highlight,
+      groundAt(other.left + 20, other.top + 3),
+      'the chosen row stands out from the others',
+    );
+    assert.strictEqual(
+      groundAt(nearEdge, chosen.top + 3),
+      highlight,
+      'at its far edge',
+    );
+    assert.strictEqual(
+      groundAt(nearEdge, chosen.bottom - 2),
+      highlight,
+      'at its far bottom corner',
+    );
+    document.documentElement.style.removeProperty('--selected');
   });
 
   test('Close asks once, then ends the session and takes it off the list', async function (assert) {

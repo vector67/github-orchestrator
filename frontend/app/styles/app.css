@@ -4802,9 +4802,21 @@ kbd {
   align-items: flex-start;
 }
 
+.watched:not(.on):hover {
+  background: var(--grey-fill);
+}
+
+.watched.on {
+  background: var(--selected);
+}
+
 .watched > .sess {
   flex: 1;
   min-width: 0;
+}
+
+.watched.on > .sess {
+  border-left-color: var(--border-strong);
 }
 
 .watched-head {

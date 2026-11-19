@@ -2398,6 +2398,9 @@ class WatchedSession(BaseModel):
     id: str
     argv: list[str] = Field(description="The command the session runs.")
     worktree: str
+    branch: str | None = Field(description="The branch the worktree had checked out when "
+                                           "the session started, or null on a detached "
+                                           "head or outside git.")
     started_at: str = Field(description="When the session started, ISO 8601.")
     activity: Activity = Field(
         description="`working` while the agent's hooks say a prompt is in hand, or, "
