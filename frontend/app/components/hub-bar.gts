@@ -7,20 +7,27 @@ import { LinkTo } from '@ember/routing';
 import MentionsCounter from 'frontend/components/mentions-counter';
 import SettingsMenu from 'frontend/components/settings-menu';
 import { TODAY_HINT, todayOf, type Said } from 'frontend/data/runs';
+import type RouterService from '@ember/routing/router-service';
 import type HubService from 'frontend/services/hub';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
 import eq from 'frontend/helpers/eq';
 
-interface HubBarSignature {
-  Args: { on: 'wall' | 'runs' | 'terminals' | 'setup' };
-}
+type HubPage = 'wall' | 'runs' | 'terminals' | 'setup';
 
-export default class HubBar extends Component<HubBarSignature> {
+const PAGE_OF_ROUTE: Record<string, HubPage> = {
+  index: 'wall',
+  runs: 'runs',
+  terminals: 'terminals',
+  setup: 'setup',
+};
+
+export default class HubBar extends Component {
   @service declare hub: HubService;
   @service declare store: StoreService;
   @service declare keys: KeysService;
+  @service declare router: RouterService;
 
   @tracked picking = false;
 
@@ -35,6 +42,16 @@ export default class HubBar extends Component<HubBarSignature> {
   willDestroy(): void {
     super.willDestroy();
     this.keys.drop(this.keymap);
+  }
+
+  get on(): HubPage | undefined {
+    const route = (this.router.currentRouteName ?? '').replace(/_loading$/, '');
+    return PAGE_OF_ROUTE[route];
+  }
+
+  get settingUp(): boolean {
+    const { setup } = this.store;
+    return this.on === 'setup' && setup !== null && setup.state !== 'watching';
   }
 
   get chosenLabel(): string {
@@ -85,111 +102,115 @@ export default class HubBar extends Component<HubBarSignature> {
   <template>
     <header class="wall-bar" data-top-bar>
       <span class="wall-name">Orchestrator</span>
-      <nav class="hub-nav">
-        <LinkTo
-          @route="index"
-          data-test-nav="wall"
-          aria-current={{if (eq @on "wall") "page"}}
-        >Wall</LinkTo>
-        <LinkTo
-          @route="runs"
-          data-test-nav="runs"
-          aria-current={{if (eq @on "runs") "page"}}
-        >Runs</LinkTo>
-        <LinkTo
-          @route="terminals"
-          data-test-nav="terminals"
-          aria-current={{if (eq @on "terminals") "page"}}
-        >Terminals</LinkTo>
-        <LinkTo
-          @route="setup"
-          data-test-nav="setup"
-          aria-current={{if (eq @on "setup") "page"}}
-        >Setup</LinkTo>
-      </nav>
-      <span class="repo-filter">
-        <button
-          type="button"
-          class="repo-pick"
-          aria-haspopup="true"
-          aria-expanded={{if this.picking "true" "false"}}
-          title="show the pull requests of some repos only"
-          data-test-repo-filter
-          {{on "click" this.openPicker}}
-        >{{this.chosenLabel}}</button>
-        {{#if this.picking}}
+      {{#if this.settingUp}}
+        <span class="setup-crumb">Setup</span>
+      {{else}}
+        <nav class="hub-nav">
+          <LinkTo
+            @route="index"
+            data-test-nav="wall"
+            aria-current={{if (eq this.on "wall") "page"}}
+          >Wall</LinkTo>
+          <LinkTo
+            @route="runs"
+            data-test-nav="runs"
+            aria-current={{if (eq this.on "runs") "page"}}
+          >Runs</LinkTo>
+          <LinkTo
+            @route="terminals"
+            data-test-nav="terminals"
+            aria-current={{if (eq this.on "terminals") "page"}}
+          >Terminals</LinkTo>
+          <LinkTo
+            @route="setup"
+            data-test-nav="setup"
+            aria-current={{if (eq this.on "setup") "page"}}
+          >Setup</LinkTo>
+        </nav>
+        <span class="repo-filter">
           <button
             type="button"
-            class="repo-scrim"
-            tabindex="-1"
-            aria-label="close the repo filter"
-            {{on "click" this.closePicker}}
-          ></button>
-          <div class="repo-menu" data-test-repo-menu>
+            class="repo-pick"
+            aria-haspopup="true"
+            aria-expanded={{if this.picking "true" "false"}}
+            title="show the pull requests of some repos only"
+            data-test-repo-filter
+            {{on "click" this.openPicker}}
+          >{{this.chosenLabel}}</button>
+          {{#if this.picking}}
             <button
               type="button"
-              class="repo-all"
-              aria-pressed={{if this.store.chosen "false" "true"}}
-              data-test-repo-all
-              {{on "click" this.all}}
-            >All repos</button>
-            {{#each this.store.watching key="@identity" as |repo|}}
-              <span class="repo-choice" data-test-repo-choice={{repo}}>
-                <input
-                  type="checkbox"
-                  class="checkbox"
-                  checked={{this.isChosen repo}}
-                  aria-label="show {{repo}}"
-                  {{on "change" (fn this.toggle repo)}}
-                />
-                <button
-                  type="button"
-                  class="repo-only"
-                  title="show {{repo}} only"
-                  data-test-repo-only
-                  data-test-watching
-                  {{on "click" (fn this.only repo)}}
-                >{{repo}}</button>
-              </span>
-            {{/each}}
-          </div>
-        {{/if}}
-      </span>
-      <span class="grow"></span>
-      <span class="health">
-        {{#if this.poll}}
+              class="repo-scrim"
+              tabindex="-1"
+              aria-label="close the repo filter"
+              {{on "click" this.closePicker}}
+            ></button>
+            <div class="repo-menu" data-test-repo-menu>
+              <button
+                type="button"
+                class="repo-all"
+                aria-pressed={{if this.store.chosen "false" "true"}}
+                data-test-repo-all
+                {{on "click" this.all}}
+              >All repos</button>
+              {{#each this.store.watching key="@identity" as |repo|}}
+                <span class="repo-choice" data-test-repo-choice={{repo}}>
+                  <input
+                    type="checkbox"
+                    class="checkbox"
+                    checked={{this.isChosen repo}}
+                    aria-label="show {{repo}}"
+                    {{on "change" (fn this.toggle repo)}}
+                  />
+                  <button
+                    type="button"
+                    class="repo-only"
+                    title="show {{repo}} only"
+                    data-test-repo-only
+                    data-test-watching
+                    {{on "click" (fn this.only repo)}}
+                  >{{repo}}</button>
+                </span>
+              {{/each}}
+            </div>
+          {{/if}}
+        </span>
+        <span class="grow"></span>
+        <span class="health">
+          {{#if this.poll}}
+            <span
+              class="health-poll {{if this.poll.alarm 'alarm-t'}}"
+              title={{this.poll.text}}
+              data-test-health="poll"
+              data-test-health-alarm={{this.poll.alarm}}
+            >{{#if this.poll.alarm}}<i
+                  class="sq alarm"
+                ></i>{{/if}}{{this.poll.text}}</span>
+          {{/if}}
+          {{#if this.today}}
+            <span
+              title={{TODAY_HINT}}
+              data-test-health="today"
+            >{{this.today}}</span>
+          {{/if}}
+        </span>
+        {{#if this.hub.fontProblem}}
           <span
-            class="health-poll {{if this.poll.alarm 'alarm-t'}}"
-            title={{this.poll.text}}
-            data-test-health="poll"
-            data-test-health-alarm={{this.poll.alarm}}
-          >{{#if this.poll.alarm}}<i
-                class="sq alarm"
-              ></i>{{/if}}{{this.poll.text}}</span>
+            class="font-problem"
+            title={{this.hub.fontProblem}}
+            data-test-font-problem
+          >Board font missing</span>
         {{/if}}
-        {{#if this.today}}
+        {{#if this.hub.update}}
           <span
-            title={{TODAY_HINT}}
-            data-test-health="today"
-          >{{this.today}}</span>
+            class="update-available"
+            title="github-orchestrator {{this.hub.update.version}} is out. Run github-orchestrator update to install it."
+            data-test-update-available
+          >Update available</span>
         {{/if}}
-      </span>
-      {{#if this.hub.fontProblem}}
-        <span
-          class="font-problem"
-          title={{this.hub.fontProblem}}
-          data-test-font-problem
-        >Board font missing</span>
+        <MentionsCounter />
+        <SettingsMenu />
       {{/if}}
-      {{#if this.hub.update}}
-        <span
-          class="update-available"
-          title="github-orchestrator {{this.hub.update.version}} is out. Run github-orchestrator update to install it."
-          data-test-update-available
-        >Update available</span>
-      {{/if}}
-      <MentionsCounter />
-      <SettingsMenu />
     </header>
   </template>
 }

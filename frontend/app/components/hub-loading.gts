@@ -1,24 +1,18 @@
-import Component from '@glimmer/component';
-import { service } from '@ember/service';
-import HubBar from 'frontend/components/hub-bar';
+import type { TOC } from '@ember/component/template-only';
 import Waiting from 'frontend/components/waiting';
-import type HubService from 'frontend/services/hub';
 
 interface HubLoadingSignature {
-  Args: { on: 'wall' | 'runs' };
+  Args: { on: 'wall' | 'runs' | 'terminals' | 'setup' };
 }
 
-export default class HubLoading extends Component<HubLoadingSignature> {
-  @service declare hub: HubService;
+const HubLoading: TOC<HubLoadingSignature> = <template>
+  <div class="page-loading">
+    <p class="work-placeholder" data-test-loading={{@on}}>
+      Loading the
+      {{@on}}…
+    </p>
+    <Waiting />
+  </div>
+</template>;
 
-  <template>
-    <HubBar @on={{@on}} />
-    <div class="page-loading">
-      <p class="work-placeholder" data-test-loading={{@on}}>
-        Loading the
-        {{@on}}…
-      </p>
-      <Waiting />
-    </div>
-  </template>
-}
+export default HubLoading;

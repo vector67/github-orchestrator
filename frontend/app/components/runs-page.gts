@@ -2,7 +2,6 @@ import Component from '@glimmer/component';
 import { service } from '@ember/service';
 import { hash } from '@ember/helper';
 import { LinkTo } from '@ember/routing';
-import HubBar from 'frontend/components/hub-bar';
 import type { FinishedRun } from 'frontend/data/api';
 import { factsOf, rowsOf, type Fact, type RunRow } from 'frontend/data/runs';
 import type HubService from 'frontend/services/hub';
@@ -31,7 +30,6 @@ export default class RunsPage extends Component {
 
   <template>
     <main id="runs" data-test-runs>
-      <HubBar @on="runs" />
       <dl class="runs-watcher">
         {{#each this.facts key="label" as |fact|}}
           <div

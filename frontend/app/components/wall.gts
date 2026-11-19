@@ -13,7 +13,6 @@ import ImportanceConfirm from 'frontend/components/importance-confirm';
 import ReadyConfirm from 'frontend/components/ready-confirm';
 import type { AssignReviewersRequest } from 'frontend/data/api';
 import Glyphs from 'frontend/components/glyphs';
-import HubBar from 'frontend/components/hub-bar';
 import MigrationWait from 'frontend/components/migration-wait';
 import PendingRing from 'frontend/components/pending-ring';
 import StateChip from 'frontend/components/state-chip';
@@ -292,7 +291,6 @@ export default class Wall extends Component<WallSignature> {
   <template>
     {{pageTitle this.tabTitle}}
     <main id="wall" data-test-wall>
-      <HubBar @on="wall" />
       <h1 class="visually-hidden">Pull requests</h1>
       {{#if this.stale}}
         <p class="wall-stale-note" data-test-wall-stale-note>These rows may be

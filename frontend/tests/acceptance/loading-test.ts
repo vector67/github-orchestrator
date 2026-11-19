@@ -121,6 +121,58 @@ module('Acceptance | loading', function (hooks) {
     await visiting;
   });
 
+  test('the terminals page says it is loading the terminals, under the hub bar', async function (assert) {
+    onTheHub();
+    const release = board().hold(/\/api\/terminal-sessions$/);
+
+    const visiting = visit('/terminals');
+    await waitFor('[data-test-loading="terminals"]');
+
+    assert
+      .dom('[data-test-loading="terminals"]')
+      .hasText('Loading the terminals…');
+    assert
+      .dom('[data-test-nav="terminals"]')
+      .hasAttribute('aria-current', 'page');
+
+    release();
+    await visiting;
+  });
+
+  test('the setup page says it is loading the setup, under the hub bar', async function (assert) {
+    onTheHub();
+    const release = board().hold(/\/api\/setup$/);
+
+    const visiting = visit('/setup');
+    await waitFor('[data-test-loading="setup"]');
+
+    assert.dom('[data-test-loading="setup"]').hasText('Loading the setup…');
+    assert.dom('[data-test-nav="setup"]').hasAttribute('aria-current', 'page');
+
+    release();
+    await visiting;
+  });
+
+  test('the hub bar stays up, on the page being opened, while that page loads', async function (assert) {
+    onTheHub();
+    await visit('/');
+    const bar = find('[data-top-bar]');
+    const release = board().hold(/\/api\/terminal-sessions$/);
+
+    const clicking = click('[data-test-nav="terminals"]');
+    await waitFor('[data-test-loading="terminals"]');
+
+    assert.strictEqual(find('[data-top-bar]'), bar);
+    assert
+      .dom('[data-test-nav="terminals"]')
+      .hasAttribute('aria-current', 'page');
+
+    release();
+    await clicking;
+
+    assert.strictEqual(find('[data-top-bar]'), bar);
+  });
+
   test('after ten seconds the loading board says what it is still waiting on', async function (assert) {
     const release = board().hold(/\/api\/conversations$/);
 

@@ -4,7 +4,6 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import AreYouSure from 'frontend/components/are-you-sure';
-import HubBar from 'frontend/components/hub-bar';
 import showsSession from 'frontend/modifiers/shows-session';
 import type { WatchedSession } from 'frontend/data/api';
 import { elapsedOf } from 'frontend/data/dashboard';
@@ -119,7 +118,6 @@ export default class TerminalsPage extends Component {
 
   <template>
     <div id="terminals" data-test-terminals>
-      <HubBar @on="terminals" />
       <main class="terminals-split">
         <aside class="term-side">
           {{#each this.rows key="key" as |row|}}
