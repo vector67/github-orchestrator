@@ -51,6 +51,11 @@ export interface ResetControls {
   unqueue: () => void;
 }
 
+export interface KeptScroll {
+  top: number;
+  at: string;
+}
+
 class PerPr {
   @tracked failed = false;
   @tracked source: DiffSource = 'origin';
@@ -65,6 +70,7 @@ class PerPr {
   @tracked confirmingReset: ResetWhen | null = null;
   asked: string | null = null;
   fetching: Promise<void> | null = null;
+  scrolled: KeptScroll | null = null;
 
   constructor(readonly scope: PrScope) {}
 }
@@ -475,6 +481,14 @@ export default class PullRequestDiffService extends Service {
     this.dwellTimer = null;
     this.dwelt = null;
   };
+
+  keepScroll = (top: number, at: string) => {
+    this.pr.scrolled = { top, at };
+  };
+
+  get keptScroll(): KeptScroll | null {
+    return this.pr.scrolled;
+  }
 
   reachedBottom = (pane: HTMLElement) => {
     if (this.commitBox.autoRead !== 'bottom' || this.showing) return;
