@@ -312,6 +312,8 @@ export type Read = 'answered' | 'updated' | 'unchanged' | 'failed';
 
 export type Restart = 'going' | 'failed' | 'back';
 
+export type Reviewable = ReviewerGroup[] | null | { trouble: string };
+
 interface Restarting {
   pid: number | null;
   operation: string | null;
@@ -522,6 +524,7 @@ export default class StoreService extends Service {
   @tracked emojis: Emoji[] = [];
   @tracked private mentionables: Record<string, MentionableList> = {};
   private mentionableAsked = new Set<string>();
+  @tracked private mentionableTrouble: Record<string, string> = {};
   private ending = new Set<string>();
   private restarting: Restarting | null = null;
   private streams: SharedStreams | null = null;
@@ -1114,10 +1117,12 @@ export default class StoreService extends Service {
     );
   }
 
-  reviewable(pr: Numbered): ReviewerGroup[] | null {
+  reviewable(pr: Numbered): Reviewable {
     const listed = this.mentionables[pr.repo];
     if (!listed?.logins.length && this.mentionableAsked.has(pr.repo))
       return null;
+    const trouble = this.mentionableTrouble[pr.repo];
+    if (trouble !== undefined) return { trouble };
     return reviewersOf(
       this.prs[keyOf(pr.repo, pr.number)],
       listed ?? { logins: [], reviewers: [] },
@@ -1134,10 +1139,20 @@ export default class StoreService extends Service {
         (answered) => {
           if (answered.logins.length === 0)
             this.mentionableAsked.delete(pr.repo);
+          this.mentionableTrouble = Object.fromEntries(
+            Object.entries(this.mentionableTrouble).filter(
+              ([repo]) => repo !== pr.repo,
+            ),
+          );
           this.mentionables = { ...this.mentionables, [pr.repo]: answered };
         },
         (trouble: unknown) => {
           this.mentionableAsked.delete(pr.repo);
+          this.mentionableTrouble = {
+            ...this.mentionableTrouble,
+            [pr.repo]:
+              trouble instanceof Error ? trouble.message : String(trouble),
+          };
           this.mentionables = { ...this.mentionables };
           return reportError('mentionable', trouble);
         },

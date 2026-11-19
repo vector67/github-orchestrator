@@ -4,14 +4,19 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import type Owner from '@ember/owner';
 import type { AssignReviewersRequest } from 'frontend/data/api';
-import type { Reviewer, ReviewerGroup } from 'frontend/services/store';
+import type {
+  Reviewable,
+  Reviewer,
+  ReviewerGroup,
+} from 'frontend/services/store';
+import Waiting from 'frontend/components/waiting';
 import didChange from 'frontend/modifiers/did-change';
 import modal from 'frontend/modifiers/modal';
 
 interface AssignReviewersSignature {
   Args: {
     number: number;
-    groups: ReviewerGroup[] | null;
+    groups: Reviewable;
     draft: boolean;
     pick: AssignReviewersRequest | null;
     assign: (pick: AssignReviewersRequest) => void;
@@ -85,12 +90,16 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
     this.pick = args.pick ?? NOBODY;
   }
 
+  get groups(): ReviewerGroup[] {
+    return Array.isArray(this.args.groups) ? this.args.groups : [];
+  }
+
   get everyone(): Reviewer[] {
-    return (this.args.groups ?? []).flatMap((group) => group.people);
+    return this.groups.flatMap((group) => group.people);
   }
 
   get shown(): ReviewerGroup[] {
-    return matching(this.args.groups ?? [], this.typed);
+    return matching(this.groups, this.typed);
   }
 
   get listed(): Reviewer[] {
@@ -103,6 +112,11 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
 
   get asking(): boolean {
     return this.args.groups === null;
+  }
+
+  get trouble(): string | null {
+    const groups = this.args.groups;
+    return groups && 'trouble' in groups ? groups.trouble : null;
   }
 
   get nobodyToAsk(): boolean {
@@ -217,8 +231,13 @@ export default class AssignReviewers extends Component<AssignReviewersSignature>
           {{on "keydown" this.keyed}}
         />
         {{#if this.asking}}
-          <p class="note" data-test-reviewers-asking>Asking GitHub who can
-            review…</p>
+          <p class="work-placeholder" data-test-loading="reviewers">Loading the
+            reviewers…</p>
+          <Waiting @on="/api/mentionable" />
+        {{else if this.trouble}}
+          <p class="refusal" data-refused="true" data-test-reviewers-trouble>The
+            reviewers could not load:
+            {{this.trouble}}</p>
         {{else if this.nobodyToAsk}}
           <p class="note">Nobody to ask yet: GitHub has not said who can review.</p>
         {{else if this.listed.length}}

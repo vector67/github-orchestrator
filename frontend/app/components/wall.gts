@@ -31,7 +31,7 @@ import type HubService from 'frontend/services/hub';
 import type StoreService from 'frontend/services/store';
 import type {
   Outstanding,
-  ReviewerGroup,
+  Reviewable,
   WallRow,
   WallSection,
 } from 'frontend/services/store';
@@ -177,7 +177,7 @@ export default class Wall extends Component<WallSignature> {
     void this.controls.assignWhenReady(this.controls.ofRow(pr), pick);
   };
 
-  groupsOf = (pr: WallRow): ReviewerGroup[] | null => this.store.reviewable(pr);
+  groupsOf = (pr: WallRow): Reviewable => this.store.reviewable(pr);
 
   open = (pr: WallRow) => {
     void this.router.transitionTo(pageOf(pr));
