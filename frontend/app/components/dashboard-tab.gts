@@ -69,7 +69,7 @@ import type StoreService from 'frontend/services/store';
 import type {
   Outstanding,
   RerequestPrompt as Prompt,
-  ReviewerGroup,
+  Reviewable,
   Summaries,
 } from 'frontend/services/store';
 import type TerminalService from 'frontend/services/terminal';
@@ -378,7 +378,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
     return this.on?.shown.drawn.system.assign_when_ready ?? null;
   }
 
-  get groups(): ReviewerGroup[] | null {
+  get groups(): Reviewable {
     const pr = this.here.pr;
     return pr ? this.store.reviewable(pr) : null;
   }

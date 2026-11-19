@@ -7,7 +7,7 @@ import { on } from '@ember/modifier';
 import { LinkTo } from '@ember/routing';
 import type { AssignReviewersRequest } from 'frontend/data/api';
 import type StoreService from 'frontend/services/store';
-import type { Outstanding, ReviewerGroup } from 'frontend/services/store';
+import type { Outstanding, Reviewable } from 'frontend/services/store';
 import modal from 'frontend/modifiers/modal';
 import AssignReviewers from 'frontend/components/assign-reviewers';
 import Glyphs from 'frontend/components/glyphs';
@@ -19,7 +19,7 @@ interface ReadyConfirmSignature {
     repo: string;
     number: number;
     outstanding: Outstanding | null;
-    groups: ReviewerGroup[] | null;
+    groups: Reviewable;
     mark: () => void;
     assign: (pick: AssignReviewersRequest) => void;
     assignWhenReady: (pick: AssignReviewersRequest) => void;

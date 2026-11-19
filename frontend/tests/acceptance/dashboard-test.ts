@@ -1579,8 +1579,9 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-reviewer="carol"] input').isChecked();
   });
 
-  test('while GitHub is being asked who can review, Assign reviewers says so', async function (assert) {
-    board().mentionable = ['anna'];
+  test('while the reviewers load, Assign reviewers shows the board’s loading placeholder, and the list replaces it', async function (assert) {
+    board().mentionable = ['anna', 'bob'];
+    board().reviewers = [{ login: 'bob', asked: 4 }];
     onTheHub();
     await visit('/pr/o/r/7/dashboard');
     const release = board().hold(/\/api\/mentionable$/);
@@ -1589,13 +1590,68 @@ module('Acceptance | dashboard', function (hooks) {
     await waitFor('[data-test-assign-reviewers]');
 
     assert
-      .dom('[data-test-assign-reviewers]')
-      .containsText('Asking GitHub who can review…');
+      .dom('[data-test-assign-reviewers] [data-test-loading="reviewers"]')
+      .hasText('Loading the reviewers…');
     assert.dom('[data-test-login]').doesNotExist();
 
     release();
     await pressing;
 
+    assert.dom('[data-test-loading="reviewers"]').doesNotExist();
+    assert.deepEqual(texts('[data-test-reviewer-group]'), [
+      'Usually asked',
+      'Everyone else',
+    ]);
+    assert.deepEqual(texts('[data-test-login]'), ['bob', 'anna']);
+  });
+
+  test('once loaded with nobody usually asked, Assign reviewers shows no loading placeholder', async function (assert) {
+    board().mentionable = ['anna'];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.dom('[data-test-loading="reviewers"]').doesNotExist();
+    assert.dom('[data-test-reviewer-group]').doesNotExist();
+    assert.deepEqual(texts('[data-test-login]'), ['anna']);
+  });
+
+  test('once loaded with nobody to ask, Assign reviewers shows no loading placeholder', async function (assert) {
+    board().mentionable = [];
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.dom('[data-test-loading="reviewers"]').doesNotExist();
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .containsText('Nobody to ask yet');
+  });
+
+  test('when the reviewers fail to load, Assign reviewers says so and why, and asks again when reopened', async function (assert) {
+    board().mentionable = ['anna'];
+    board().broken = /\/api\/mentionable$/;
+    onTheHub();
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('R');
+
+    assert.dom('[data-test-loading="reviewers"]').doesNotExist();
+    assert
+      .dom('[data-test-assign-reviewers] [data-test-reviewers-trouble]')
+      .hasAttribute('data-refused', 'true')
+      .hasText('The reviewers could not load: connection refused');
+    assert
+      .dom('[data-test-assign-reviewers]')
+      .doesNotContainText('Nobody to ask yet');
+
+    board().broken = null;
+    await press('Escape');
+    await press('R');
+
+    assert.dom('[data-test-reviewers-trouble]').doesNotExist();
     assert.deepEqual(texts('[data-test-login]'), ['anna']);
   });
 

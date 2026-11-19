@@ -4346,7 +4346,7 @@ kbd {
   color: var(--text);
   background: var(--page);
   border: 1px solid var(--hairline);
-  font-family: var(--body-stack, system-ui, sans-serif);
+  font: inherit;
   resize: vertical;
 }
 
