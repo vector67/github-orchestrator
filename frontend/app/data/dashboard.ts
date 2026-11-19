@@ -713,6 +713,7 @@ export interface Row {
   hint: string;
   value: string;
   alarm: boolean;
+  warn: boolean;
   quiet: boolean;
   rebase: boolean;
   ignoreCi: string | null;
@@ -725,6 +726,7 @@ function row(key: string, label: string, value: string, tone = ''): Row {
     hint: ROW_HINTS[key] ?? '',
     value,
     alarm: tone === 'alarm',
+    warn: tone === 'warn',
     quiet: tone === 'quiet',
     rebase: false,
     ignoreCi: null,
@@ -770,6 +772,7 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
     );
   }
   const facts = polledOf(shown);
+  const wrong = summaries.role === 'author' ? 'alarm' : 'warn';
   const ci = facts.ci_status;
   const ignored = ignoredOf(facts);
   rows.push({
@@ -777,7 +780,7 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
       'ci',
       'CI',
       ci,
-      ci === 'failing' ? 'alarm' : ci === 'passing' ? 'quiet' : '',
+      ci === 'failing' ? wrong : ci === 'passing' ? 'quiet' : '',
     ),
     ignoreCi: ignored.length
       ? `${ignored.length} ignored`
@@ -794,7 +797,7 @@ function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
     rows.push(row('mergeable', 'Mergeable', 'no, agent rebasing'));
   else
     rows.push({
-      ...row('mergeable', 'Mergeable', 'no', 'alarm'),
+      ...row('mergeable', 'Mergeable', 'no', wrong),
       rebase: true,
     });
   const decision = facts.review_decision;
@@ -1384,6 +1387,7 @@ export interface Reading {
   system: Row[];
   since: string[] | null;
   rebaseIsNext: boolean;
+  notYours: boolean;
   draft: boolean;
   muted: boolean;
   dismiss: DismissWording;
@@ -1444,6 +1448,7 @@ export function dashboardOf(
     system: systemRows(shown, summaries, now),
     since: frozen ? null : since,
     rebaseIsNext: rebaseIsNext(shown, next),
+    notYours: summaries.role === 'reviewer',
     draft: next.flags.includes('draft'),
     muted: next.muted,
     dismiss: dismissOf(shown),

@@ -2772,6 +2772,11 @@ kbd {
   border-color: var(--red);
 }
 
+.sq.warn {
+  background: var(--yellow);
+  border-color: var(--yellow-text);
+}
+
 .sq.park {
   background: var(--grey);
   border-color: var(--grey);

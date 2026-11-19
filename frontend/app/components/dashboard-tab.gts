@@ -38,6 +38,7 @@ import {
 } from 'frontend/data/dashboard';
 import {
   areYouSureOf,
+  notYoursAsksOf,
   opensDialog,
   prLabelOf,
   RELEASE_ASKS,
@@ -112,7 +113,8 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   @service('pr-controls') declare controls: PrControlsService;
 
   @tracked pane: Pane = 'notes';
-  @tracked asking: Control | 'importance' | 'ignore-ci' | null = null;
+  @tracked asking:
+    Control | 'importance' | 'ignore-ci' | 'ignore-ci-not-yours' | null = null;
 
   readonly palette = new GitPaletteState({
     run: (keys) => this.controls.runGit(this.on!, keys),
@@ -292,8 +294,14 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   }
 
   askIgnoreCi = () => {
-    this.asking = 'ignore-ci';
+    this.asking = this.reading?.notYours ? 'ignore-ci-not-yours' : 'ignore-ci';
   };
+
+  get rebaseAsks(): Asking | null {
+    return this.reading?.notYours
+      ? notYoursAsksOf('rebase', this.number ?? 0)
+      : null;
+  }
 
   ignoreCi = (asked: IgnoreCiRequest) => {
     this.asking = null;
@@ -330,6 +338,9 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   get yesOrNo(): Asking | null {
     const asking = this.asking;
     if (asking === 'release') return RELEASE_ASKS;
+    if (asking === 'ignore-ci-not-yours') {
+      return notYoursAsksOf('ignore-ci', this.number ?? 0);
+    }
     if (asking !== 'close' && asking !== 'take-over') return null;
     return areYouSureOf(asking, this.number ?? 0);
   }
@@ -337,6 +348,10 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
   confirmYes = () => {
     const asking = this.asking;
     this.cancelAsking();
+    if (asking === 'ignore-ci-not-yours') {
+      this.asking = 'ignore-ci';
+      return;
+    }
     const on = this.on;
     if (!on) return;
     if (asking === 'close') void this.controls.close(on);
@@ -889,17 +904,24 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
                     data-test-label
                   >{{one.label}}</span>
                   <span
-                    class="{{if one.quiet 'quiet'}} {{if one.alarm 'alarm-t'}}"
+                    class="{{if one.quiet 'quiet'}}
+                      {{if one.alarm 'alarm-t'}}
+                      {{if one.warn 'alarm-t'}}"
                   >{{#if one.alarm}}<i
                         class="sq alarm"
                         data-test-alarm
+                      ></i>{{/if}}{{#if one.warn}}<i
+                        class="sq warn"
+                        data-test-warn
                       ></i>{{/if}}<span
                       data-test-value
                     >{{one.value}}</span>{{#if one.rebase}}
-                      <RebaseButton />{{/if}}{{#if one.ignoreCi}}
+                      <RebaseButton @asks={{this.rebaseAsks}} />{{/if}}{{#if
+                      one.ignoreCi
+                    }}
                       <button
                         type="button"
-                        class="btn"
+                        class="btn {{if this.reading.notYours 'danger'}}"
                         disabled={{this.ciHeld}}
                         data-opens-dialog="true"
                         data-test-ignore-ci
