@@ -50,6 +50,72 @@ module('Acceptance | pull request description', function (hooks) {
     assert.dom('[data-test-description-edit]').hasText('Edit');
   });
 
+  function longSummary(): void {
+    board().summary = prSummary({
+      head_sha: 'c0ffee1',
+      exit_status: 0,
+      finished: '2026-09-12T10:00:00Z',
+      markdown: Array.from({ length: 200 }, (_, n) => `Paragraph ${n}.`).join(
+        '\n\n',
+      ),
+    });
+  }
+
+  async function scrollSummaryDown(): Promise<void> {
+    const body = document.querySelector<HTMLElement>(
+      '[data-test-summary-markdown]',
+    )!;
+    body.scrollTop += 200;
+    await triggerEvent(body, 'scroll');
+  }
+
+  test('scrolling the summary down folds the description to Show description beside the title, which opens it again with Edit and Hide', async function (assert) {
+    described();
+    longSummary();
+    await visit('/pr/o/r/7/summary');
+
+    assert.dom('[data-test-description-show]').doesNotExist();
+    assert.dom('[data-test-description-hide]').hasText('Hide');
+
+    await scrollSummaryDown();
+
+    assert.dom('[data-test-description]').doesNotExist();
+    assert.dom('[data-test-description-edit]').doesNotExist();
+    assert.dom('[data-test-description-hide]').doesNotExist();
+    assert
+      .dom('[data-test-summary-title-row] [data-test-description-show]')
+      .hasText('Show description');
+
+    await click('[data-test-description-show]');
+
+    assert.dom('[data-test-description]').hasText('🤖 Renames the helper.');
+    assert.dom('[data-test-description-edit]').hasText('Edit');
+    assert.dom('[data-test-description-hide]').hasText('Hide');
+    assert.dom('[data-test-description-show]').doesNotExist();
+  });
+
+  test('Hide folds the description to Show description', async function (assert) {
+    described();
+    await visit('/pr/o/r/7/summary');
+
+    await click('[data-test-description-hide]');
+
+    assert.dom('[data-test-description]').doesNotExist();
+    assert.dom('[data-test-description-show]').hasText('Show description');
+  });
+
+  test('scrolling the summary while editing the description keeps the editor open', async function (assert) {
+    described();
+    longSummary();
+    await visit('/pr/o/r/7/summary');
+    await click('[data-test-description-edit]');
+    await fillIn('[data-test-description-text]', '🤖 Your words.');
+
+    await scrollSummaryDown();
+
+    assert.dom('[data-test-description-text]').hasValue('🤖 Your words.');
+  });
+
   test('Edit opens the title and the markdown in a box with Write and Preview, and Save writes both and shows them', async function (assert) {
     described();
     await visit('/pr/o/r/7/summary');
