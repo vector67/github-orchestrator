@@ -4,18 +4,15 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import type RouterService from '@ember/routing/router-service';
-import { modifier } from 'ember-modifier';
 import DeferMention from 'frontend/components/defer-mention';
 import { pageOf } from 'frontend/data/wall';
+import actionsMenu from 'frontend/modifiers/actions-menu';
 import navigates from 'frontend/modifiers/navigates';
 import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import type StoreService from 'frontend/services/store';
 import type { MentionRow } from 'frontend/services/store';
 import type ToastsService from 'frontend/services/toasts';
-
-const EDGE = 8;
-const GAP = 4;
 
 export default class MentionsCounter extends Component {
   @service declare router: RouterService;
@@ -31,14 +28,6 @@ export default class MentionsCounter extends Component {
     take: (key) => {
       if (key !== 'Escape') return false;
       this.close();
-      return true;
-    },
-  };
-
-  private readonly actionKeys: Keymap = {
-    take: (key) => {
-      if (key !== 'Escape') return false;
-      this.acting = null;
       return true;
     },
   };
@@ -133,39 +122,6 @@ export default class MentionsCounter extends Component {
       this.toasts.say(`Mention not dismissed: ${dismissed.why}`, 'failed');
   };
 
-  shown = modifier((element: HTMLElement) => {
-    const arrow = element.closest('.mention')!.querySelector('.mention-more')!;
-    const by = arrow.getBoundingClientRect();
-    element.showPopover();
-    const below = by.bottom + GAP;
-    const fitsBelow = below + element.offsetHeight <= window.innerHeight - EDGE;
-    const top = fitsBelow ? below : by.top - GAP - element.offsetHeight;
-    element.style.top = `${Math.max(EDGE, top)}px`;
-    const room = window.innerWidth - element.offsetWidth - EDGE;
-    element.style.left = `${Math.max(EDGE, Math.min(by.right - element.offsetWidth, room))}px`;
-    const moved = (scrolled: Event) => {
-      if (!element.contains(scrolled.target as Node)) this.acting = null;
-    };
-    const resized = () => {
-      this.acting = null;
-    };
-    const outside = (pressed: Event) => {
-      const target = pressed.target as Node;
-      if (!element.contains(target) && !arrow.contains(target))
-        this.acting = null;
-    };
-    document.addEventListener('scroll', moved, true);
-    window.addEventListener('resize', resized);
-    document.addEventListener('mousedown', outside, true);
-    this.keys.push('dialog', this.actionKeys);
-    return () => {
-      document.removeEventListener('scroll', moved, true);
-      window.removeEventListener('resize', resized);
-      document.removeEventListener('mousedown', outside, true);
-      this.keys.drop(this.actionKeys);
-    };
-  });
-
   <template>
     <span class="mentions">
       <button
@@ -243,7 +199,7 @@ export default class MentionsCounter extends Component {
               {{/if}}
               <button
                 type="button"
-                class="mention-more"
+                class="row-more"
                 aria-label="Actions for this mention"
                 aria-haspopup="menu"
                 aria-expanded={{if (this.isActing mention) "true" "false"}}
@@ -252,22 +208,22 @@ export default class MentionsCounter extends Component {
               >▾</button>
               {{#if (this.isActing mention)}}
                 <div
-                  class="mention-actions"
+                  class="row-actions"
                   popover="manual"
                   role="menu"
                   data-test-mention-actions
-                  {{this.shown}}
+                  {{actionsMenu ".row-more" this.keys this.leaveActions}}
                 >
                   <button
                     type="button"
-                    class="mention-action"
+                    class="row-action"
                     role="menuitem"
                     data-test-mention-action="context"
                     {{on "click" (fn this.go mention)}}
                   >See in context</button>
                   <a
                     href={{mention.url}}
-                    class="mention-action"
+                    class="row-action"
                     role="menuitem"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -277,7 +233,7 @@ export default class MentionsCounter extends Component {
                   {{#if mention.deferredUntil}}
                     <button
                       type="button"
-                      class="mention-action"
+                      class="row-action"
                       role="menuitem"
                       data-test-mention-action="stop-deferring"
                       {{on "click" (fn this.stopDeferring mention)}}
@@ -285,7 +241,7 @@ export default class MentionsCounter extends Component {
                   {{else}}
                     <button
                       type="button"
-                      class="mention-action"
+                      class="row-action"
                       role="menuitem"
                       data-test-mention-action="defer"
                       {{on "click" (fn this.defer mention)}}
@@ -293,7 +249,7 @@ export default class MentionsCounter extends Component {
                   {{/if}}
                   <button
                     type="button"
-                    class="mention-action"
+                    class="row-action"
                     role="menuitem"
                     data-test-mention-action="dismiss"
                     {{on "click" (fn this.dismiss mention)}}

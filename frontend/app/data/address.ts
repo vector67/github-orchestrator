@@ -31,3 +31,7 @@ export function copyDirectory(path: string): Promise<string> {
 export function copyPath(path: string): Promise<string> {
   return copied(path, 'path');
 }
+
+export function copyBranch(branch: string): Promise<string> {
+  return copied(branch, 'branch');
+}

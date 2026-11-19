@@ -1739,6 +1739,27 @@ export default class StoreService extends Service {
     return answer;
   }
 
+  async openShellBeside(one: WatchedSession): Promise<Tried<void>> {
+    const answer = await tried(
+      'open shell beside a session',
+      this.shellBeside(one),
+    );
+    if (answer.done) await this.readAgain({ kind: 'terminals' });
+    return answer;
+  }
+
+  private async shellBeside(one: WatchedSession): Promise<void> {
+    if (one.thread === null) {
+      await posted(`${one.board_url}/api/terminal/sessions`, null, {
+        keys: 'new',
+      });
+      return;
+    }
+    const thread = `${one.board_url}${under(one.thread)}`;
+    const { etag } = await fetched<Conversation>(thread);
+    await posted(`${thread}/operations:open-shell`, etag, {});
+  }
+
   async dismissMention(asked: DismissMentionRequest): Promise<Tried<void>> {
     const answer = await tried(
       'dismiss mention',

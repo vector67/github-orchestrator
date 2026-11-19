@@ -16,8 +16,21 @@ idle, plus a chip on the Wall rows of pull requests with a session waiting.
 3. **Order**: waiting first, the longest wait at the top, then working, then
    idle. Each row names its pull request, its program and the branch its
    worktree had checked out when it started, says how long the session has
-   been open, and has a Close button that asks once and then ends that live
-   session.
+   been open, and has a ▾ arrow that opens its actions menu, the mentions
+   list's menu placed in the top layer at the arrow:
+   - **Open pull request**, **Open diff**: the session's pull request board, and
+     its Diff tab.
+   - **Open in Terminal tab**: the pull request's Terminal tab, with this
+     session chosen (`?session=<id>`).
+   - **Fullscreen**: this session's screen over the whole page, until its ×.
+   - **New shell here**: a login shell in the same worktree: the pull
+     request's own (`POST /api/terminal/sessions`, keys `new`), or, for a
+     session a thread opened, the thread's (`:open-shell` on that thread).
+   - **Copy worktree path**, **Copy branch name**: to the clipboard; the second
+     is greyed out for a session on no branch.
+   - **Open conversation**: the thread that opened the session; greyed out for
+     a session no thread opened.
+   - **Close**: asks once, then ends that live session.
 4. **Working or waiting**:
    - Claude sessions the board starts get hooks through `--settings`:
      `UserPromptSubmit` writes `working` and `Stop` writes `waiting` into the
@@ -47,6 +60,8 @@ idle, plus a chip on the Wall rows of pull requests with a session waiting.
   names when the session starts (none on a detached head or outside git), read
   from the files, without running git. `TerminalSessions.watched(now, agent)`
   answers each session with that branch, when it started, its activity and, when waiting, since when.
+  A thread's fix, answer and shell sessions also record the thread's key, passed
+  down from `agent_runs` through `PrProcesses.split`.
   `TerminalSessions.close(session)` ends one live session as hanging up ends
   them all.
 - The hub serves `GET /api/terminal-sessions`, every held pull request's

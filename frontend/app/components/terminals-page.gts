@@ -4,6 +4,7 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import AreYouSure from 'frontend/components/are-you-sure';
+import SessionActions from 'frontend/components/session-actions';
 import showsSession from 'frontend/modifiers/shows-session';
 import type { WatchedSession } from 'frontend/data/api';
 import { elapsedOf } from 'frontend/data/dashboard';
@@ -55,6 +56,7 @@ export default class TerminalsPage extends Component {
 
   @tracked shown: { key: string; session: Session } | null = null;
   @tracked closing: WatchedSession | null = null;
+  @tracked fullscreen = false;
 
   get rows(): Row[] {
     return (this.store.watchedSessions ?? []).map((one) => ({
@@ -80,6 +82,15 @@ export default class TerminalsPage extends Component {
 
   open = (row: Row) => {
     this.shown = { key: row.key, session: this.terminal.watch(row.one) };
+  };
+
+  showFullscreen = (one: WatchedSession) => {
+    this.shown = { key: keyOf(one), session: this.terminal.watch(one) };
+    this.fullscreen = true;
+  };
+
+  leaveFullscreen = () => {
+    this.fullscreen = false;
   };
 
   leave = () => {
@@ -146,12 +157,12 @@ export default class TerminalsPage extends Component {
                   class="where"
                   data-test-watched-open
                 >{{row.open}}</span></button>
-              <button
-                type="button"
-                class="btn watched-close"
-                data-test-watched-close={{row.one.id}}
-                {{on "click" (fn this.askToClose row.one)}}
-              >Close</button>
+              <SessionActions
+                @one={{row.one}}
+                @command={{row.command}}
+                @fullscreen={{this.showFullscreen}}
+                @close={{this.askToClose}}
+              />
             </div>
           {{else}}
             <p class="note" data-test-terminals-empty>No terminal session is
@@ -160,10 +171,20 @@ export default class TerminalsPage extends Component {
         </aside>
         <section
           class="tty"
+          data-fullscreen={{if this.fullscreen "true"}}
           data-tty-theme={{if this.terminal.light "light" "dark"}}
           data-tty-scheme={{this.terminal.scheme}}
           data-test-screen
         >
+          {{#if this.fullscreen}}
+            <button
+              type="button"
+              class="tty-corner"
+              aria-label="Leave fullscreen"
+              data-test-terminal-leave-fullscreen
+              {{on "click" this.leaveFullscreen}}
+            >×</button>
+          {{/if}}
           {{#if this.selected}}
             <div
               class="tty-host"

@@ -90,6 +90,23 @@ module('Acceptance | terminal', function (hooks) {
     assert.ok(true, 'the screen shows what the session printed');
   });
 
+  test('a link naming a session arrives with that session chosen, not the newest', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [
+      SHELL,
+      { id: 'git-1', argv: ['git', 'commit'], worktree: SHELL.worktree },
+    ];
+
+    await visit('/pr/o/r/7/terminal?session=shell-1');
+
+    assert
+      .dom('[data-test-session="shell-1"]')
+      .hasAttribute('aria-current', 'true');
+    assert
+      .dom('[data-test-session="git-1"]')
+      .doesNotHaveAttribute('aria-current');
+  });
+
   test('the page tells the session its size and sends what you type in the terminal', async function (assert) {
     onTheHub();
     board().terminalSessions = [SHELL];

@@ -3419,7 +3419,7 @@ kbd {
   text-decoration: none;
 }
 
-.mention-more {
+.row-more {
   flex: none;
   width: 24px;
   height: 24px;
@@ -3431,17 +3431,17 @@ kbd {
   border: 1px solid var(--border-strong);
 }
 
-.mention-more:hover {
+.row-more:hover {
   color: var(--text);
 }
 
-.mention-more[aria-expanded="true"] {
+.row-more[aria-expanded="true"] {
   color: var(--page);
   background: var(--text);
   border-color: var(--text);
 }
 
-.mention-actions {
+.row-actions {
   inset: auto;
   min-width: 180px;
   margin: 0;
@@ -3450,12 +3450,12 @@ kbd {
   border: 2px solid var(--border-strong);
 }
 
-.mention-actions:popover-open {
+.row-actions:popover-open {
   display: flex;
   flex-direction: column;
 }
 
-.mention-action {
+.row-action {
   display: flex;
   gap: 12px;
   justify-content: space-between;
@@ -3473,16 +3473,16 @@ kbd {
   border-bottom: 1px solid var(--hairline);
 }
 
-.mention-action:last-child {
+.row-action:last-child {
   border-bottom: 0;
 }
 
-.mention-action:disabled {
+.row-action:disabled {
   cursor: default;
   color: var(--muted);
 }
 
-.mention-action:hover:not(:disabled) {
+.row-action:hover:not(:disabled) {
   background: var(--grey-fill);
 }
 
@@ -4822,8 +4822,7 @@ kbd {
   align-items: baseline;
 }
 
-.watched-close {
-  flex: none;
+.watched-more {
   margin: 7px 12px 0 0;
 }
 
