@@ -9,6 +9,7 @@ import type HereService from 'frontend/services/here';
 import type { PrScope } from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
 import type { Asked } from 'frontend/services/store';
+import type TerminalService from 'frontend/services/terminal';
 
 export const DOWN = 'the board server is not answering';
 const HEAVY = 'the system is under heavy load';
@@ -124,6 +125,7 @@ interface Polling {
 export default class ReachabilityService extends Service {
   @service declare here: HereService;
   @service declare store: StoreService;
+  @service declare terminal: TerminalService;
 
   @tracked private healthAnswers = false;
   @tracked private revision = 0;
@@ -151,7 +153,8 @@ export default class ReachabilityService extends Service {
 
   get banner(): string | null {
     void this.revision;
-    return this.reaches.some((one) => one.down) ? this.outage : null;
+    if (this.reaches.some((one) => one.down)) return this.outage;
+    return this.terminal.slow ? HEAVY : null;
   }
 
   private kept<R extends Reach>(one: R, scope?: PrScope): R {

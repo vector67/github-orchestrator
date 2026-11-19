@@ -16,6 +16,15 @@ const MONO =
 
 const DEFAULT_GROUND = 'default';
 
+const PING_EVERY_MS = 1000;
+const SLOW_ROUND_TRIP_MS = 3000;
+const SLOW_FOR_MS = 5000;
+
+interface Ping {
+  id: number;
+  at: number;
+}
+
 function leaving(event: KeyboardEvent): boolean {
   return event.ctrlKey && event.shiftKey && event.key === 'ArrowLeft';
 }
@@ -37,12 +46,11 @@ function bytesOf(binary: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(binary, (char) => char.charCodeAt(0));
 }
 
-function exitCodeOf(text: string): number | null {
+function said(text: string): { exit_code?: unknown; pong?: unknown } {
   try {
-    const said = JSON.parse(text) as { exit_code?: unknown };
-    return typeof said.exit_code === 'number' ? said.exit_code : null;
+    return JSON.parse(text) as { exit_code?: unknown; pong?: unknown };
   } catch {
-    return null;
+    return {};
   }
 }
 
@@ -50,6 +58,7 @@ export class Session {
   @tracked standing: Standing = 'connecting';
   @tracked exitCode: number | null = null;
   @tracked leaving = false;
+  @tracked slow = false;
 
   readonly listed: TerminalSession;
   readonly element: HTMLDivElement = document.createElement('div');
@@ -68,6 +77,10 @@ export class Session {
   private host: HTMLElement | null = null;
   private sampling = false;
   private readonly palette = new Map<number, string>();
+  private pinging: number | null = null;
+  private pings: Ping[] = [];
+  private nextPing = 0;
+  private slowSince: number | null = null;
 
   constructor(
     listed: TerminalSession,
@@ -227,6 +240,38 @@ export class Session {
   private connected(): void {
     this.standing = 'live';
     this.sendSize();
+    this.startPinging();
+  }
+
+  private startPinging(): void {
+    this.stopPinging();
+    this.pinging = setInterval(() => this.ping(), PING_EVERY_MS);
+  }
+
+  private stopPinging(): void {
+    if (this.pinging !== null) clearInterval(this.pinging);
+    this.pinging = null;
+    this.pings = [];
+    this.slowSince = null;
+    this.slow = false;
+  }
+
+  private ping(): void {
+    const now = Date.now();
+    const oldest = this.pings[0];
+    if (oldest && now - oldest.at > SLOW_ROUND_TRIP_MS) {
+      this.slowSince ??= now;
+    } else {
+      this.slowSince = null;
+    }
+    this.slow = this.slowSince !== null && now - this.slowSince >= SLOW_FOR_MS;
+    const id = (this.nextPing += 1);
+    this.pings.push({ id, at: now });
+    this.send(JSON.stringify({ ping: id }));
+  }
+
+  private ponged(id: number): void {
+    this.pings = this.pings.filter((one) => one.id > id);
   }
 
   private heard(data: unknown): void {
@@ -234,7 +279,9 @@ export class Session {
       this.shown += data.byteLength;
       this.screen.write(new Uint8Array(data));
     } else if (typeof data === 'string') {
-      this.exitCode = exitCodeOf(data);
+      const { exit_code, pong } = said(data);
+      if (typeof pong === 'number') this.ponged(pong);
+      else this.exitCode = typeof exit_code === 'number' ? exit_code : null;
     }
   }
 
@@ -248,6 +295,7 @@ export class Session {
   }
 
   private closed(code: number): void {
+    this.stopPinging();
     if (this.exitCode !== null) {
       this.standing = 'exited';
       this.element.setAttribute('data-exited', '');
@@ -259,6 +307,7 @@ export class Session {
 
   close(): void {
     this.leaving = true;
+    this.stopPinging();
     this.screen.dispose();
     this.element.remove();
   }

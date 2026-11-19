@@ -743,6 +743,8 @@ export class FakeSocket {
   onopen: ((event: Event) => void) | null = null;
   onmessage: ((event: MessageEvent) => void) | null = null;
   onclose: ((event: CloseEvent) => void) | null = null;
+  answersPings = true;
+  private unanswered: number[] = [];
 
   constructor(url: string, session: string) {
     this.url = url;
@@ -762,8 +764,14 @@ export class FakeSocket {
       .map((one) => JSON.parse(one) as unknown);
   }
 
+  answerPings(): void {
+    for (const ping of this.unanswered)
+      this.hear(JSON.stringify({ pong: ping }));
+    this.unanswered = [];
+  }
+
   send(data: string | ArrayBufferView | ArrayBuffer): void {
-    if (typeof data === 'string') this.sent.push(data);
+    if (typeof data === 'string') this.sendText(data);
     else if (data instanceof ArrayBuffer) this.sent.push(data);
     else {
       this.sent.push(
@@ -771,6 +779,16 @@ export class FakeSocket {
           .buffer,
       );
     }
+  }
+
+  private sendText(data: string): void {
+    const said = JSON.parse(data) as { ping?: number };
+    if (said.ping === undefined) {
+      this.sent.push(data);
+      return;
+    }
+    this.unanswered.push(said.ping);
+    if (this.answersPings) this.answerPings();
   }
 
   close(code = 1000): void {

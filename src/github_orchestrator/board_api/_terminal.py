@@ -25,6 +25,14 @@ def _size_of(text: str) -> tuple[int, int] | None:
     return columns, rows
 
 
+def _ping_of(text: str) -> int | None:
+    try:
+        ping = json.loads(text)["ping"]
+    except (ValueError, TypeError, KeyError):
+        return None
+    return ping if type(ping) is int else None
+
+
 async def carried(websocket: WebSocket, sessions: TerminalSessions, session: str,
                   after: int, threads: anyio.CapacityLimiter) -> None:
     connection = sessions.attach(session, after)
@@ -42,8 +50,11 @@ async def carried(websocket: WebSocket, sessions: TerminalSessions, session: str
                 await anyio.to_thread.run_sync(connection.write, message["bytes"],
                                                limiter=threads)
             elif message.get("text") is not None:
+                ping = _ping_of(message["text"])
                 size = _size_of(message["text"])
-                if size is None:
+                if ping is not None:
+                    await websocket.send_text(json.dumps({"pong": ping}))
+                elif size is None:
                     log.info("terminal session %s: ignored %r from the page", session,
                              message["text"][:80])
                 else:

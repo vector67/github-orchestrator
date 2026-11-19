@@ -75,6 +75,12 @@ export default class TerminalService extends Service {
     LIGHT_SYSTEM.addEventListener('change', this.followSystem);
   }
 
+  get slow(): boolean {
+    return Object.values(this.held).some((sessions) =>
+      sessions.some((one) => one.slow),
+    );
+  }
+
   get light(): boolean {
     return this.theme === 'system' ? this.systemLight : this.theme === 'light';
   }

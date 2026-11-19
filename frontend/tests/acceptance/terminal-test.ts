@@ -462,6 +462,52 @@ module('Acceptance | terminal', function (hooks) {
       .hasText('the board server is not answering');
   });
 
+  async function seconds(count: number): Promise<void> {
+    for (let one = 0; one < count; one++) await clock().tick(1000);
+  }
+
+  test('a terminal whose round trip stays over 3 seconds for 5 seconds says the system is under heavy load', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const [socket] = board().socketsOf('shell-1');
+
+    socket!.answersPings = false;
+    await seconds(9);
+    assert
+      .dom('[data-test-banner]')
+      .doesNotExist('over 3 seconds for less than 5 is not yet heavy load');
+
+    await seconds(1);
+    assert.dom('[data-test-banner]').hasText('the system is under heavy load');
+  });
+
+  test('a terminal whose round trip comes back under 3 seconds takes the heavy-load banner down', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const [socket] = board().socketsOf('shell-1');
+    socket!.answersPings = false;
+    await seconds(10);
+    assert.dom('[data-test-banner]').exists();
+
+    socket!.answersPings = true;
+    socket!.answerPings();
+    await seconds(1);
+
+    assert.dom('[data-test-banner]').doesNotExist();
+  });
+
+  test('a terminal answering within 3 seconds raises no banner', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+
+    await seconds(12);
+
+    assert.dom('[data-test-banner]').doesNotExist();
+  });
+
   test('a launcher starts its command and the tab shows it at once', async function (assert) {
     onTheHub();
     await visit('/pr/o/r/7/terminal');
