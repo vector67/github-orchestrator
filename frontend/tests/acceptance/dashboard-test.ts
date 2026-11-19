@@ -268,6 +268,21 @@ module('Acceptance | dashboard', function (hooks) {
     assert.dom('[data-test-status="mergeable"] [data-test-rebase]').exists();
   });
 
+  test('a branch behind its base on someone else’s pull request reads yellow, not red', async function (assert) {
+    onTheHub({ facts: { is_author: false, merge_state: 'behind' } });
+
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-value]')
+      .hasText('no');
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-alarm]')
+      .doesNotExist();
+    assert.dom('[data-test-status="mergeable"] [data-test-warn]').exists();
+    assert.dom('[data-test-status="mergeable"] [data-test-rebase]').exists();
+  });
+
   test('Rebase on main starts an agent session, so it carries the star', async function (assert) {
     onTheHub({
       facts: factsFor('rebase', { merge_state: 'behind' }),

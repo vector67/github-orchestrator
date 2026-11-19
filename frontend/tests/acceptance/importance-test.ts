@@ -201,6 +201,19 @@ module('Acceptance | importance', function (hooks) {
       '3',
     ],
     [
+      'someone else’s, importance set, CI failing and behind main',
+      {
+        facts: {
+          ...WAITING_ON_REVIEW,
+          is_author: false,
+          ci_status: 'failing',
+          merge_state: 'behind',
+        },
+        manager: { importance: 'normal' },
+      },
+      null,
+    ],
+    [
       'importance set, CI failing',
       {
         facts: { ...WAITING_ON_REVIEW, ci_status: 'failing' },
