@@ -24,6 +24,7 @@ These were settled before the build. They are fixed.
    with the title and the rendered description, and Edit and Hide buttons.
    Hide, or scrolling the summary down, folds the description to a Show
    description button across from the title; an open editor stays open.
+   Scrolling the summary back to the top brings the description back.
 3. Edit opens a markdown box with Write and Preview tabs, plus a title field.
    Save PATCHes title and body together (the endpoint `assign_reviewers`
    already PATCHes in `_pull_requests.py`). Cancel throws the edit away.
