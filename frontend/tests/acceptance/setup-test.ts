@@ -486,6 +486,15 @@ module('Acceptance | setup', function (hooks) {
     assert.deepEqual(board().posted, []);
   });
 
+  test('before the hub watches anything, the top bar names setup and leads nowhere else', async function (assert) {
+    inSetup();
+
+    await visit('/setup');
+
+    assert.dom('[data-top-bar]').exists({ count: 1 }).includesText('Setup');
+    assert.dom('[data-test-nav]').doesNotExist();
+  });
+
   test('unpicking a watched repo says it stops being watched, and the write leaves it out', async function (assert) {
     const setup = watchingTwo();
     await visit('/setup');

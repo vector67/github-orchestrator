@@ -10,6 +10,7 @@ import type { Diff, FileChange } from 'frontend/data/api';
 import { fileOf, type DiffRow, type Expand } from 'frontend/data/diff-rows';
 import { inTreeOrder } from 'frontend/data/file-tree';
 import Reveals from 'frontend/data/reveals';
+import FileViews from 'frontend/data/file-views';
 import didChange from 'frontend/modifiers/did-change';
 import type { Inline } from 'frontend/data/inline';
 import {
@@ -39,6 +40,7 @@ export interface PrDiffSignature {
     edit?: (item: Inline) => void;
     markers?: boolean;
     only?: string;
+    views?: FileViews;
   };
   Blocks: { commenting: [Selection | null] };
 }
@@ -81,8 +83,7 @@ export default class PrDiff extends Component<PrDiffSignature> {
   @service declare store: StoreService;
   @service declare toasts: ToastsService;
 
-  @tracked private toggled: Record<string, boolean> = {};
-  @tracked private loaded: string[] = [];
+  private readonly ownViews = new FileViews();
   @tracked private dragging: Selection | null = null;
   private pressed: Pressed | null = null;
   private readonly reveals: Reveals;
@@ -90,6 +91,10 @@ export default class PrDiff extends Component<PrDiffSignature> {
   constructor(owner: Owner, args: PrDiffSignature['Args']) {
     super(owner, args);
     this.reveals = new Reveals(this.store);
+  }
+
+  private get views(): FileViews {
+    return this.args.views ?? this.ownViews;
   }
 
   @cached
@@ -100,8 +105,8 @@ export default class PrDiff extends Component<PrDiffSignature> {
     return inTreeOrder(drawn).map((change) => ({
       change,
       rows: fileOf(change, this.reveals.of(head, change.path)).rows,
-      folded: this.toggled[change.path] ?? false,
-      held: this.loaded.includes(change.path) ? null : heldBecause(change),
+      folded: this.views.folded(change.path),
+      held: this.views.isLoaded(change.path) ? null : heldBecause(change),
       outdated: this.args.outdated?.[change.path] ?? [],
     }));
   }
@@ -111,11 +116,11 @@ export default class PrDiff extends Component<PrDiffSignature> {
   };
 
   fold = (shown: Shown) => {
-    this.toggled = { ...this.toggled, [shown.change.path]: !shown.folded };
+    this.views.fold(shown.change.path);
   };
 
   load = (shown: Shown) => {
-    this.loaded = [...this.loaded, shown.change.path];
+    this.views.load(shown.change.path);
   };
 
   get selectable(): boolean {

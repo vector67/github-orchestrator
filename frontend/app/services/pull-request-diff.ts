@@ -9,6 +9,7 @@ import {
   type DrawnInline,
 } from 'frontend/data/anchors';
 import type { Pressing, Pressings } from 'frontend/data/decisions';
+import FileViews from 'frontend/data/file-views';
 import { inlineOf, type Inlined } from 'frontend/data/inline';
 import { ordered, type Picked, type Timeline } from 'frontend/data/timeline';
 import type { Lines } from 'frontend/data/selection';
@@ -51,6 +52,11 @@ export interface ResetControls {
   unqueue: () => void;
 }
 
+export interface KeptScroll {
+  top: number;
+  at: string;
+}
+
 class PerPr {
   @tracked failed = false;
   @tracked source: DiffSource = 'origin';
@@ -65,6 +71,8 @@ class PerPr {
   @tracked confirmingReset: ResetWhen | null = null;
   asked: string | null = null;
   fetching: Promise<void> | null = null;
+  scrolled: KeptScroll | null = null;
+  readonly views = new FileViews();
 
   constructor(readonly scope: PrScope) {}
 }
@@ -475,6 +483,18 @@ export default class PullRequestDiffService extends Service {
     this.dwellTimer = null;
     this.dwelt = null;
   };
+
+  keepScroll = (top: number, at: string) => {
+    this.pr.scrolled = { top, at };
+  };
+
+  get keptScroll(): KeptScroll | null {
+    return this.pr.scrolled;
+  }
+
+  get views(): FileViews {
+    return this.pr.views;
+  }
 
   reachedBottom = (pane: HTMLElement) => {
     if (this.commitBox.autoRead !== 'bottom' || this.showing) return;

@@ -5,7 +5,6 @@ import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { fn } from '@ember/helper';
 import { waitForPromise } from '@ember/test-waiters';
-import HubBar from 'frontend/components/hub-bar';
 import PendingRing from 'frontend/components/pending-ring';
 import type {
   Setup,
@@ -364,14 +363,6 @@ export default class SetupPage extends Component {
 
   <template>
     <main id="setup" data-test-setup>
-      {{#if this.watching}}
-        <HubBar @on="setup" />
-      {{else}}
-        <header class="wall-bar" data-top-bar>
-          <span class="wall-name">Orchestrator</span>
-          <span class="setup-crumb">Setup</span>
-        </header>
-      {{/if}}
       <div class="setup-body">
         {{#if this.broken}}
           <section

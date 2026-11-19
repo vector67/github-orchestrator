@@ -2951,11 +2951,21 @@ kbd {
   color: var(--text);
 }
 
-#wall,
+#hub,
 #pr-view {
   display: flex;
   flex-direction: column;
   height: 100dvh;
+}
+
+#wall,
+#runs,
+#terminals,
+#setup {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .wall-bar,
@@ -3696,12 +3706,6 @@ kbd {
   background: var(--red);
 }
 
-#setup {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-}
-
 .setup-crumb {
   font-weight: var(--fw-strong);
   color: var(--muted);
@@ -3875,13 +3879,6 @@ kbd {
   .setup-clone > .setup-alarm {
     grid-column: 1;
   }
-}
-
-#runs,
-#terminals {
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
 }
 
 .runs-watcher {
@@ -4349,7 +4346,7 @@ kbd {
   color: var(--text);
   background: var(--page);
   border: 1px solid var(--hairline);
-  font-family: var(--mono, ui-monospace, monospace);
+  font: inherit;
   resize: vertical;
 }
 
@@ -6664,7 +6661,7 @@ button.tree-row[aria-current="true"] {
     overflow: visible;
   }
 
-  #wall,
+  #hub,
   #pr-view {
     height: auto;
   }

@@ -29,6 +29,7 @@ import type KeysService from 'frontend/services/keys';
 import type { Keymap } from 'frontend/services/keys';
 import didChange from 'frontend/modifiers/did-change';
 import type PullRequestDiffService from 'frontend/services/pull-request-diff';
+import type { KeptScroll } from 'frontend/services/pull-request-diff';
 import eq from 'frontend/helpers/eq';
 
 const NARROW_TAB = 720;
@@ -57,6 +58,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
   private followed: unknown = null;
   private scrolledAwayFrom: string | null = null;
   private shownLinked: unknown = null;
+  private returnTo: KeptScroll | null;
   private readonly keymap: Keymap = { take: (key) => this.takes(key) };
   private readonly filesKeymap: Keymap = {
     take: (key) => {
@@ -70,6 +72,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
     super(owner, args);
     this.keys.push('tab', this.keymap);
     this.pullRequestDiff.fetchBranch();
+    this.returnTo = this.pullRequestDiff.keptScroll;
   }
 
   willDestroy(): void {
@@ -231,6 +234,12 @@ export default class DiffTab extends Component<DiffTabSignature> {
     this.pane = pane;
     if (scrolling === this.followed) return;
     this.followed = scrolling;
+    if (this.returnTo?.at === this.placing) {
+      pane.scrollTop = this.returnTo.top;
+      this.returnTo = null;
+      this.scrolledAwayFrom = this.placing;
+      return;
+    }
     if (!this.args.file) {
       pane.scrollTop = 0;
       return;
@@ -253,7 +262,9 @@ export default class DiffTab extends Component<DiffTabSignature> {
   };
 
   scrolled = (event: Event) => {
-    this.pullRequestDiff.reachedBottom(event.currentTarget as HTMLElement);
+    const pane = event.currentTarget as HTMLElement;
+    this.pullRequestDiff.keepScroll(pane.scrollTop, this.placing);
+    this.pullRequestDiff.reachedBottom(pane);
   };
 
   private scrollTo(path: string): void {
@@ -448,6 +459,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
             {{#if this.pullRequestDiff.commenting}}
               <PrDiff
                 @diff={{this.pullRequestDiff.shown}}
+                @views={{this.pullRequestDiff.views}}
                 @selection={{this.selection}}
                 @select={{this.select}}
                 @boxOpen={{this.boxOpen}}
@@ -481,7 +493,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
                 </:commenting>
               </PrDiff>
             {{else}}
-              <PrDiff @diff={{this.pullRequestDiff.shown}} />
+              <PrDiff
+                @diff={{this.pullRequestDiff.shown}}
+                @views={{this.pullRequestDiff.views}}
+              />
             {{/if}}
           {{else if this.pullRequestDiff.shownFailed}}
             <p class="land-error" data-test-diff-failed>{{DIFF_FAILED}}</p>
