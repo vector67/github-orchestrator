@@ -247,7 +247,8 @@ class _Held:
             handler.join(max(0.0, deadline - time.monotonic()))
 
 
-def _held(directory: Path, session: str, worktree: str, argv: list[str]) -> _Held:
+def _held(directory: Path, session: str, worktree: str, thread: str | None,
+          argv: list[str]) -> _Held:
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     master, slave = os.openpty()
     try:
@@ -266,7 +267,7 @@ def _held(directory: Path, session: str, worktree: str, argv: list[str]) -> _Hel
     server.listen()
     write_atomically(directory / f"{session}{RECORD}",
                      json.dumps({"pid": os.getpid(), "argv": argv, "worktree": worktree,
-                                 "branch": branch_of(worktree),
+                                 "branch": branch_of(worktree), "thread": thread,
                                  "started": time.time_ns()}).encode())
     log.info("terminal session %s started in %s: %s", session, worktree, argv)
     return _Held(directory, session, process, master, server)
@@ -286,7 +287,7 @@ def _detached(directory: Path, session: str) -> None:
 
 
 def main(arguments: list[str]) -> int:
-    directory, session, wait, worktree, *argv = arguments
+    directory, session, wait, worktree, thread, *argv = arguments
     told, telling = os.pipe()
     if os.fork() > 0:
         os.close(telling)
@@ -299,7 +300,7 @@ def main(arguments: list[str]) -> int:
     os.close(told)
     os.setsid()
     try:
-        held = _held(Path(directory), session, worktree, argv)
+        held = _held(Path(directory), session, worktree, thread or None, argv)
     except OSError as exc:
         os.write(telling, (str(exc) or "the session could not start").encode())
         os._exit(1)

@@ -9885,6 +9885,16 @@
     "started_at": {
      "type": "string"
     },
+    "thread": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "waiting_since": {
      "anyOf": [
       {
@@ -9907,6 +9917,7 @@
     "argv",
     "worktree",
     "branch",
+    "thread",
     "started_at",
     "activity",
     "waiting_since"

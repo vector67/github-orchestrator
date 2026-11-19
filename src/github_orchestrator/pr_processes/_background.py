@@ -5,7 +5,7 @@ import subprocess
 from collections.abc import Callable, Set
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from github_orchestrator.domain import Pr, Repo
 from github_orchestrator.pr_processes._changes import start
@@ -18,6 +18,10 @@ from github_orchestrator.terminal_sessions import Terminals
 log = logging.getLogger(__name__)
 
 Run = Callable[..., subprocess.CompletedProcess[Any]]
+
+
+class Starts(Protocol):
+    def __call__(self, worktree: str, argv: list[str], *, thread: str | None) -> str: ...
 
 RECORD = ".json"
 OUTPUT = ".log"
@@ -142,16 +146,16 @@ class BackgroundPrProcesses:
             log.info("Closed the agent manager for %s", pr)
         return True
 
-    def split(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
-        return self._split(pr, worktree, argv, self._terminals.of(pr).start)
+    def split(self, pr: Pr, worktree: str, argv: list[str], *, thread: str | None = None) -> str | None:
+        return self._split(pr, worktree, argv, thread, self._terminals.of(pr).start)
 
-    def split_kept(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
-        return self._split(pr, worktree, argv, self._terminals.of(pr).start_kept)
+    def split_kept(self, pr: Pr, worktree: str, argv: list[str], *, thread: str | None = None) -> str | None:
+        return self._split(pr, worktree, argv, thread, self._terminals.of(pr).start_kept)
 
-    def _split(self, pr: Pr, worktree: str, argv: list[str],
-               start: Callable[[str, list[str]], str]) -> str | None:
+    def _split(self, pr: Pr, worktree: str, argv: list[str], thread: str | None,
+               start: Starts) -> str | None:
         try:
-            start(worktree, argv)
+            start(worktree, argv, thread=thread)
         except OSError as exc:
             log.warning("Could not start a terminal session for %s in %s: %s", pr, worktree, exc)
             return str(exc)

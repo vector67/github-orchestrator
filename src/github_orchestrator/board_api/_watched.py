@@ -20,7 +20,7 @@ def _row(pr: Pr, watched: Watched) -> contract.WatchedSession:
     return contract.WatchedSession(
         repo=str(pr.repo), number=pr.number, board_url=pr_page(pr), id=watched.session.id,
         argv=list(watched.session.argv), worktree=watched.session.worktree,
-        branch=watched.session.branch,
+        branch=watched.session.branch, thread=watched.session.thread,
         started_at=watched.started_at.isoformat(), activity=watched.activity,
         waiting_since=None if since is None else since.isoformat())
 

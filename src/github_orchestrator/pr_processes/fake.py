@@ -21,6 +21,7 @@ class Session:
     worktree: str
     argv: list[str]
     kept: bool = False
+    thread: str | None = None
 
 
 @dataclass
@@ -72,11 +73,11 @@ class FakePrProcesses:
         self._forget(pr)
         return True
 
-    def split(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
-        return self._split(pr, Session(worktree, list(argv)))
+    def split(self, pr: Pr, worktree: str, argv: list[str], *, thread: str | None = None) -> str | None:
+        return self._split(pr, Session(worktree, list(argv), thread=thread))
 
-    def split_kept(self, pr: Pr, worktree: str, argv: list[str]) -> str | None:
-        return self._split(pr, Session(worktree, list(argv), kept=True))
+    def split_kept(self, pr: Pr, worktree: str, argv: list[str], *, thread: str | None = None) -> str | None:
+        return self._split(pr, Session(worktree, list(argv), kept=True, thread=thread))
 
     def _split(self, pr: Pr, session: Session) -> str | None:
         if self.refusal is not None:

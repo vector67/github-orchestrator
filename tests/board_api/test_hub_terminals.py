@@ -27,10 +27,17 @@ def test_each_session_names_its_pull_request_its_program_and_when_it_started():
 
     assert _listed(_hub(terminals)) == [{
         "repo": REPO, "number": 55, "board_url": "/pr/acme/widgets/55", "id": started,
-        "argv": ["git", "commit"], "worktree": "/w/55", "branch": None,
+        "argv": ["git", "commit"], "worktree": "/w/55", "branch": None, "thread": None,
         "started_at": (NOW - timedelta(minutes=5)).isoformat(), "activity": "working",
         "waiting_since": None,
     }]
+
+
+def test_a_session_a_thread_opened_names_that_thread():
+    terminals = FakeTerminals()
+    terminals.of(THIRD).start_kept("/w/55", ["claude"], thread="PRRT_9")
+
+    assert [one["thread"] for one in _listed(_hub(terminals))] == ["PRRT_9"]
 
 
 def test_each_session_names_the_branch_it_started_on(tmp_path):

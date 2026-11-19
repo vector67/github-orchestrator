@@ -179,5 +179,5 @@ class ThreadAgents:
         return self.thread_work.answer_in_session(
             self._asked(conversation, _worktree_of(worktree), False, None), answer)
 
-    def open_shell(self, worktree: str | None) -> str | None:
-        return self.thread_work.open_shell(self.pr, _worktree_of(worktree))
+    def open_shell(self, worktree: str | None, key: str) -> str | None:
+        return self.thread_work.open_shell(self.pr, _worktree_of(worktree), key)

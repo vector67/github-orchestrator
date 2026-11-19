@@ -422,26 +422,27 @@ class FakeAgentRuns:
 
     def open_session(self, fix: ThreadFix, steer: str | None) -> str | None:
         refused = open_session_in(self.pr_processes, fix.pr, fix.worktree, ["claude"],
-                                  f"session on {fix.key}")
+                                  f"session on {fix.key}", fix.key)
         if refused is None:
             self.sessions.append(Session(fix, steer))
         return refused
 
     def fix_in_session(self, fix: ThreadFix) -> str | None:
         refused = open_session_in(self.pr_processes, fix.pr, fix.worktree, ["claude"],
-                                  f"first fix on {fix.key}")
+                                  f"first fix on {fix.key}", fix.key)
         if refused is None:
             self.sessions.append(Session(fix, None, first=True))
         return refused
 
     def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
-        refused = self.pr_processes.split_kept(fix.pr, fix.worktree, ["claude", "--continue"])
+        refused = self.pr_processes.split_kept(fix.pr, fix.worktree, ["claude", "--continue"],
+                                               thread=fix.key)
         if refused is None:
             self.answering.append(Answering(fix, answer))
         return refused
 
-    def open_shell(self, pr: Pr, worktree: str) -> str | None:
-        return self.pr_processes.split_kept(pr, worktree, shell_argv())
+    def open_shell(self, pr: Pr, worktree: str, thread: str) -> str | None:
+        return self.pr_processes.split_kept(pr, worktree, shell_argv(), thread=thread)
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in((json.dumps(entry) for entry in reversed(self.ledger)), pr)

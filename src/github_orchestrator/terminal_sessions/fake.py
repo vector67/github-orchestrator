@@ -65,16 +65,18 @@ class FakeTerminalSessions:
         self.refusal: str | None = None
         self._ids = itertools.count(1)
 
-    def start(self, worktree: str, argv: list[str]) -> str:
-        return self._started(worktree, argv, kept=False)
+    def start(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str:
+        return self._started(worktree, argv, thread, kept=False)
 
-    def start_kept(self, worktree: str, argv: list[str]) -> str:
-        return self._started(worktree, argv, kept=True)
+    def start_kept(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str:
+        return self._started(worktree, argv, thread, kept=True)
 
-    def _started(self, worktree: str, argv: list[str], *, kept: bool) -> str:
+    def _started(self, worktree: str, argv: list[str], thread: str | None, *,
+                 kept: bool) -> str:
         if self.refusal is not None:
             raise FileNotFoundError(2, self.refusal, worktree)
-        session = Session(f"session-{next(self._ids)}", tuple(argv), worktree, branch_of(worktree))
+        session = Session(f"session-{next(self._ids)}", tuple(argv), worktree, branch_of(worktree),
+                          thread)
         self.sessions[session.id] = FakeSession(session, kept=kept)
         return session.id
 

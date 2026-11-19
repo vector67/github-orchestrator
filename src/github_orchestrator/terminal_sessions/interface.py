@@ -12,6 +12,7 @@ class Session:
     argv: tuple[str, ...]
     worktree: str
     branch: str | None
+    thread: str | None
 
 
 class Activity(enum.StrEnum):
@@ -41,9 +42,9 @@ class Connection(Protocol):
 
 
 class TerminalSessions(Protocol):
-    def start(self, worktree: str, argv: list[str]) -> str: ...
+    def start(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str: ...
 
-    def start_kept(self, worktree: str, argv: list[str]) -> str: ...
+    def start_kept(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str: ...
 
     def listed(self) -> list[Session]: ...
 

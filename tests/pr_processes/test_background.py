@@ -223,6 +223,13 @@ def test_a_kept_split_starts_a_session_no_page_has_to_claim(windows, sessions, w
     assert sessions.kept() == [(str(worktree), ("claude", "Rework it"))]
 
 
+def test_a_split_names_the_thread_that_opened_it_to_its_session(windows, sessions, worktree):
+    windows.split(THE_PR, str(worktree), ["git", "commit"])
+    windows.split_kept(THE_PR, str(worktree), ["claude", "Rework it"], thread="PRRT_7")
+
+    assert [session.thread for session in sessions.listed()] == [None, "PRRT_7"]
+
+
 def test_a_kept_split_whose_session_cannot_start_is_refused_with_the_reason(
         windows, sessions, worktree):
     sessions.refusal = "No such file or directory"

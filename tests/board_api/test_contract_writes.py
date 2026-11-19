@@ -428,7 +428,7 @@ def test_open_shell_opens_a_login_shell_in_the_threads_own_worktree(ready):
     assert answer.json()["operation"]["kind"] == "open-shell"
     drained(ready)
     [pane] = ready.stage.agent_runs.pr_processes.sessions[THE_PR]
-    assert pane.argv[-1] == "-l"
+    assert (pane.argv[-1], pane.thread) == ("-l", KEY)
     assert ready.stage.agent_runs.sessions == []
 
 

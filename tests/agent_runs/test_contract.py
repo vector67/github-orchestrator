@@ -372,9 +372,20 @@ def test_a_first_fix_in_a_session_opens_in_the_threads_worktree_and_is_kept(worl
 
 def test_a_threads_session_and_shell_are_kept_until_a_page_claims_them(world):
     world.runs.open_session(_thread("/tmp/wt"), None)
-    world.runs.open_shell(THE_PR, "/tmp/wt")
+    world.runs.open_shell(THE_PR, "/tmp/wt", "PRRT_1")
 
     assert [session.kept for session in world.fake.pr_processes.sessions[THE_PR]] == [True, True]
+
+
+def test_a_threads_sessions_and_shell_name_the_thread(world):
+    world.runs.open_session(_thread("/tmp/wt", key="PRRT_1"), None)
+    world.runs.fix_in_session(_thread("/tmp/wt", key="PRRT_2"))
+    world.runs.answer_in_session(_thread("/tmp/wt", key="PRRT_3"), "Yes.")
+    world.runs.open_shell(THE_PR, "/tmp/wt", "PRRT_4")
+    world.runs.rebase_in_session(THE_PR, "/tmp/wt", yours=True)
+
+    assert [session.thread for session in world.fake.pr_processes.sessions[THE_PR]] == [
+        "PRRT_1", "PRRT_2", "PRRT_3", "PRRT_4", None]
 
 
 def test_a_rebase_or_question_session_ends_when_no_page_claims_it(world):

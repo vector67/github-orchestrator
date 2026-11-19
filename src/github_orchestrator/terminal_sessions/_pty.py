@@ -171,17 +171,17 @@ class PtySessions:
         self._first_connection_seconds = first_connection_seconds
         self._clamp = clamp
 
-    def start(self, worktree: str, argv: list[str]) -> str:
-        return self._started(str(self._first_connection_seconds), worktree, argv)
+    def start(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str:
+        return self._started(str(self._first_connection_seconds), worktree, argv, thread)
 
-    def start_kept(self, worktree: str, argv: list[str]) -> str:
-        return self._started(KEPT, worktree, argv)
+    def start_kept(self, worktree: str, argv: list[str], *, thread: str | None = None) -> str:
+        return self._started(KEPT, worktree, argv, thread)
 
-    def _started(self, wait: str, worktree: str, argv: list[str]) -> str:
+    def _started(self, wait: str, worktree: str, argv: list[str], thread: str | None) -> str:
         session = secrets.token_hex(6)
         holder = self._popen(
             [*self._clamp, sys.executable, "-m", HOLDER, str(self._directory), session,
-             wait, worktree, *argv],
+             wait, worktree, thread or "", *argv],
             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
             env={**os.environ, **self._environment}, cwd="/", close_fds=True)
         _, trouble = holder.communicate()
@@ -209,7 +209,7 @@ class PtySessions:
                 continue
             found.append((fields["started"], fields["pid"],
                           Session(session, tuple(fields["argv"]), fields["worktree"],
-                                  fields.get("branch"))))
+                                  fields.get("branch"), fields.get("thread"))))
         return [(started, pid, held) for started, pid, held in sorted(found, key=lambda one: one[0])]
 
     def _held(self) -> list[tuple[int, Session]]:

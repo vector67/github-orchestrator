@@ -153,6 +153,14 @@ def test_a_session_on_a_detached_head_or_outside_git_has_no_branch(any_sessions,
     assert [listed.branch for listed in any_sessions.listed()] == [None, None]
 
 
+def test_a_session_remembers_the_thread_that_opened_it(any_sessions, worktree):
+    any_sessions.start(str(worktree), FOREVER, thread="PRRT_7")
+    any_sessions.start_kept(str(worktree), FOREVER, thread="PRRT_8")
+    any_sessions.start(str(worktree), FOREVER)
+
+    assert [listed.thread for listed in any_sessions.listed()] == ["PRRT_7", "PRRT_8", None]
+
+
 def test_sessions_are_listed_in_the_order_they_started(any_sessions, worktree):
     first = any_sessions.start(str(worktree), FOREVER)
     second = any_sessions.start(str(worktree), ["sh", "-c", "sleep 30"])

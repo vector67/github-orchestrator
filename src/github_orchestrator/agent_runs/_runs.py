@@ -128,8 +128,8 @@ def _kept_session(session_file: Path) -> str | None:
 
 
 def open_session_in(pr_processes: PrProcesses, pr: Pr, worktree: str, command: list[str],
-                    prompt: str) -> str | None:
-    return pr_processes.split_kept(pr, worktree, [*command, prompt])
+                    prompt: str, thread: str) -> str | None:
+    return pr_processes.split_kept(pr, worktree, [*command, prompt], thread=thread)
 
 
 class AgentRun:
@@ -521,7 +521,8 @@ class AgentRuns:
             return AGENT_SETTINGS_HELD
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,
                                self._thread_command(fix),
-                               rework_prompt(self._commands, fix, steer, self._workers))
+                               rework_prompt(self._commands, fix, steer, self._workers),
+                               fix.key)
 
     def fix_in_session(self, fix: ThreadFix) -> str | None:
         if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
@@ -529,7 +530,8 @@ class AgentRuns:
         return open_session_in(self._pr_processes, fix.pr, fix.worktree,
                                self._thread_command(fix),
                                thread_prompt(self._commands, fix, self._workers,
-                                             watched=True))
+                                             watched=True),
+                               fix.key)
 
     def answer_in_session(self, fix: ThreadFix, answer: str | None) -> str | None:
         if self._held(fix.pr, fix.worktree, yours=not fix.reviewing):
@@ -538,10 +540,11 @@ class AgentRuns:
                  else watched_answer_prompt(self._commands, fix, answer))
         argv = self._lines.answering(_kept_session(self._session_file(fix)), first)
         return self._pr_processes.split_kept(fix.pr, fix.worktree,
-                                             [*self._thread_command(fix), *argv])
+                                             [*self._thread_command(fix), *argv],
+                                             thread=fix.key)
 
-    def open_shell(self, pr: Pr, worktree: str) -> str | None:
-        return self._pr_processes.split_kept(pr, worktree, shell_argv())
+    def open_shell(self, pr: Pr, worktree: str, thread: str) -> str | None:
+        return self._pr_processes.split_kept(pr, worktree, shell_argv(), thread=thread)
 
     def last_run(self, pr: Pr) -> LastRun | None:
         return last_run_in(iter_lines_reverse(self._runs_log, max_bytes=SEED_SCAN_BYTES),

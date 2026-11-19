@@ -321,7 +321,8 @@ def _perform(ports: Ports, conversation: Conversation, effect: Effect,
             return (None if refused is None
                     else SessionRefused(reason=refused, back_to=effect.back_to))
         case OpenLoginShell():
-            refused = ports.agents.open_shell(thread_workspace(ports, conversation).path)
+            refused = ports.agents.open_shell(thread_workspace(ports, conversation).path,
+                                              conversation.key)
             return None if refused is None else ShellRefused(reason=refused)
         case Pick():
             return _pick_outcome(ports, conversation, effect)
