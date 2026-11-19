@@ -459,6 +459,7 @@ export default class DiffTab extends Component<DiffTabSignature> {
             {{#if this.pullRequestDiff.commenting}}
               <PrDiff
                 @diff={{this.pullRequestDiff.shown}}
+                @views={{this.pullRequestDiff.views}}
                 @selection={{this.selection}}
                 @select={{this.select}}
                 @boxOpen={{this.boxOpen}}
@@ -492,7 +493,10 @@ export default class DiffTab extends Component<DiffTabSignature> {
                 </:commenting>
               </PrDiff>
             {{else}}
-              <PrDiff @diff={{this.pullRequestDiff.shown}} />
+              <PrDiff
+                @diff={{this.pullRequestDiff.shown}}
+                @views={{this.pullRequestDiff.views}}
+              />
             {{/if}}
           {{else if this.pullRequestDiff.shownFailed}}
             <p class="land-error" data-test-diff-failed>{{DIFF_FAILED}}</p>

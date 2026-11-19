@@ -55,6 +55,15 @@ function scrolledTo(path: string): boolean {
   return pane.scrollTop > 0 && Math.abs(offset) < 2;
 }
 
+function rowAtTop(): string {
+  const top = find('[data-test-diff-pane]')!.getBoundingClientRect().top;
+  const row = findAll('[data-test-row]').find(
+    (one) => one.getBoundingClientRect().bottom > top,
+  );
+  const file = row?.closest<HTMLElement>('[data-test-file]');
+  return `${file?.dataset['testFile']}:${row?.getAttribute('data-line')}`;
+}
+
 async function tabOf(width: number) {
   (find('[data-test-diff-tab]') as HTMLElement).style.maxWidth = `${width}px`;
   await new Promise((done) =>
@@ -629,6 +638,55 @@ module('Acceptance | pr diff', function (hooks) {
       await visit('/pr/o/r/7/diff?file=README.md');
 
       assert.true(scrolledTo('README.md'));
+    });
+
+    test('a file folded before going to the terminal is still folded on coming back', async function (assert) {
+      await visit('/pr/o/r/7/diff');
+      const file = '[data-test-file="src/widgets/changes.py"]';
+      await click(`${file} [data-test-fold]`);
+
+      await click('[data-test-tab="terminal"]');
+      await click('[data-test-tab="diff"]');
+
+      assert.dom(`${file} [data-test-row]`).doesNotExist();
+      assert
+        .dom(`${file} [data-test-fold]`)
+        .hasAttribute('aria-expanded', 'false');
+    });
+
+    test('a large file loaded before going to the terminal is still loaded on coming back', async function (assert) {
+      const many = Array.from({ length: 401 }, (_, at) => added(at + 1, 'x'));
+      board().pullRequestDiff = prDiff(changed('big.py', many));
+      await visit('/pr/o/r/7/diff');
+      const file = '[data-test-file="big.py"]';
+      await click(`${file} [data-test-load-diff]`);
+
+      await click('[data-test-tab="terminal"]');
+      await click('[data-test-tab="diff"]');
+
+      assert.dom(`${file} [data-test-row="added"]`).exists({ count: 401 });
+      assert.dom(`${file} [data-test-load-diff]`).doesNotExist();
+    });
+
+    test('a diff folded and scrolled before going to the terminal comes back on the same content', async function (assert) {
+      board().pullRequestDiff = prDiff(
+        changed('src/widgets/changes.py', CHANGES),
+        changed('README.md', LONG),
+      );
+      await visit('/pr/o/r/7/diff');
+      await click('[data-test-file="src/widgets/changes.py"] [data-test-fold]');
+      const left = find('[data-test-diff-pane]')!;
+      left.scrollTop = 300;
+      await triggerEvent(left, 'scroll');
+      const leftOn = rowAtTop();
+
+      await click('[data-test-tab="terminal"]');
+      await click('[data-test-tab="diff"]');
+
+      const pane = find('[data-test-diff-pane]')!;
+      assert.notStrictEqual(pane, left, 'the diff was drawn afresh');
+      assert.strictEqual(pane.scrollTop, 300);
+      assert.strictEqual(rowAtTop(), leftOn);
     });
   });
 
