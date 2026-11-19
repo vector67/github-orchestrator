@@ -595,6 +595,41 @@ module('Acceptance | pr diff', function (hooks) {
       assert.true(scrolled > 0, 'the pane was scrolled');
       assert.strictEqual(pane.scrollTop, scrolled);
     });
+
+    test('going to the terminal and back returns the diff to where it was scrolled', async function (assert) {
+      board().pullRequestDiff = prDiff(
+        changed('src/widgets/changes.py', CHANGES),
+        changed('README.md', LONG),
+      );
+      await visit('/pr/o/r/7/diff');
+      const scrolled = find('[data-test-diff-pane]')!;
+      scrolled.scrollTop = 300;
+      await triggerEvent(scrolled, 'scroll');
+
+      await click('[data-test-tab="terminal"]');
+      assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+      await click('[data-test-tab="diff"]');
+
+      const pane = find('[data-test-diff-pane]')!;
+      assert.notStrictEqual(pane, scrolled, 'the diff was drawn afresh');
+      assert.strictEqual(pane.scrollTop, 300);
+    });
+
+    test('a diff opened on a file after leaving it scrolls to that file, not to where it was', async function (assert) {
+      board().pullRequestDiff = prDiff(
+        changed('src/widgets/changes.py', CHANGES),
+        changed('README.md', LONG),
+      );
+      await visit('/pr/o/r/7/diff');
+      const pane = find('[data-test-diff-pane]')!;
+      pane.scrollTop = 300;
+      await triggerEvent(pane, 'scroll');
+
+      await click('[data-test-tab="terminal"]');
+      await visit('/pr/o/r/7/diff?file=README.md');
+
+      assert.true(scrolledTo('README.md'));
+    });
   });
 
   module('selecting', function () {
