@@ -997,6 +997,27 @@ const RED_PR_WRITES: Record<RedPrVerb, (number: number) => AreYouSure> = {
   }),
 };
 
+export type NotYoursVerb = 'rebase' | 'ignore-ci';
+
+const NOT_YOURS: Record<NotYoursVerb, (number: number) => AreYouSure> = {
+  rebase: (number) => ({
+    label: 'Rebase on main',
+    question: `#${number} is not your pull request. Rebase it on main anyway?`,
+    consequence:
+      'Its branch is its author’s to keep up to date. A rebase rewrites the commits they work on.',
+  }),
+  'ignore-ci': (number) => ({
+    label: 'Ignore CI',
+    question: `#${number} is not your pull request. Ignore its CI anyway?`,
+    consequence:
+      'Its CI is its author’s to fix. Ignoring a check only changes what this board counts.',
+  }),
+};
+
+export function notYoursAsksOf(verb: NotYoursVerb, number: number): AreYouSure {
+  return NOT_YOURS[verb](number);
+}
+
 export type UndonePrVerb = RedPrVerb | 'mark-ready';
 
 export interface PrUndo {

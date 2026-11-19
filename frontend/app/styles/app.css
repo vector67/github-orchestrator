@@ -2772,6 +2772,11 @@ kbd {
   border-color: var(--red);
 }
 
+.sq.warn {
+  background: var(--yellow);
+  border-color: var(--yellow-text);
+}
+
 .sq.park {
   background: var(--grey);
   border-color: var(--grey);
@@ -4292,6 +4297,17 @@ kbd {
   border-bottom: 1px solid var(--hairline);
 }
 
+.summary-pr-title-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.summary-pr-show {
+  flex: none;
+}
+
 .summary-pr-title {
   margin: 0 0 6px;
   font-size: var(--fs-xl);
@@ -4317,7 +4333,9 @@ kbd {
   overflow: auto;
 }
 
-.summary-pr-edit {
+.summary-pr-actions {
+  display: flex;
+  gap: 8px;
   margin-top: 8px;
 }
 

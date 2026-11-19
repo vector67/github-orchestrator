@@ -84,6 +84,53 @@ module('Acceptance | ignore CI', function (hooks) {
     assert.deepEqual(verbs(), []);
   });
 
+  const SOMEONE_ELSES_FAILING: DashboardOver = {
+    facts: { ...VERCEL_FAILING.facts, is_author: false },
+  };
+
+  test('on someone else’s pull request a failing CI reads yellow, not red, and "Ignore CI" is drawn as danger', async function (assert) {
+    await onTheDashboard(SOMEONE_ELSES_FAILING);
+
+    assert.dom(`${CI_ROW} [data-test-alarm]`).doesNotExist();
+    assert.dom(`${CI_ROW} [data-test-warn]`).exists();
+    assert.dom(`${CI_ROW} [data-test-ignore-ci]`).hasClass('danger');
+  });
+
+  test('on your own pull request a failing CI reads red, and "Ignore CI" is not drawn as danger', async function (assert) {
+    await onTheDashboard(VERCEL_FAILING);
+
+    assert.dom(`${CI_ROW} [data-test-alarm]`).exists();
+    assert.dom(`${CI_ROW} [data-test-warn]`).doesNotExist();
+    assert.dom(`${CI_ROW} [data-test-ignore-ci]`).doesNotHaveClass('danger');
+  });
+
+  test('"Ignore CI" on someone else’s pull request asks first, and the dialog opens only after yes', async function (assert) {
+    await onTheDashboard(SOMEONE_ELSES_FAILING);
+
+    await click('[data-test-ignore-ci]');
+
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('#7 is not your pull request. Ignore its CI anyway?');
+    assert.dom('[data-test-ignore-ci-dialog]').doesNotExist();
+
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.dom('[data-test-ignore-ci-dialog]').exists();
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('saying no to "Ignore CI" on someone else’s pull request opens nothing', async function (assert) {
+    await onTheDashboard(SOMEONE_ELSES_FAILING);
+
+    await click('[data-test-ignore-ci]');
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.dom('[data-test-ignore-ci-dialog]').doesNotExist();
+  });
+
   test('each check in the dialog carries the square for how it stands: done when passed, alarm when failed', async function (assert) {
     await onTheDashboard(VERCEL_FAILING);
 

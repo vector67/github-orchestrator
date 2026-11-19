@@ -11,7 +11,14 @@ import type StoreService from 'frontend/services/store';
 type Pane = 'write' | 'preview';
 
 interface PrDescriptionSignature {
-  Args: { title: string | null; body: string | null; unchecked: boolean };
+  Args: {
+    title: string | null;
+    body: string | null;
+    unchecked: boolean;
+    shown: boolean;
+    onShow: () => void;
+    onHide: () => void;
+  };
   Blocks: { default: [] };
 }
 
@@ -115,9 +122,19 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
           {{on "input" this.typeTitle}}
         />
       {{else}}
-        <h2 class="summary-pr-title" data-test-summary-title>
-          {{@title}}
-        </h2>
+        <div class="summary-pr-title-row" data-test-summary-title-row>
+          <h2 class="summary-pr-title" data-test-summary-title>
+            {{@title}}
+          </h2>
+          {{#unless @shown}}
+            <button
+              type="button"
+              class="btn summary-pr-show"
+              data-test-description-show
+              {{on "click" @onShow}}
+            >Show description</button>
+          {{/unless}}
+        </div>
       {{/if}}
       {{yield}}
       {{#if this.editing}}
@@ -209,7 +226,7 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
             >Cancel</button>
           </div>
         </div>
-      {{else}}
+      {{else if @shown}}
         {{#if @body}}
           <CommentBody
             class="summary-pr-description"
@@ -217,12 +234,20 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
             data-test-description
           />
         {{/if}}
-        <button
-          type="button"
-          class="btn summary-pr-edit"
-          data-test-description-edit
-          {{on "click" this.edit}}
-        >Edit</button>
+        <div class="summary-pr-actions">
+          <button
+            type="button"
+            class="btn"
+            data-test-description-edit
+            {{on "click" this.edit}}
+          >Edit</button>
+          <button
+            type="button"
+            class="btn"
+            data-test-description-hide
+            {{on "click" @onHide}}
+          >Hide</button>
+        </div>
       {{/if}}
     </header>
   </template>

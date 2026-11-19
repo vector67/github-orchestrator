@@ -610,6 +610,57 @@ module('Acceptance | terminal', function (hooks) {
     assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
   });
 
+  const SOMEONE_ELSES_BEHIND: DashboardOver = {
+    facts: { is_author: false, merge_state: 'behind' },
+  };
+
+  test('Rebase on main on someone else’s pull request is drawn as danger and asks first, opening nothing until you say yes', async function (assert) {
+    needingARebase(SOMEONE_ELSES_BEHIND);
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-rebase]')
+      .hasClass('danger');
+
+    await click('[data-test-status="mergeable"] [data-test-rebase]');
+
+    assert
+      .dom('[data-test-are-you-sure-question]')
+      .hasText('#7 is not your pull request. Rebase it on main anyway?');
+    assert.deepEqual(opened(), []);
+
+    await click('[data-test-are-you-sure-submit]');
+
+    assert.deepEqual(opened(), [{ keys: 'r' }]);
+    assert.strictEqual(currentURL(), '/pr/o/r/7/terminal');
+  });
+
+  test('saying no to Rebase on main on someone else’s pull request opens nothing', async function (assert) {
+    needingARebase(SOMEONE_ELSES_BEHIND);
+    await visit('/pr/o/r/7/dashboard');
+
+    await click('[data-test-status="mergeable"] [data-test-rebase]');
+    await click('[data-test-are-you-sure-cancel]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.deepEqual(opened(), []);
+    assert.strictEqual(currentURL(), '/pr/o/r/7/dashboard');
+  });
+
+  test('Rebase on main on your own pull request opens without asking', async function (assert) {
+    needingARebase(REBASE_NEXT);
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-status="mergeable"] [data-test-rebase]')
+      .doesNotHaveClass('danger');
+
+    await click('[data-test-status="mergeable"] [data-test-rebase]');
+
+    assert.dom('[data-test-are-you-sure]').doesNotExist();
+    assert.deepEqual(opened(), [{ keys: 'r' }]);
+  });
+
   test('Rebase on main shows its session opening, with the ring, from the click until the board lists it', async function (assert) {
     needingARebase(REBASE_NEXT);
     await visit('/pr/o/r/7/dashboard');

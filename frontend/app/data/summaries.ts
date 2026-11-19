@@ -1049,7 +1049,7 @@ function summarised(
   const agent = pr?.drawn?.system.agent;
   const agentRebasing =
     agent?.state === 'working' && agent.event === 'became-unmergeable';
-  const wrong = flagsOf(facts).filter(
+  const wrong = flagsOf(role === 'author' ? facts : null).filter(
     (flag) => PROBLEMS.includes(flag) && !(flag === 'rebase' && agentRebasing),
   );
   return {

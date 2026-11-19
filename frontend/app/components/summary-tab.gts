@@ -1,4 +1,5 @@
 import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
 import { service } from '@ember/service';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
@@ -23,6 +24,23 @@ export default class SummaryTab extends Component {
   @service declare hub: HubService;
   @service declare store: StoreService;
   @service declare theme: ThemeService;
+
+  @tracked descriptionShown = true;
+  private summaryTop = 0;
+
+  showDescription = (): void => {
+    this.descriptionShown = true;
+  };
+
+  hideDescription = (): void => {
+    this.descriptionShown = false;
+  };
+
+  foldDescriptionOnScrollDown = (event: Event): void => {
+    const top = (event.target as HTMLElement).scrollTop;
+    if (top > this.summaryTop) this.descriptionShown = false;
+    this.summaryTop = top;
+  };
 
   get tab(): Tab | null {
     const { repo, number } = this.here.at;
@@ -79,6 +97,9 @@ export default class SummaryTab extends Component {
           @title={{this.header.title}}
           @body={{this.header.body}}
           @unchecked={{this.header.unchecked}}
+          @shown={{this.descriptionShown}}
+          @onShow={{this.showDescription}}
+          @onHide={{this.hideDescription}}
         >
           <div class="summary-pr-facts">
             {{#if this.header.createdAt}}
@@ -265,6 +286,7 @@ export default class SummaryTab extends Component {
           <div
             class="summary-body comment-body"
             data-test-summary-markdown
+            {{on "scroll" this.foldDescriptionOnScrollDown}}
             {{drawn summaryOf this.tab.markdown}}
             {{diagrams this.tab.markdown this.theme.dark}}
           ></div>
