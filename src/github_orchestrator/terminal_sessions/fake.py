@@ -20,6 +20,7 @@ class FakeSession:
     session: Session
     printed: bytearray = field(default_factory=bytearray)
     typed: list[bytes] = field(default_factory=list)
+    pinged: list[int] = field(default_factory=list)
     size: tuple[int, int] | None = None
     exit_code: int | None = None
     connections: int = 0
@@ -35,6 +36,7 @@ class FakeConnection:
         self._held = held
         self._offset = min(after, len(held.printed))
         self._closed = False
+        self._pongs: list[int] = []
 
     def read(self, timeout: float) -> bytes | None:
         printed = bytes(self._held.printed[self._offset:])
@@ -48,6 +50,14 @@ class FakeConnection:
 
     def resize(self, columns: int, rows: int) -> None:
         self._held.size = (columns, rows)
+
+    def ping(self, ping: int) -> None:
+        self._held.pinged.append(ping)
+        self._pongs.append(ping)
+
+    def pongs(self) -> list[int]:
+        heard, self._pongs = self._pongs, []
+        return heard
 
     def exit_code(self) -> int | None:
         return self._held.exit_code

@@ -53,7 +53,7 @@ async def carried(websocket: WebSocket, sessions: TerminalSessions, session: str
                 ping = _ping_of(message["text"])
                 size = _size_of(message["text"])
                 if ping is not None:
-                    await websocket.send_text(json.dumps({"pong": ping}))
+                    await anyio.to_thread.run_sync(connection.ping, ping, limiter=threads)
                 elif size is None:
                     log.info("terminal session %s: ignored %r from the page", session,
                              message["text"][:80])
@@ -67,6 +67,8 @@ async def carried(websocket: WebSocket, sessions: TerminalSessions, session: str
                 abandon_on_cancel=True)) is not None:
             if chunk:
                 await websocket.send_bytes(chunk)
+            for pong in connection.pongs():
+                await websocket.send_text(json.dumps({"pong": pong}))
         await websocket.send_text(json.dumps({"exit_code": connection.exit_code()}))
         await websocket.close(ENDED)
 

@@ -6,6 +6,8 @@ EXIT = b"x"
 INPUT = b"i"
 RESIZE = b"r"
 RESUME = b"f"
+PING = b"p"
+PONG = b"q"
 
 _HEADER = struct.Struct("!cI")
 _SIZE = struct.Struct("!HH")

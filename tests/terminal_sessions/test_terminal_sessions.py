@@ -185,6 +185,20 @@ def test_closing_the_last_connection_leaves_the_session_to_be_attached_again(any
     assert any_sessions.attach(started) is not None
 
 
+def test_a_connection_pinging_its_session_hears_each_ping_back(any_sessions, worktree):
+    connection = any_sessions.attach(any_sessions.start(str(worktree), FOREVER))
+
+    connection.ping(7)
+    connection.ping(8)
+
+    heard: list[int] = []
+    deadline = time.monotonic() + 10.0
+    while len(heard) < 2 and time.monotonic() < deadline:
+        connection.read(0.1)
+        heard += connection.pongs()
+    assert heard == [7, 8]
+
+
 def test_a_session_prints_what_its_command_prints_and_ends_with_its_exit_code(real, worktree):
     connection = real.attach(real.start(str(worktree), ["sh", "-c", "read go; printf hello; exit 3"]))
 

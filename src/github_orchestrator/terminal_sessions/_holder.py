@@ -20,6 +20,8 @@ from github_orchestrator.terminal_sessions._frames import (
     EXIT,
     INPUT,
     OUTPUT,
+    PING,
+    PONG,
     RESIZE,
     RESUME,
     Unframer,
@@ -178,17 +180,20 @@ class _Held:
             self._connections += 1
             offset = max(after, self._dropped)
         gone = threading.Event()
-        typing = threading.Thread(target=self._typed, args=(connection, frames, gone),
-                                  daemon=True)
+        sending = threading.Lock()
+        typing = threading.Thread(target=self._typed,
+                                  args=(connection, frames, gone, sending), daemon=True)
         typing.start()
         try:
             while not gone.is_set():
                 chunk, offset = self._output_after(offset, SEND_SECONDS)
                 if chunk is None:
-                    connection.sendall(framed(EXIT, str(self._exit_code).encode()))
+                    with sending:
+                        connection.sendall(framed(EXIT, str(self._exit_code).encode()))
                     break
                 if chunk:
-                    connection.sendall(framed(OUTPUT, chunk))
+                    with sending:
+                        connection.sendall(framed(OUTPUT, chunk))
         except OSError:
             pass
         finally:
@@ -197,7 +202,7 @@ class _Held:
             connection.close()
 
     def _typed(self, connection: socket.socket, frames: Unframer,
-               gone: threading.Event) -> None:
+               gone: threading.Event, sending: threading.Lock) -> None:
         data = b""
         try:
             while True:
@@ -206,6 +211,9 @@ class _Held:
                         self._write(payload)
                     elif kind == RESIZE:
                         self._resize(*size_of(payload))
+                    elif kind == PING:
+                        with sending:
+                            connection.sendall(framed(PONG, payload))
                 data = connection.recv(READ_BYTES)
                 if not data:
                     break

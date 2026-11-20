@@ -161,7 +161,7 @@ def test_what_the_page_types_and_its_size_reach_the_session(web, sessions):
     assert sessions.sessions[session].size == (120, 40)
 
 
-def test_a_page_pinging_the_session_hears_its_ping_back(web, sessions):
+def test_a_page_pinging_the_session_hears_its_ping_back_from_the_session(web, sessions):
     session = sessions.start(WORKTREE, ["/bin/zsh", "-l"])
     sessions.print(session, b"$ ")
 
@@ -169,6 +169,8 @@ def test_a_page_pinging_the_session_hears_its_ping_back(web, sessions):
         page.receive_bytes()
         page.send_text(json.dumps({"ping": 7}))
         assert json.loads(page.receive_text()) == {"pong": 7}
+
+    assert sessions.sessions[session].pinged == [7]
 
 
 def test_a_session_that_ends_tells_the_page_its_exit_code_and_closes(web, sessions):

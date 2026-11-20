@@ -18,6 +18,8 @@ from github_orchestrator.terminal_sessions._frames import (
     EXIT,
     INPUT,
     OUTPUT,
+    PING,
+    PONG,
     RESIZE,
     RESUME,
     Unframer,
@@ -76,6 +78,7 @@ class _Connection:
         self._exit_code: int | None = None
         self._over = False
         self._closed = False
+        self._pongs: list[int] = []
 
     def read(self, timeout: float) -> bytes | None:
         if self._over:
@@ -91,6 +94,8 @@ class _Connection:
         for kind, payload in self._frames.fed(data):
             if kind == OUTPUT:
                 printed += payload
+            elif kind == PONG:
+                self._pongs.append(int(payload))
             elif kind == EXIT:
                 self._exit_code = int(payload)
                 self._over = True
@@ -111,6 +116,13 @@ class _Connection:
 
     def resize(self, columns: int, rows: int) -> None:
         self._send(framed(RESIZE, sized(columns, rows)))
+
+    def ping(self, ping: int) -> None:
+        self._send(framed(PING, str(ping).encode()))
+
+    def pongs(self) -> list[int]:
+        heard, self._pongs = self._pongs, []
+        return heard
 
     def exit_code(self) -> int | None:
         return self._exit_code
