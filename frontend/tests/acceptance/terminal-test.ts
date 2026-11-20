@@ -471,6 +471,7 @@ module('Acceptance | terminal', function (hooks) {
     board().terminalSessions = [SHELL];
     await visit('/pr/o/r/7/terminal');
     const [socket] = board().socketsOf('shell-1');
+    await seconds(1);
 
     socket!.answersPings = false;
     await seconds(9);
@@ -487,6 +488,7 @@ module('Acceptance | terminal', function (hooks) {
     board().terminalSessions = [SHELL];
     await visit('/pr/o/r/7/terminal');
     const [socket] = board().socketsOf('shell-1');
+    await seconds(1);
     socket!.answersPings = false;
     await seconds(10);
     assert.dom('[data-test-banner]').exists();
@@ -494,6 +496,18 @@ module('Acceptance | terminal', function (hooks) {
     socket!.answersPings = true;
     socket!.answerPings();
     await seconds(1);
+
+    assert.dom('[data-test-banner]').doesNotExist();
+  });
+
+  test('a terminal session that has never answered a ping raises no banner, since its holder predates pings', async function (assert) {
+    onTheHub();
+    board().terminalSessions = [SHELL];
+    await visit('/pr/o/r/7/terminal');
+    const [socket] = board().socketsOf('shell-1');
+
+    socket!.answersPings = false;
+    await seconds(12);
 
     assert.dom('[data-test-banner]').doesNotExist();
   });

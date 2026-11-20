@@ -80,6 +80,7 @@ export class Session {
   private pinging: number | null = null;
   private pings: Ping[] = [];
   private nextPing = 0;
+  private answered = false;
   private slowSince: number | null = null;
 
   constructor(
@@ -252,6 +253,7 @@ export class Session {
     if (this.pinging !== null) clearInterval(this.pinging);
     this.pinging = null;
     this.pings = [];
+    this.answered = false;
     this.slowSince = null;
     this.slow = false;
   }
@@ -259,7 +261,7 @@ export class Session {
   private ping(): void {
     const now = Date.now();
     const oldest = this.pings[0];
-    if (oldest && now - oldest.at > SLOW_ROUND_TRIP_MS) {
+    if (this.answered && oldest && now - oldest.at > SLOW_ROUND_TRIP_MS) {
       this.slowSince ??= now;
     } else {
       this.slowSince = null;
@@ -271,6 +273,7 @@ export class Session {
   }
 
   private ponged(id: number): void {
+    this.answered = true;
     this.pings = this.pings.filter((one) => one.id > id);
   }
 
