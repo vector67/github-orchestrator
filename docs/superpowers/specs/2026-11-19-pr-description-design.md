@@ -22,9 +22,11 @@ These were settled before the build. They are fixed.
    (`board_api/_contract.py`) drops it. Expose it.
 2. The Summary tab (`frontend/app/components/summary-tab.gts`) gets a block
    with the title and the rendered description, and Edit and Hide buttons.
-   Hide, or scrolling the summary down, folds the description to a Show
-   description button across from the title; an open editor stays open.
-   Scrolling the summary back to the top brings the description back.
+   Hide folds the description to a Show description button across from the
+   title. The whole tab scrolls under the title and its facts, so the
+   summary's strip slides up over the description and stays under them; once
+   it covers the description, Show description appears, and scrolls back to
+   the top.
 3. Edit opens a markdown box with Write and Preview tabs, plus a title field.
    Save PATCHes title and body together (the endpoint `assign_reviewers`
    already PATCHes in `_pull_requests.py`). Cancel throws the edit away.

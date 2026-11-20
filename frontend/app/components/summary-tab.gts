@@ -26,21 +26,26 @@ export default class SummaryTab extends Component {
   @service declare theme: ThemeService;
 
   @tracked descriptionShown = true;
-  private summaryTop = 0;
+  @tracked descriptionCovered = false;
+  private scroller: HTMLElement | null = null;
 
   showDescription = (): void => {
     this.descriptionShown = true;
+    this.descriptionCovered = false;
+    this.scroller?.scrollTo({ top: 0 });
   };
 
   hideDescription = (): void => {
     this.descriptionShown = false;
   };
 
-  foldDescriptionOnScroll = (event: Event): void => {
-    const top = (event.target as HTMLElement).scrollTop;
-    if (top === 0) this.descriptionShown = true;
-    else if (top > this.summaryTop) this.descriptionShown = false;
-    this.summaryTop = top;
+  coverDescriptionOnScroll = (event: Event): void => {
+    const scroller = event.currentTarget as HTMLElement;
+    const description = scroller.querySelector<HTMLElement>('.summary-pr-body');
+    this.scroller = scroller;
+    this.descriptionCovered =
+      scroller.scrollTop > 0 &&
+      scroller.scrollTop >= (description?.offsetHeight ?? 0) - 1;
   };
 
   get tab(): Tab | null {
@@ -92,13 +97,18 @@ export default class SummaryTab extends Component {
   };
 
   <template>
-    <div id="summary-tab" data-test-summary-tab>
+    <div
+      id="summary-tab"
+      data-test-summary-tab
+      {{on "scroll" this.coverDescriptionOnScroll}}
+    >
       {{#if this.header}}
         <PrDescription
           @title={{this.header.title}}
           @body={{this.header.body}}
           @unchecked={{this.header.unchecked}}
           @shown={{this.descriptionShown}}
+          @covered={{this.descriptionCovered}}
           @onShow={{this.showDescription}}
           @onHide={{this.hideDescription}}
         >
@@ -287,7 +297,6 @@ export default class SummaryTab extends Component {
           <div
             class="summary-body comment-body"
             data-test-summary-markdown
-            {{on "scroll" this.foldDescriptionOnScroll}}
             {{drawn summaryOf this.tab.markdown}}
             {{diagrams this.tab.markdown this.theme.dark}}
           ></div>

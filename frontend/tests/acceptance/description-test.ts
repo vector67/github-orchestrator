@@ -1,6 +1,13 @@
 import { module, test } from 'qunit';
 import { setupApplicationTest } from 'frontend/tests/helpers';
-import { click, fillIn, focus, triggerEvent, visit } from '@ember/test-helpers';
+import {
+  click,
+  fillIn,
+  focus,
+  triggerEvent,
+  visit,
+  waitUntil,
+} from '@ember/test-helpers';
 import {
   DESCRIPTION_SAVED_AT,
   dashboard,
@@ -61,50 +68,74 @@ module('Acceptance | pull request description', function (hooks) {
     });
   }
 
-  async function scrollSummaryDown(): Promise<void> {
-    const body = document.querySelector<HTMLElement>(
-      '[data-test-summary-markdown]',
-    )!;
-    body.scrollTop += 200;
-    await triggerEvent(body, 'scroll');
+  function summaryTab(): HTMLElement {
+    return document.querySelector<HTMLElement>('[data-test-summary-tab]')!;
   }
 
-  test('scrolling the summary down folds the description to Show description beside the title, which opens it again with Edit and Hide', async function (assert) {
+  function topOf(selector: string): number {
+    return document.querySelector(selector)!.getBoundingClientRect().top;
+  }
+
+  function bottomOf(selector: string): number {
+    return document.querySelector(selector)!.getBoundingClientRect().bottom;
+  }
+
+  async function scrollSummaryTo(top: number): Promise<void> {
+    summaryTab().scrollTop = top;
+    await triggerEvent(summaryTab(), 'scroll');
+  }
+
+  async function scrollSummaryDown(): Promise<void> {
+    await scrollSummaryTo(summaryTab().scrollTop + 2000);
+  }
+
+  test('scrolling the summary a little slides the strip up over the description, keeping the title and its facts in place', async function (assert) {
+    described();
+    longSummary();
+    await visit('/pr/o/r/7/summary');
+    const titleBefore = topOf('[data-test-summary-title]');
+    const stripBefore = topOf('[data-test-summary-strip]');
+
+    await scrollSummaryTo(4);
+
+    assert.strictEqual(topOf('[data-test-summary-title]'), titleBefore);
+    assert.true(topOf('[data-test-summary-strip]') < stripBefore);
+    assert.dom('[data-test-description]').exists();
+    assert.dom('[data-test-description-show]').doesNotExist();
+  });
+
+  test('once the strip covers the whole description it stays under the title, with Show description beside the title, which scrolls back to the top', async function (assert) {
     described();
     longSummary();
     await visit('/pr/o/r/7/summary');
 
-    assert.dom('[data-test-description-show]').doesNotExist();
-    assert.dom('[data-test-description-hide]').hasText('Hide');
-
     await scrollSummaryDown();
 
-    assert.dom('[data-test-description]').doesNotExist();
-    assert.dom('[data-test-description-edit]').doesNotExist();
-    assert.dom('[data-test-description-hide]').doesNotExist();
+    await waitUntil(
+      () =>
+        Math.abs(
+          topOf('[data-test-summary-strip]') -
+            bottomOf('[data-test-summary-pr]'),
+        ) < 1,
+    );
     assert
       .dom('[data-test-summary-title-row] [data-test-description-show]')
       .hasText('Show description');
 
     await click('[data-test-description-show]');
 
+    assert.strictEqual(summaryTab().scrollTop, 0);
     assert.dom('[data-test-description]').hasText('🤖 Renames the helper.');
-    assert.dom('[data-test-description-edit]').hasText('Edit');
-    assert.dom('[data-test-description-hide]').hasText('Hide');
     assert.dom('[data-test-description-show]').doesNotExist();
   });
 
-  test('scrolling the summary back to the top brings the description back', async function (assert) {
+  test('scrolling the summary back to the top takes Show description away', async function (assert) {
     described();
     longSummary();
     await visit('/pr/o/r/7/summary');
     await scrollSummaryDown();
-    const body = document.querySelector<HTMLElement>(
-      '[data-test-summary-markdown]',
-    )!;
 
-    body.scrollTop = 0;
-    await triggerEvent(body, 'scroll');
+    await scrollSummaryTo(0);
 
     assert.dom('[data-test-description]').hasText('🤖 Renames the helper.');
     assert.dom('[data-test-description-show]').doesNotExist();

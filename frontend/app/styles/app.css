@@ -4230,11 +4230,16 @@ kbd {
   flex: 1;
   flex-direction: column;
   min-height: 0;
+  overflow: auto;
 }
 
 .summary-strip {
+  position: sticky;
+  top: var(--summary-pr-height, 0);
+  z-index: 1;
   display: flex;
   flex: none;
+  background: var(--page);
   flex-wrap: wrap;
   gap: 6px 14px;
   align-items: center;
@@ -4292,8 +4297,17 @@ kbd {
 }
 
 .summary-pr {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   flex: none;
-  padding: 14px 24px 10px;
+  padding: 14px 24px 6px;
+  background: var(--page);
+}
+
+.summary-pr-body {
+  flex: none;
+  padding: 0 24px 10px;
   border-bottom: 1px solid var(--hairline);
 }
 
@@ -4423,7 +4437,6 @@ kbd {
 .summary-body {
   flex: 1;
   padding: 16px 24px 32px;
-  overflow: auto;
 }
 
 .summary-body table {

@@ -5,6 +5,7 @@ import { fn } from '@ember/helper';
 import { on } from '@ember/modifier';
 import { waitForPromise } from '@ember/test-waiters';
 import CommentBody from 'frontend/components/comment-body';
+import sharesHeight from 'frontend/modifiers/shares-height';
 import type HereService from 'frontend/services/here';
 import type StoreService from 'frontend/services/store';
 
@@ -16,6 +17,7 @@ interface PrDescriptionSignature {
     body: string | null;
     unchecked: boolean;
     shown: boolean;
+    covered: boolean;
     onShow: () => void;
     onHide: () => void;
   };
@@ -36,6 +38,10 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
   private startedFrom = '';
 
   isPane = (pane: Pane): boolean => this.pane === pane;
+
+  get offersShow(): boolean {
+    return !this.args.shown || this.args.covered;
+  }
 
   get unsaveable(): boolean {
     return this.saving || !this.title.trim();
@@ -111,7 +117,11 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
   }
 
   <template>
-    <header class="summary-pr" data-test-summary-pr>
+    <header
+      class="summary-pr"
+      data-test-summary-pr
+      {{sharesHeight "--summary-pr-height"}}
+    >
       {{#if this.editing}}
         <input
           type="text"
@@ -126,17 +136,19 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
           <h2 class="summary-pr-title" data-test-summary-title>
             {{@title}}
           </h2>
-          {{#unless @shown}}
+          {{#if this.offersShow}}
             <button
               type="button"
               class="btn summary-pr-show"
               data-test-description-show
               {{on "click" @onShow}}
             >Show description</button>
-          {{/unless}}
+          {{/if}}
         </div>
       {{/if}}
       {{yield}}
+    </header>
+    <div class="summary-pr-body" data-test-summary-pr-body>
       {{#if this.editing}}
         <div class="description-editor" data-test-description-editor>
           <div class="defer-tabs" role="tablist">
@@ -249,6 +261,6 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
           >Hide</button>
         </div>
       {{/if}}
-    </header>
+    </div>
   </template>
 }
