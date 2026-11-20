@@ -112,6 +112,15 @@ def test_a_review_sent_since_the_last_poll_reads_as_given(settings, tmp_path):
         "approved", "2026-09-24T12:00:00Z", False)
 
 
+def test_a_review_sent_since_the_last_poll_leaves_you_off_the_pending_reviewers(
+        settings, tmp_path):
+    asked = polled_pr(author="alice", reviews=(), pending_reviewers=(ACCOUNT, "dave"))
+
+    dashboard = _sent(settings, tmp_path, asked, Verdict.APPROVE)
+
+    assert dashboard.pending_reviewers == ("dave",)
+
+
 def test_a_comment_sent_after_an_approval_keeps_the_approval_and_ends_the_request(
         settings, tmp_path):
     approved = Review(ACCOUNT, ReviewState.APPROVED, REVIEWED_AT, "abc000")

@@ -21,14 +21,16 @@ from github_orchestrator.working_copies import WrongBranch
 _VERDICTS = frozenset({ReviewerStatus.APPROVED, ReviewerStatus.CHANGES_REQUESTED})
 
 
-def _as_sent(facts: Facts, threads: ConversationManager) -> Facts:
+def _as_sent(facts: Facts, threads: ConversationManager, account: str) -> Facts:
     sent = None if facts.polled_at is None else threads.sent_since(facts.polled_at)
     if sent is None:
         return facts
+    answered = replace(facts, viewer_requested=False, pending_reviewers=tuple(
+        login for login in facts.pending_reviewers if login != account))
     given, settled_at = sent
     if given is ReviewerStatus.COMMENTED and facts.my_review in _VERDICTS:
-        return replace(facts, viewer_requested=False)
-    return replace(facts, my_review=given, my_review_at=settled_at, viewer_requested=False)
+        return answered
+    return replace(answered, my_review=given, my_review_at=settled_at)
 
 
 def _my_review(state: Facts) -> str | None:
@@ -52,7 +54,7 @@ def dashboard_of(config: ManagerConfig, facts: Facts | None, *, run: Run | None,
                  rerequest_queued: tuple[str, ...],
                  agent_settings: HeldAgentSettings | None) -> Dashboard:
     counts = threads.counts()
-    facts = None if facts is None else _as_sent(facts, threads)
+    facts = None if facts is None else _as_sent(facts, threads, config.account)
     since = None if facts is None or facts.is_author is True else facts.since_review
     return Dashboard(
         pr=config.pr,
