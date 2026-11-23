@@ -544,13 +544,17 @@ function told(at: string | null | undefined, what: string): HistoryEntry[] {
   return at ? [{ at, when: whenOf(new Date(at)), what }] : [];
 }
 
-function commentsTold(one: Thread, author: string | null): HistoryEntry[] {
+function commentsTold(
+  one: Thread,
+  author: string | null,
+  names: Record<string, string | null>,
+): HistoryEntry[] {
   return (one.comments ?? []).flatMap((said) =>
     told(
       said.created_at,
       said.author === author && author !== one.opened_by
-        ? `${said.author} replied`
-        : `${said.author} commented`,
+        ? `${personNameOf(said.author, names)} replied`
+        : `${personNameOf(said.author, names)} commented`,
     ),
   );
 }
@@ -610,10 +614,11 @@ export function commentStoryOf(
   thread: Thread | undefined,
   operations: Operations,
   author: string | null,
+  names: Record<string, string | null>,
 ): CommentStory {
   if (!thread) return { what: null, history: [] };
   const history = [
-    ...commentsTold(thread, author),
+    ...commentsTold(thread, author, names),
     ...operationsOf(thread, operations).flatMap((one) =>
       operationTold(one, thread),
     ),
@@ -2493,6 +2498,13 @@ export interface Reviewer extends Person {
 export interface ReviewerGroup {
   label: string | null;
   people: Reviewer[];
+}
+
+export function personNameOf(
+  login: string,
+  names: Record<string, string | null>,
+): string {
+  return names[login] ?? login;
 }
 
 export function styledNames(

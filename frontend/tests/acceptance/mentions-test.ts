@@ -70,6 +70,17 @@ module('Acceptance | mentions', function (hooks) {
     await click(`[data-test-mention="${key}"] [data-test-mention-more]`);
   }
 
+  test('a mention names whoever mentioned you by the name GitHub gave', async function (assert) {
+    board().held = [heldPr({ dashboard: { names: { anna: 'Anna Example' } } })];
+    board().mentions.mentions = [outstandingMention({ thread: 'k1' })];
+
+    await listed();
+
+    assert
+      .dom('[data-test-mention="k1"] .mention-head')
+      .hasText('Anna Example on o/r#7');
+  });
+
   test('clicking anywhere on a mention on the board opens its thread', async function (assert) {
     board().held = [heldPr()];
     board().conversations = [thread({ key: 'k1' })];
@@ -519,6 +530,16 @@ module('Acceptance | mentions | defer', function (hooks) {
       outstandingMention({ thread: 'k1', comment_id: 1 }),
       outstandingMention({ thread: 'k2', comment_id: 2 }),
     ];
+  });
+
+  test('Defer… names whoever mentioned you by the name GitHub gave', async function (assert) {
+    board().held = [heldPr({ dashboard: { names: { anna: 'Anna Example' } } })];
+
+    await deferring();
+
+    assert
+      .dom('#defer-mention-question')
+      .hasText('Defer Anna Example’s mention on o/r#7');
   });
 
   test('Defer… opens a dialog on its For a time tab, with four presets in your local time', async function (assert) {

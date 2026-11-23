@@ -1434,6 +1434,16 @@ module('Acceptance | pr diff', function (hooks) {
       };
     });
 
+    test('each comment on a card names its author by name where the board knows it', async function (assert) {
+      board().people = [{ login: 'anna', name: 'Anna Example' }];
+      await visit('/pr/o/r/7/diff');
+
+      assert.deepEqual(
+        texts(`${under('+20')} [data-test-card="k1"] .comment-head .who`),
+        ['Anna Example', 'octocat'],
+      );
+    });
+
     test('a posted thread shows under its last line with its comments, a resolved one folds to the lines it is on', async function (assert) {
       board().conversations.push(
         thread({ key: 'k5', anchor: anchored(20), github_resolved: true }),

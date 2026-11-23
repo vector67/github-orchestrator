@@ -3666,6 +3666,12 @@
     "manager": {
      "$ref": "#/components/schemas/ManagerFlags"
     },
+    "names": {
+     "additionalProperties": {
+      "type": "string"
+     },
+     "type": "object"
+    },
     "notice": {
      "anyOf": [
       {
@@ -3717,6 +3723,7 @@
     "notice",
     "standing",
     "facts",
+    "names",
     "manager",
     "threads",
     "unreadable",

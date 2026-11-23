@@ -194,7 +194,11 @@ export default class InlineCard extends Component<InlineCardSignature> {
           {{#each @item.entries key="@index" as |entry|}}
             <div class="inline-comment">
               <div class="comment-head">
-                <span class="who">{{entry.author}}</span>
+                <span class="who">{{if
+                    entry.author_name
+                    entry.author_name
+                    entry.author
+                  }}</span>
                 <span class="meta">{{entry.meta}}</span>
               </div>
               <CommentBody @body={{entry.body}} />

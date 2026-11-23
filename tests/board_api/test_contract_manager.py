@@ -97,6 +97,7 @@ def test_the_dashboard_read_answers_what_the_manager_last_drew():
                   "my_review_sha": None, "force_pushed_at": None,
                   "viewer_requested": False, "mentioned": False, "mentions": [],
                   "unresolved_threads": 0},
+        "names": {},
         "manager": {"frozen_on": None, "on_hold": True, "working_on": "new-comments",
                     "hidden": False, "importance": None, "nudge_due": False,
                     "threads_live": 2, "agent_settings": None, "clean_up": None, "changed_at": None},
@@ -152,6 +153,14 @@ def test_the_dashboard_read_ships_the_facts_flags_and_threads_the_next_move_read
 
 
 HELD = HeldAgentSettings((".claude/settings.json", "CLAUDE.md"), "d1g35t")
+
+
+def test_the_dashboard_names_the_people_github_named_with_the_pull_request():
+    drawn = replace(IDLE, approved_by=("hubot",), names={"hubot": "Hu Bot"})
+
+    answer = client_for(manager=FakeManagerPanel(now=drawn)).get("/api/dashboard")
+
+    assert answer.json()["names"] == {"hubot": "Hu Bot"}
 
 
 def test_the_dashboard_ships_the_files_a_worktree_clean_up_asks_about():

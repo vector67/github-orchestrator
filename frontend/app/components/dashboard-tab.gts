@@ -411,7 +411,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   get rerequests(): RerequestControl[] {
     const move = this.summaries?.move;
-    return move ? rerequestControlsOf(move) : [];
+    return move ? rerequestControlsOf(move, this.store.names) : [];
   }
 
   get rerequestPrompt(): Prompt | null {
@@ -448,7 +448,7 @@ export default class DashboardTab extends Component<DashboardTabSignature> {
 
   get queued(): QueuedControl[] {
     const move = this.summaries?.move;
-    return move ? queuedControlsOf(move) : [];
+    return move ? queuedControlsOf(move, this.store.names) : [];
   }
 
   cancelRerequest = (reviewer: string) => () => {

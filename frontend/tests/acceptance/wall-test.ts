@@ -863,6 +863,22 @@ module('Acceptance | wall', function (hooks) {
     assert.deepEqual(chips('o/r#7'), ['approved by alice']);
   });
 
+  test('an approval names the approver by the name GitHub gave with the pull request', async function (assert) {
+    onTheHub(
+      heldPr({
+        dashboard: {
+          facts: factsFor('await-ci', { review_decision: null }),
+          status: { approved_by: ['alice'] },
+          names: { alice: 'Alice Liddell' },
+        },
+      }),
+    );
+
+    await visit('/');
+
+    assert.deepEqual(chips('o/r#7'), ['approved by Alice Liddell']);
+  });
+
   test('a review request after others reviewed does not say "no reviews yet"', async function (assert) {
     onTheHub(
       heldPr({

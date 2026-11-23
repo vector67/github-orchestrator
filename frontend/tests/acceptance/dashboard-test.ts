@@ -205,6 +205,31 @@ module('Acceptance | dashboard', function (hooks) {
       .hasText('Approved by alice · CI passing');
   });
 
+  test('the band names the approver in the names style the settings menu picked', async function (assert) {
+    onTheHub({
+      facts: factsFor('ready-to-merge'),
+      status: { approved_by: ['alice'] },
+      names: { alice: 'Alice Liddell' },
+    });
+
+    await visit('/pr/o/r/7/dashboard');
+    assert
+      .dom('[data-test-band-computed]')
+      .hasText('Approved by Alice Liddell · CI passing');
+
+    await click('[data-test-settings-open]');
+    await click('[data-test-name-style-open]');
+    await click('[data-test-name-style="first"]');
+    assert
+      .dom('[data-test-band-computed]')
+      .hasText('Approved by Alice · CI passing');
+
+    await click('[data-test-name-style="login"]');
+    assert
+      .dom('[data-test-band-computed]')
+      .hasText('Approved by alice · CI passing');
+  });
+
   test('the status block marks what is wrong and words the rest', async function (assert) {
     onTheHub({
       facts: {
@@ -228,7 +253,7 @@ module('Acceptance | dashboard', function (hooks) {
         ]),
       ),
       {
-        reviewer: '@carol',
+        reviewer: 'carol',
         ci: 'failing',
         mergeable: 'no',
         review: 'changes requested',

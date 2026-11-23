@@ -554,6 +554,7 @@ export function dashboard(over: DashboardOver = {}): Dashboard {
     notice: null,
     standing: 'answering',
     facts: facts === null ? null : prFacts(facts),
+    names: {},
     manager: {
       frozen_on: null,
       on_hold: false,

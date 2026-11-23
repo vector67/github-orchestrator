@@ -152,6 +152,7 @@ import {
   commitNoteOf,
   mergeNoteOf,
   pickedRangeOf,
+  personNameOf,
   timelineOf,
   summaryOf,
   summaryTabOf,
@@ -605,6 +606,7 @@ export default class StoreService extends Service {
       this.threads[key]?.[thread],
       this.operations[key] ?? {},
       this.prs[key]?.author ?? null,
+      this.names,
     );
   }
 
@@ -623,7 +625,7 @@ export default class StoreService extends Service {
     now: number,
   ): Reading {
     const failing = failingOf(shown, this.ledger?.runs ?? []);
-    return dashboardOf(shown, summaries, now, failing);
+    return dashboardOf(shown, summaries, now, this.names, failing);
   }
 
   get mentionRows(): MentionRow[] {
@@ -1114,6 +1116,8 @@ export default class StoreService extends Service {
   get names(): Record<string, string | null> {
     return styledNames(this.fullNames, this.nameStyle.chosen);
   }
+
+  nameFor = (login: string): string => personNameOf(login, this.names);
 
   mentionable(pr: Numbered): Person[] {
     const key = keyOf(pr.repo, pr.number);
@@ -2083,6 +2087,14 @@ export default class StoreService extends Service {
     };
   }
 
+  private takeNames(names: Record<string, string> | undefined): void {
+    const fresh = Object.entries(names ?? {}).filter(
+      ([login, name]) => this.fullNames[login] !== name,
+    );
+    if (!fresh.length) return;
+    this.fullNames = { ...this.fullNames, ...Object.fromEntries(fresh) };
+  }
+
   private takeConversations(
     { repo, number }: Numbered,
     list: ConversationList,
@@ -2428,6 +2440,7 @@ export default class StoreService extends Service {
       fromTheHub,
     );
     this.mergeThreads(keyOf(repo, number), threads, listed_at, false);
+    this.takeNames(dashboard.names);
     const drawn: Drawn = {
       polled: dashboard.polled,
       status: dashboard.status,

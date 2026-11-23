@@ -2224,6 +2224,10 @@ class Dashboard(BaseModel):
                     "they are what is on disk without it.")
     facts: PrFacts | None = Field(
         description="What the next move reads of GitHub. Null until the first poll.")
+    names: dict[str, str] = Field(
+        description="The display name GitHub gave with the pull request for its "
+                    "author and each reviewer, by login. A login with no name "
+                    "set is left out.")
     manager: ManagerFlags
     threads: list[ThreadRow] = Field(
         description="Every readable thread on the pull request, one line each. "

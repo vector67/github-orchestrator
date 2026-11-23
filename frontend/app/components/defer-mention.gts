@@ -125,7 +125,7 @@ export default class DeferMention extends Component<DeferMentionSignature> {
       >
         <header class="dialog-head">
           <p class="question" id="defer-mention-question">Defer
-            {{@mention.author}}’s mention on
+            {{this.store.nameFor @mention.author}}’s mention on
             {{@mention.repo}}#{{@mention.number}}</p>
           <button
             type="button"

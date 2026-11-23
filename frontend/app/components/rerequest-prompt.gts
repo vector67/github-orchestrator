@@ -87,7 +87,7 @@ export default class RerequestPrompt extends Component<RerequestPromptSignature>
       >
         <header class="dialog-head">
           <p class="dialog-kicker" data-test-rerequest-kicker>Last comment from
-            {{@prompt.reviewer}}</p>
+            {{this.store.nameFor @prompt.reviewer}}</p>
           <button
             type="button"
             class="dialog-close"
@@ -100,7 +100,8 @@ export default class RerequestPrompt extends Component<RerequestPromptSignature>
           class="question"
           id="rerequest-prompt-question"
           data-test-rerequest-question
-        >Re-request {{@prompt.reviewer}}'s review of #{{@prompt.number}}?</p>
+        >Re-request
+          {{this.store.nameFor @prompt.reviewer}}'s review of #{{@prompt.number}}?</p>
         <p class="rerequest-standing"><span
             class="state-chip
               {{if @prompt.badge.alarm 'tone-alarm' 'tone-plain'}}"

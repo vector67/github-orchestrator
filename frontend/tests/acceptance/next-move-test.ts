@@ -524,7 +524,7 @@ module('Acceptance | next move', function (hooks) {
       [
         'mention',
         'needs-you',
-        'Next · on hold, shown because anna mentioned you',
+        'Next · on hold, shown because Anna Example mentioned you',
       ],
     );
   });

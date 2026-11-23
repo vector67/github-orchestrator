@@ -802,6 +802,28 @@ module('Acceptance | re-request review', function (hooks) {
     ]);
   });
 
+  test('the prompt and its history name people by the names GitHub gave', async function (assert) {
+    serve({ facts: CAROL_COMMENTED, names: { carol: 'Carol Danvers' } });
+    const told = closed('PRRT_c2', {
+      comments: [
+        { id: 1, author: 'carol', created_at: AT(10), review_state: null },
+      ],
+    });
+    await markedDone([told]);
+
+    assert
+      .dom('[data-test-rerequest-kicker]')
+      .hasText('Last comment from Carol Danvers');
+    assert
+      .dom('[data-test-rerequest-question]')
+      .hasText("Re-request Carol Danvers's review of #7?");
+    await historyOpened('PRRT_c2');
+    assert.strictEqual(
+      historyOf('PRRT_c2')[0]?.what,
+      'Carol Danvers commented',
+    );
+  });
+
   test('History says a comment was rejected, resolved, or deferred and what woke it', async function (assert) {
     const deferred = closed('PRRT_c6', {
       operations: [
@@ -984,6 +1006,22 @@ module('Acceptance | re-request review', function (hooks) {
     assert
       .dom('[data-test-rerequest-question]')
       .hasText("Re-request erin's review of #7?");
+  });
+
+  test('with two reviewers owed, each "Re-request review" names its reviewer by name', async function (assert) {
+    serve({
+      facts: { ...CAROL_COMMENTED, commented_by: ['carol', 'erin'] },
+      names: { erin: 'Erin Hannon' },
+    });
+    board().conversations = [
+      closed('PRRT_c1', {}),
+      closed('PRRT_e1', { opened_by: 'erin' }),
+    ];
+    await visit('/pr/o/r/7/dashboard');
+
+    assert
+      .dom('[data-test-control="rerequest-review"][data-test-reviewer="erin"]')
+      .hasText('Re-request review from Erin Hannon');
   });
 
   const QUEUED: DashboardOver = {

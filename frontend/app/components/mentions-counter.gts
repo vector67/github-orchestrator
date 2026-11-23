@@ -157,7 +157,9 @@ export default class MentionsCounter extends Component {
                   rel="noopener noreferrer"
                   data-test-mention-github
                 >
-                  <span class="mention-head">{{mention.author}}
+                  <span class="mention-head">{{this.store.nameFor
+                      mention.author
+                    }}
                     on
                     {{mention.repo}}#{{mention.number}}</span>
                   <span
@@ -179,7 +181,9 @@ export default class MentionsCounter extends Component {
                   data-test-mention-open
                   {{navigates (fn this.go mention)}}
                 >
-                  <span class="mention-head">{{mention.author}}
+                  <span class="mention-head">{{this.store.nameFor
+                      mention.author
+                    }}
                     on
                     {{mention.repo}}#{{mention.number}}</span>
                   <span

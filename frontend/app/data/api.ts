@@ -271,6 +271,7 @@ export interface Dashboard {
   notice: Notice | null;
   standing: ManagerStanding;
   facts: PrFacts | null;
+  names: Record<string, string>;
   manager: ManagerFlags;
   threads: ThreadRow[];
   unreadable: string[];

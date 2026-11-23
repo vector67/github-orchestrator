@@ -594,6 +594,7 @@ def dashboard_of(dashboard: Dashboard) -> contract.Dashboard:
             code=dashboard.notice.code, detail=dashboard.notice.detail),
         standing=dashboard.standing,
         facts=_facts_of(dashboard) if dashboard.polled else None,
+        names=dashboard.names,
         manager=contract.ManagerFlags(
             frozen_on=dashboard.frozen_on, on_hold=dashboard.on_hold,
             working_on=dashboard.working_on, hidden=dashboard.hidden,

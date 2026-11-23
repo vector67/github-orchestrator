@@ -551,7 +551,7 @@ module('Acceptance | agent question', function (hooks) {
 
       assert
         .dom('[data-test-answer-reply]')
-        .includesText("anna replied to the thread you're answering");
+        .includesText("Anna Example replied to the thread you're answering");
       await click('[data-test-see-reply]');
       assert
         .dom('[data-test-reply-dialog] [data-test-entry]')
@@ -567,6 +567,23 @@ module('Acceptance | agent question', function (hooks) {
       assert.dom('[data-test-answer-reply]').doesNotExist();
     });
 
+    test('a reply on the thread you are answering names its author by name', async function (assert) {
+      answering(board());
+      board().people = [{ login: 'anna', name: 'Anna Example' }];
+
+      await visit(`/pr/o/r/7/conversations/${KEY}`);
+
+      assert
+        .dom('[data-test-answer-reply]')
+        .includesText("Anna Example replied to the thread you're answering");
+      await click('[data-test-see-reply]');
+      assert.dom('.reply-dialog-title').hasText('Anna Example replied');
+      assert
+        .dom('[data-test-reply-dialog] [data-test-entry] .entry-who')
+        .hasText('Anna Example');
+      assert.dom('[data-test-copy-reply]').hasText("Copy Anna Example's reply");
+    });
+
     test('a reply on a thread you answered in a visible session says so too', async function (assert) {
       answering(board(), 'answer');
 
@@ -574,7 +591,7 @@ module('Acceptance | agent question', function (hooks) {
 
       assert
         .dom('[data-test-answer-reply]')
-        .includesText("anna replied to the thread you're answering");
+        .includesText("Anna Example replied to the thread you're answering");
     });
 
     test('a dismissed reply toast stays dismissed', async function (assert) {

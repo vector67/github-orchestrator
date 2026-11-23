@@ -23,20 +23,22 @@ import type {
 
 export const REREQUEST_REVIEW = 'Re-request review';
 
+type Names = Record<string, string | null>;
+
 interface PerReviewer {
   reviewer: string;
   first: boolean;
   named: (label: string, joined?: string) => string;
 }
 
-function perReviewer(move: NextMove, code: Move): PerReviewer[] {
+function perReviewer(move: NextMove, code: Move, names: Names): PerReviewer[] {
   if (move.code !== code) return [];
   const many = move.reviewers.length > 1;
   return move.reviewers.map((reviewer, at) => ({
     reviewer,
     first: at === 0,
     named: (label, joined = '') =>
-      many ? `${label} ${joined}${reviewer}` : label,
+      many ? `${label} ${joined}${nameOf(reviewer, names)}` : label,
   }));
 }
 
@@ -46,8 +48,11 @@ export interface RerequestControl {
   first: boolean;
 }
 
-export function rerequestControlsOf(move: NextMove): RerequestControl[] {
-  return perReviewer(move, 'rerequest-review').map(
+export function rerequestControlsOf(
+  move: NextMove,
+  names: Names,
+): RerequestControl[] {
+  return perReviewer(move, 'rerequest-review', names).map(
     ({ reviewer, first, named }) => ({
       reviewer,
       first,
@@ -63,8 +68,11 @@ export interface QueuedControl {
   first: boolean;
 }
 
-export function queuedControlsOf(move: NextMove): QueuedControl[] {
-  return perReviewer(move, 'rerequest-queued').map(
+export function queuedControlsOf(
+  move: NextMove,
+  names: Names,
+): QueuedControl[] {
+  return perReviewer(move, 'rerequest-queued', names).map(
     ({ reviewer, first, named }) => ({
       reviewer,
       first,
@@ -166,6 +174,14 @@ function withoutBidiControls(name: string): string {
 
 function listed(people: string[]): string {
   return people.map(withoutBidiControls).join(', ');
+}
+
+function nameOf(login: string, names: Names): string {
+  return names[login] ?? login;
+}
+
+function named(logins: string[], names: Names): string {
+  return listed(logins.map((login) => nameOf(login, names)));
 }
 
 const WAITING_FOR_AUTHOR = 'Waiting for author';
@@ -275,27 +291,35 @@ function unresolvedOf(facts: Polled): string {
     : 'unresolved comments';
 }
 
-function afterApprovingOf(move: NextMove): string {
+function afterApprovingOf(move: NextMove, names: Names): string {
   const still = move.stillRequested;
   return still.length
-    ? `You approved · ${listed(still)} still requested`
+    ? `You approved · ${named(still, names)} still requested`
     : 'You approved';
 }
 
-function awaitingReviewOf(status: DashboardStatus, facts: Polled): string {
+function awaitingReviewOf(
+  status: DashboardStatus,
+  facts: Polled,
+  names: Names,
+): string {
   const approved = status.approved_by.filter(
     (login) => !facts.pending_reviewers.includes(login),
   );
-  const parts = approved.map((login) => `${login} approved`);
+  const parts = approved.map((login) => `${nameOf(login, names)} approved`);
   if (facts.pending_reviewers.length) {
-    parts.push(`Waiting on: ${listed(facts.pending_reviewers)}`);
+    parts.push(`Waiting on: ${named(facts.pending_reviewers, names)}`);
   } else if (!approved.length) {
     parts.push('No reviewers assigned');
   }
   return parts.join(' · ');
 }
 
-function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
+function afterApprovingWithOthersOf(
+  move: NextMove,
+  facts: Polled,
+  names: Names,
+): string {
   const requesters = move.reviewers.filter(
     (login) =>
       facts.changes_requested_by.includes(login) &&
@@ -303,18 +327,25 @@ function afterApprovingWithOthersOf(move: NextMove, facts: Polled): string {
   );
   const awaited = move.reviewers.filter((login) => !requesters.includes(login));
   const parts = ['You approved'];
-  if (requesters.length) parts.push(`${listed(requesters)} requested changes`);
-  if (awaited.length) parts.push(`Waiting on review from: ${listed(awaited)}`);
+  if (requesters.length)
+    parts.push(`${named(requesters, names)} requested changes`);
+  if (awaited.length)
+    parts.push(`Waiting on review from: ${named(awaited, names)}`);
   return parts.join(' · ');
 }
 
 const EVERY_MENTION_ANSWERED = 'Every mention answered';
 
-function mentionedOf(move: NextMove): string {
-  return `${listed(move.mentionedBy)} mentioned you`;
+function mentionedOf(move: NextMove, names: Names): string {
+  return `${named(move.mentionedBy, names)} mentioned you`;
 }
 
-function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
+function detailOf(
+  state: Move,
+  shown: ShownPr,
+  move: NextMove,
+  names: Names,
+): string {
   const status = shown.drawn.status;
   const facts = polledOf(shown);
   const ci = CI_WORDS[facts.ci_status] ?? `CI ${facts.ci_status}`;
@@ -328,31 +359,31 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
         ? 'Merge conflicts detected'
         : `Behind ${baseOf(shown)}`;
     case 'address-feedback':
-      return `${listed(facts.changes_requested_by) || 'Reviewer'} requested changes · ${unresolvedOf(facts)}`;
+      return `${named(facts.changes_requested_by, names) || 'Reviewer'} requested changes · ${unresolvedOf(facts)}`;
     case 'rerequest-review':
-      return `Every comment from ${listed(move.reviewers)} is closed`;
+      return `Every comment from ${named(move.reviewers, names)} is closed`;
     case 'rerequest-queued':
-      return `Asks ${listed(move.reviewers)} once the fixes are pushed and CI is green`;
+      return `Asks ${named(move.reviewers, names)} once the fixes are pushed and CI is green`;
     case 'ready-to-merge':
-      return `${status.approved_by.length ? `Approved by ${listed(status.approved_by)}` : 'No approval needed'} · ${ci}`;
+      return `${status.approved_by.length ? `Approved by ${named(status.approved_by, names)}` : 'No approval needed'} · ${ci}`;
     case 'await-review':
     case 'request-reviewers':
     case 'mark-ready-for-review':
-      return awaitingReviewOf(status, facts);
+      return awaitingReviewOf(status, facts, names);
     case 'await-rereview':
-      return `Waiting on ${listed(move.reviewers)} to re-review`;
+      return `Waiting on ${named(move.reviewers, names)} to re-review`;
     case 'await-deferred':
-      return `Re-request waits until ${listed(move.reviewers)}'s deferred comment is closed`;
+      return `Re-request waits until ${named(move.reviewers, names)}'s deferred comment is closed`;
     case 'await-ci':
       return `${checksDoneOf(facts).done}/${checksDoneOf(facts).total} checks complete`;
     case 'review':
-      return `${ci} · ${status.changed_files ?? '?'} files changed · ${reviewsSoFarOf(status, facts).replace(', ', ' · ')}`;
+      return `${ci} · ${status.changed_files ?? '?'} files changed · ${reviewsSoFarOf(status, facts, names).replace(', ', ' · ')}`;
     case 'rereview':
       return `Re-review requested · ${ci}`;
     case 'await-reviewers':
-      return afterApprovingWithOthersOf(move, facts);
+      return afterApprovingWithOthersOf(move, facts, names);
     case 'await-author':
-      return afterApprovingOf(move);
+      return afterApprovingOf(move, names);
     case 'await-rerequest':
       return 'Waiting for the author to ask you to review again';
     case 'await-ready':
@@ -360,7 +391,7 @@ function detailOf(state: Move, shown: ShownPr, move: NextMove): string {
     case 'not-reviewing':
       return 'You are not a reviewer on this PR';
     case 'mention':
-      return mentionedOf(move);
+      return mentionedOf(move, names);
     case 'mentioned':
       return EVERY_MENTION_ANSWERED;
     default:
@@ -373,12 +404,12 @@ interface Action {
   detail: string;
 }
 
-function actionOf(shown: ShownPr, move: NextMove): Action | null {
+function actionOf(shown: ShownPr, move: NextMove, names: Names): Action | null {
   const state = move.state;
   if (!state) return null;
   return {
     label: labelOf(state, shown),
-    detail: detailOf(state, shown, move),
+    detail: detailOf(state, shown, move, names),
   };
 }
 
@@ -400,7 +431,7 @@ function commentsOf(tally: Tally, noun: string): string {
   return `${plural(tally.toDecide + tally.agentOn, noun)} · ${agents}`;
 }
 
-function moveOf(shown: ShownPr, summaries: Summaries): string {
+function moveOf(shown: ShownPr, summaries: Summaries, names: Names): string {
   const { agent } = shown.drawn.system;
   const { move, human, bot } = summaries;
   const code = move.code;
@@ -414,11 +445,11 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'on-hold':
       return 'On hold';
     case 'address-feedback':
-      return `Address changes from ${listed(move.reviewers)}`;
+      return `Address changes from ${named(move.reviewers, names)}`;
     case 'rerequest-review':
-      return `${REREQUEST_REVIEW} from ${listed(move.reviewers)}`;
+      return `${REREQUEST_REVIEW} from ${named(move.reviewers, names)}`;
     case 'rerequest-queued':
-      return `Re-request queued for ${listed(move.reviewers)}`;
+      return `Re-request queued for ${named(move.reviewers, names)}`;
     case 'agent-question':
       return 'Your move: an agent is asking you a question';
     case 'human-comments':
@@ -442,13 +473,13 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'await-ci':
       return 'Waiting on CI';
     case 'await-rereview':
-      return `Waiting on ${listed(move.reviewers)} to re-review`;
+      return `Waiting on ${named(move.reviewers, names)} to re-review`;
     case 'await-deferred':
-      return `Waiting on a deferred comment from ${listed(move.reviewers)}`;
+      return `Waiting on a deferred comment from ${named(move.reviewers, names)}`;
     case 'await-review':
     case 'await-reviewers':
       return move.reviewers.length
-        ? `Waiting on reviewers ${listed(move.reviewers)}`
+        ? `Waiting on reviewers ${named(move.reviewers, names)}`
         : 'Waiting on reviewers';
     case 'await-author':
       return 'Waiting on the author';
@@ -463,7 +494,7 @@ function moveOf(shown: ShownPr, summaries: Summaries): string {
     case 'mentioned':
       return 'Waiting on others';
     case 'nudge':
-      return `Nudge ${listed(move.reviewers.length ? move.reviewers : [shown.author ?? 'the author'])}`;
+      return `Nudge ${move.reviewers.length ? named(move.reviewers, names) : shown.author ? nameOf(shown.author, names) : 'the author'}`;
     default:
       return labelOf(code, shown);
   }
@@ -509,20 +540,28 @@ function doneOf(tally: Tally): string {
   return `${tally.done} of ${tally.total} done`;
 }
 
-function approvalsOf(status: DashboardStatus, facts: Polled): string[] {
+function approvalsOf(
+  status: DashboardStatus,
+  facts: Polled,
+  names: Names,
+): string[] {
   const approved = status.approved_by.filter(
     (login) => !facts.pending_reviewers.includes(login),
   );
-  return approved.length ? [`${listed(approved)} approved`] : [];
+  return approved.length ? [`${named(approved, names)} approved`] : [];
 }
 
-function reviewsSoFarOf(status: DashboardStatus, facts: Polled): string {
+function reviewsSoFarOf(
+  status: DashboardStatus,
+  facts: Polled,
+  names: Names,
+): string {
   const parts: string[] = [];
   if (status.approved_by.length) {
-    parts.push(`${listed(status.approved_by)} approved`);
+    parts.push(`${named(status.approved_by, names)} approved`);
   }
   if (facts.changes_requested_by.length) {
-    parts.push(`${listed(facts.changes_requested_by)} requested changes`);
+    parts.push(`${named(facts.changes_requested_by, names)} requested changes`);
   }
   return parts.length ? parts.join(', ') : 'no reviews yet';
 }
@@ -541,6 +580,7 @@ function filesOf(changed: number | null): string | null {
 function reviewerReasonOf(
   shown: ShownPr,
   summaries: Summaries,
+  names: Names,
 ): (string | null)[] | null {
   const status = shown.drawn.status;
   const facts = polledOf(shown);
@@ -550,7 +590,7 @@ function reviewerReasonOf(
       return [
         'requested from you',
         filesOf(status.changed_files),
-        reviewsSoFarOf(status, facts),
+        reviewsSoFarOf(status, facts, names),
       ];
     case 'rereview':
       return [
@@ -565,7 +605,7 @@ function reviewerReasonOf(
       return [
         'you approved',
         move.stillRequested.length
-          ? `${listed(move.stillRequested)} still requested`
+          ? `${named(move.stillRequested, names)} still requested`
           : null,
       ];
     case 'await-rerequest':
@@ -577,7 +617,11 @@ function reviewerReasonOf(
   }
 }
 
-function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
+function authorReasonOf(
+  shown: ShownPr,
+  summaries: Summaries,
+  names: Names,
+): string {
   const status = shown.drawn.status;
   const facts = polledOf(shown);
   const { move, human, bot } = summaries;
@@ -626,21 +670,24 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
         ? `conflicts with ${baseOf(shown)}`
         : `behind ${baseOf(shown)}`;
     case 'ready-to-merge':
-      return `${status.approved_by.length ? `approved by ${listed(status.approved_by)}` : 'no approval needed'}, ${ci}`;
+      return `${status.approved_by.length ? `approved by ${named(status.approved_by, names)}` : 'no approval needed'}, ${ci}`;
     case 'await-ci':
       return `${checksDoneOf(facts).done} of ${checksDoneOf(facts).total} checks done`;
     case 'await-rereview':
       return 'asked again after requesting changes';
     case 'await-review':
-      return [...approvalsOf(status, facts), 'review requested'].join(' · ');
-    case 'request-reviewers':
-      return [...approvalsOf(status, facts), 'nobody is asked to review'].join(
+      return [...approvalsOf(status, facts, names), 'review requested'].join(
         ' · ',
       );
+    case 'request-reviewers':
+      return [
+        ...approvalsOf(status, facts, names),
+        'nobody is asked to review',
+      ].join(' · ');
     case 'mark-ready-for-review':
       return 'still a draft';
     case 'mention':
-      return `${listed(move.mentionedBy)} mentioned you`;
+      return `${named(move.mentionedBy, names)} mentioned you`;
     case 'mentioned':
       return 'you are not a reviewer and every mention is answered';
     default:
@@ -648,11 +695,11 @@ function authorReasonOf(shown: ShownPr, summaries: Summaries): string {
   }
 }
 
-function reasonOf(shown: ShownPr, summaries: Summaries): string {
+function reasonOf(shown: ShownPr, summaries: Summaries, names: Names): string {
   const frozen = shown.drawn.frozen;
   if (frozen) return frozenReasonOf(frozen);
-  const parts = reviewerReasonOf(shown, summaries);
-  if (!parts) return authorReasonOf(shown, summaries);
+  const parts = reviewerReasonOf(shown, summaries, names);
+  if (!parts) return authorReasonOf(shown, summaries, names);
   const since = sinceOf(shown);
   if (since) parts.push(`since then: ${since.join(', ')}`);
   return parts.filter((part) => part !== null).join(' · ');
@@ -674,10 +721,14 @@ function sinceOf(shown: ShownPr): string[] | null {
 
 const NOT_REVIEWING: Move[] = ['not-reviewing', 'mention', 'mentioned'];
 
-function whoseOf(shown: ShownPr, summaries: Summaries): string | null {
+function whoseOf(
+  shown: ShownPr,
+  summaries: Summaries,
+  names: Names,
+): string | null {
   if (!shown.drawn.polled) return null;
   if (summaries.role === 'author') return 'your PR';
-  if (shown.author) return `${shown.author}'s PR`;
+  if (shown.author) return `${nameOf(shown.author, names)}'s PR`;
   const state = summaries.move.state;
   return state && NOT_REVIEWING.includes(state) ? null : 'reviewing';
 }
@@ -761,13 +812,22 @@ function decisionWordOf(shown: ShownPr): string {
   return reviewWordOf(decision);
 }
 
-function statusRows(shown: ShownPr, summaries: Summaries, now: number): Row[] {
+function statusRows(
+  shown: ShownPr,
+  summaries: Summaries,
+  now: number,
+  names: Names,
+): Row[] {
   const status = shown.drawn.status;
   const rows: Row[] = [];
   if (!status.you_are_the_detailed_reviewer) {
     rows.push(
       status.detailed_reviewer
-        ? row('reviewer', 'Detailed reviewer', `@${status.detailed_reviewer}`)
+        ? row(
+            'reviewer',
+            'Detailed reviewer',
+            nameOf(status.detailed_reviewer, names),
+          )
         : row('reviewer', 'Detailed reviewer', 'not assigned', 'quiet'),
     );
   }
@@ -899,6 +959,7 @@ function bandOf(
   move: string,
   since: string[] | null,
   next: NextMove,
+  names: Names,
 ): Band {
   if (shown.drawn.frozen) {
     return {
@@ -911,7 +972,7 @@ function bandOf(
   if (shown.drawn.system.on_hold && next.code === 'mention') {
     return {
       state: 'on-hold',
-      label: `Next · on hold, shown because ${mentionedOf(next)}`,
+      label: `Next · on hold, shown because ${mentionedOf(next, names)}`,
       detail: null,
       computed: null,
     };
@@ -1071,14 +1132,14 @@ function mergeChip(shown: ShownPr, code: Move): Chip | null {
   return null;
 }
 
-function reviewChip(shown: ShownPr, code: Move): Chip | null {
+function reviewChip(shown: ShownPr, code: Move, names: Names): Chip | null {
   const facts = shown.facts;
   if (!facts || REVIEW_NAMED.includes(code)) return null;
   const hint = 'A reviewer asked for changes on GitHub';
   if (facts.changes_requested_by.length) {
     return chip(
       'review',
-      `${listed(facts.changes_requested_by)} requested changes`,
+      `${named(facts.changes_requested_by, names)} requested changes`,
       hint,
       'warn',
     );
@@ -1088,7 +1149,7 @@ function reviewChip(shown: ShownPr, code: Move): Chip | null {
     : null;
 }
 
-function approvedChip(shown: ShownPr, code: Move): Chip | null {
+function approvedChip(shown: ShownPr, code: Move, names: Names): Chip | null {
   const facts = shown.facts;
   if (!facts || APPROVAL_NAMED.includes(code)) return null;
   if (facts.changes_requested_by.length) return null;
@@ -1096,7 +1157,12 @@ function approvedChip(shown: ShownPr, code: Move): Chip | null {
   const approvers = shown.drawn.status.approved_by;
   const hint = 'The pull request is approved on GitHub';
   if (approvers.length) {
-    return chip('approved', `approved by ${listed(approvers)}`, hint, 'accent');
+    return chip(
+      'approved',
+      `approved by ${named(approvers, names)}`,
+      hint,
+      'accent',
+    );
   }
   return facts.review_decision === 'approved'
     ? chip('approved', 'approved', hint, 'accent')
@@ -1165,7 +1231,7 @@ function countChip(
     : null;
 }
 
-function mentionedChip(shown: ShownPr, code: Move): Chip | null {
+function mentionedChip(shown: ShownPr, code: Move, names: Names): Chip | null {
   const facts = shown.facts;
   if (!facts?.mentioned || MENTION_NAMED.includes(code)) return null;
   const who = [...new Set(facts.mentions.map((one) => one.author))];
@@ -1173,7 +1239,7 @@ function mentionedChip(shown: ShownPr, code: Move): Chip | null {
     'mentioned',
     'mentioned',
     who.length
-      ? `${listed(who)} mentioned you here`
+      ? `${named(who, names)} mentioned you here`
       : 'You were mentioned here',
     'quiet',
   );
@@ -1184,6 +1250,7 @@ function chipsOf(
   summaries: Summaries,
   failing: FinishedRun[],
   now: number,
+  names: Names,
 ): Chip[] {
   const { move, role } = summaries;
   const code = move.code;
@@ -1196,7 +1263,7 @@ function chipsOf(
     importanceChip(shown),
     ciChip(shown, code),
     mergeChip(shown, code),
-    reviewChip(shown, code),
+    reviewChip(shown, code, names),
     runsChip(shown, failing, now),
     agentChip(shown, code),
     role === 'author' && !DECISIONS.includes(code)
@@ -1254,8 +1321,8 @@ function chipsOf(
           ROW_HINTS['queue']!,
           'quiet',
         ),
-    approvedChip(shown, code),
-    mentionedChip(shown, code),
+    approvedChip(shown, code, names),
+    mentionedChip(shown, code, names),
     shown.drawn.status.you_are_the_detailed_reviewer
       ? chip('reviewer', 'detailed reviewer', DETAILED_REVIEWER_HINT, 'accent')
       : null,
@@ -1397,6 +1464,7 @@ export function dashboardOf(
   shown: ShownPr,
   summaries: Summaries,
   now: number,
+  names: Names,
   failing: FinishedRun[] = [],
 ): Reading {
   const next = summaries.move;
@@ -1408,11 +1476,11 @@ export function dashboardOf(
         : next.group
           ? SQUARES[next.group]
           : 'park';
-  const action = actionOf(shown, next);
-  const move = moveOf(shown, summaries);
+  const action = actionOf(shown, next, names);
+  const move = moveOf(shown, summaries, names);
   const since = sinceOf(shown);
   const frozen = shown.drawn.frozen;
-  const chips = chipsOf(shown, summaries, failing, now);
+  const chips = chipsOf(shown, summaries, failing, now, names);
   return {
     number: shown.number,
     code: next.code,
@@ -1424,15 +1492,15 @@ export function dashboardOf(
     ticket: shown.ticket?.toUpperCase() ?? null,
     gist: gistOf(shown),
     titleKnown: shown.title !== null,
-    whose: whoseOf(shown, summaries),
+    whose: whoseOf(shown, summaries, names),
     branch: shown.branch,
     detailedReviewer: shown.drawn.status.you_are_the_detailed_reviewer
       ? DETAILED_REVIEWER
       : null,
-    reason: reasonOf(shown, summaries),
+    reason: reasonOf(shown, summaries, names),
     chips,
     rowChips: chips.filter((one) => one.key !== 'mismatches'),
-    band: bandOf(shown, action, move, since, next),
+    band: bandOf(shown, action, move, since, next, names),
     ending: next.code === 'closed' ? ENDING : null,
     frozen: frozen
       ? {
@@ -1444,7 +1512,7 @@ export function dashboardOf(
     onHold: shown.drawn.system.on_hold,
     unpolled: shown.drawn.polled ? null : FIRST_POLL,
     notice: shown.drawn.notice ? noticeOf(shown.drawn.notice) : null,
-    status: shown.drawn.polled ? statusRows(shown, summaries, now) : [],
+    status: shown.drawn.polled ? statusRows(shown, summaries, now, names) : [],
     system: systemRows(shown, summaries, now),
     since: frozen ? null : since,
     rebaseIsNext: rebaseIsNext(shown, next),

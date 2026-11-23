@@ -93,7 +93,7 @@ export default class AnswerReply extends Component {
     {{#if this.reply}}
       <div class="answer-reply" role="status" data-test-answer-reply>
         <p class="answer-reply-text">
-          <strong>{{this.reply.author}} replied</strong>
+          <strong>{{this.store.nameFor this.reply.author}} replied</strong>
           to the thread you're answering
         </p>
         <button
@@ -117,12 +117,13 @@ export default class AnswerReply extends Component {
           class="reply-dialog"
           role="dialog"
           aria-modal="true"
-          aria-label="{{this.open.author}} replied"
+          aria-label="{{this.store.nameFor this.open.author}} replied"
           tabindex="-1"
           data-test-reply-dialog
           {{modal this.close}}
         >
-          <h2 class="reply-dialog-title">{{this.open.author}} replied</h2>
+          <h2 class="reply-dialog-title">{{this.store.nameFor this.open.author}}
+            replied</h2>
           {{#each this.comments key="id" as |said|}}
             <article
               class="transcript-entry"
@@ -130,7 +131,9 @@ export default class AnswerReply extends Component {
               data-test-entry
             >
               <div class="entry-head">
-                <span class="entry-who">{{said.author}}</span>
+                <span class="entry-who">{{this.store.nameFor
+                    said.author
+                  }}</span>
               </div>
               <CommentBody @body={{said.body}} />
             </article>
@@ -146,7 +149,7 @@ export default class AnswerReply extends Component {
               class="primary"
               data-test-copy-reply
               {{on "click" this.copy}}
-            >Copy {{this.open.author}}'s reply</button>
+            >Copy {{this.store.nameFor this.open.author}}'s reply</button>
           </footer>
         </section>
       </div>

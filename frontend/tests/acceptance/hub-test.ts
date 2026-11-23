@@ -324,6 +324,26 @@ module('Acceptance | hub', function (hooks) {
     );
   });
 
+  test('a wall saved before dashboards carried names replays as it was', async function (assert) {
+    const saved = heldPr({ number: 5 });
+    localStorage.setItem(
+      'hub-pull-requests',
+      JSON.stringify({
+        watching: ['o/r'],
+        groups: [],
+        pull_requests: [
+          { ...saved, dashboard: { ...saved.dashboard, names: undefined } },
+        ],
+      }),
+    );
+    onTheHub(heldPr({ number: 5 }));
+
+    await visit('/');
+
+    assert.dom('[data-test-wall-row="o/r#5"]').exists();
+    assert.deepEqual(board().reported, []);
+  });
+
   test('the top bar names itself for the recovery script, on the wall and on a pull request', async function (assert) {
     onTheHub(heldPr());
 
