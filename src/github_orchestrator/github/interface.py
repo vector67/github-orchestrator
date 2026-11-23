@@ -1,5 +1,5 @@
 from collections.abc import Collection, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
@@ -120,6 +120,7 @@ class PullRequestState:
     reviews: tuple[Review, ...] = ()
     review_decision: str | None = None
     pending_reviewers: tuple[str, ...] = ()
+    names: dict[str, str] = field(default_factory=dict)
     ready_for_review_at: str | None = None
     push_events: tuple[PushEvent, ...] = ()
     closed: bool = False

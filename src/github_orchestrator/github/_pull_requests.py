@@ -26,13 +26,13 @@ STATE_FIELDS = """
       headRefName baseRefName headRefOid isCrossRepository
       changedFiles additions deletions
       mergeable mergeStateStatus reviewDecision
-      author { login __typename }
+      author { login __typename ... on User { name } }
       reviewRequests(first: %(page)d) {
-        nodes { requestedReviewer { ... on User { login } ... on Team { slug } } }
+        nodes { requestedReviewer { ... on User { login name } ... on Team { slug } } }
       }
       verdicts: reviews(first: %(page)d) {
         pageInfo { hasNextPage }
-        nodes { author { login __typename } state submittedAt commit { oid } }
+        nodes { author { login __typename ... on User { name } } state submittedAt commit { oid } }
       }
       readiness: timelineItems(itemTypes: [READY_FOR_REVIEW_EVENT], last: 1) {
         nodes { ... on ReadyForReviewEvent { createdAt } }
@@ -239,6 +239,17 @@ def _pending_reviewers(pull: dict[str, Any]) -> tuple[str, ...]:
     return tuple(pending)
 
 
+def _names(pull: dict[str, Any]) -> dict[str, str]:
+    people = [pull.get("author"),
+              *((request or {}).get("requestedReviewer")
+                for request in (pull.get("reviewRequests") or {}).get("nodes") or []),
+              *((review or {}).get("author")
+                for review in (pull.get("verdicts") or {}).get("nodes") or [])]
+    return {person["login"]: person["name"] for person in people
+            if person and isinstance(person.get("login"), str)
+            and isinstance(person.get("name"), str) and person["name"]}
+
+
 def state_of(gh: Gh, account: str, pr: Pr, pull: dict[str, Any]) -> PullRequestState:
     author = _author_login(pull.get("author"))
     return PullRequestState(
@@ -261,6 +272,7 @@ def state_of(gh: Gh, account: str, pr: Pr, pull: dict[str, Any]) -> PullRequestS
         reviews=_reviews(gh, pr, pull),
         review_decision=pull.get("reviewDecision"),
         pending_reviewers=_pending_reviewers(pull),
+        names=_names(pull),
         ready_for_review_at=_ready_for_review_at(pull),
         closed=pull.get("state") in ("MERGED", "CLOSED"),
         merged=pull.get("state") == "MERGED",

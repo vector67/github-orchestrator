@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 from github_orchestrator.agent_runs.fake import FilingTicket, HeldVerdicts, Outcome
-from github_orchestrator.board_api.fake import FakeMentionable
+from github_orchestrator.board_api.fake import IDLE, FakeManagerPanel, FakeMentionable
 from github_orchestrator.conversation import Classification
 from github_orchestrator.domain import fork_pr_branch
 from github_orchestrator.github import CommentKind
@@ -112,6 +112,20 @@ def test_the_people_read_names_everyone_the_records_mention():
     assert answer.json() == [{"login": "ameier", "name": "Anna Meier"},
                              {"login": "octocat", "name": None},
                              {"login": "reviewer", "name": None}]
+
+
+def test_the_people_read_names_whoever_github_named_with_the_pull_request():
+    manager = FakeManagerPanel(now=replace(IDLE, approved_by=("hubot",),
+                                           names={"hubot": "Hu Bot", "octocat": "Octo Cat"}))
+    board = board_for(manager=manager)
+    card(board, said(1, "one", author="ameier", author_name="Anna Meier"))
+    client = client_of(board)
+
+    assert client.get("/api/people").json() == [{"login": "ameier", "name": "Anna Meier"},
+                                                 {"login": "hubot", "name": "Hu Bot"},
+                                                 {"login": "octocat", "name": "Octo Cat"}]
+    assert client.get("/api/people/hubot").json() == {"login": "hubot", "name": "Hu Bot"}
+    assert client.get("/api/viewer").json() == {"login": "octocat", "name": "Octo Cat"}
 
 
 def test_a_board_set_to_first_names_names_everyone_by_the_first_word_of_their_name():

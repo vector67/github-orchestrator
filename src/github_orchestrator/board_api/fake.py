@@ -43,7 +43,7 @@ IDLE = Dashboard(
     since_force_push=False, since_reviews=0, since_comments=0, since_resolved=0,
     checks=(CiCheck("tests", passed=True, failed=False, done=True, url="https://ci/tests",
                     summary="tests passed"),), changed_files=7, approved_by=(),
-    changes_requested_by=(), commented_by=(), pending_reviewers=("carol",),
+    changes_requested_by=(), commented_by=(), pending_reviewers=("carol",), names={},
     review_requested_at={}, unresolved_threads=0,
     polled_at="2026-06-10T10:30:00Z", ended=False, draft=False, merge_state="clean",
     viewer_requested=False, mentioned=False, mentions=(), my_review_at=None,

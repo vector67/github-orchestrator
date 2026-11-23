@@ -511,6 +511,21 @@ def test_a_bot_is_named_the_way_github_names_it_everywhere_else():
     assert (state.author, state.reviews[0].author) == ("dependabot[bot]", "dependabot[bot]")
 
 
+def test_the_author_reviewers_and_requested_reviewers_carry_their_display_names():
+    state = _state(_pull(
+        author={"login": "alice", "__typename": "User", "name": "Alice Liddell"},
+        reviewRequests={"nodes": [{"requestedReviewer": {"login": "bob", "name": "Bob Ross"}},
+                                  {"requestedReviewer": {"login": "erin", "name": None}},
+                                  {"requestedReviewer": {"slug": "platform"}}]},
+        verdicts={"pageInfo": {"hasNextPage": False}, "nodes": [
+            {"author": {"login": "carol", "__typename": "User", "name": "Carol Danvers"},
+             "state": "APPROVED", "submittedAt": None, "commit": None},
+            {"author": {"login": "dependabot", "__typename": "Bot"},
+             "state": "COMMENTED", "submittedAt": None, "commit": None}]}))
+
+    assert state.names == {"alice": "Alice Liddell", "bob": "Bob Ross", "carol": "Carol Danvers"}
+
+
 def test_errors_github_sends_beside_the_pull_request_are_logged_and_the_state_kept(caplog):
     answer = {**_pull(), "errors": [{"message": "Resource not accessible by integration"}]}
 

@@ -236,6 +236,7 @@ class Dashboard:
     changes_requested_by: tuple[str, ...]
     commented_by: tuple[str, ...]
     pending_reviewers: tuple[str, ...]
+    names: dict[str, str]
     review_requested_at: dict[str, str]
     unresolved_threads: int | None
     polled_at: str | None

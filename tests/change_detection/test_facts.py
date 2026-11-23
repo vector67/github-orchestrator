@@ -84,6 +84,12 @@ def test_the_reviewers_are_grouped_by_their_verdict_and_mine_is_picked_out(detec
     assert facts.is_author is False
 
 
+def test_the_names_github_gave_with_the_pr_are_kept(detection):
+    detection.advance(THE_PR, poll(pr_state(names={"bob": "Bob Ross"})), set())
+
+    assert detection.facts(THE_PR).names == {"bob": "Bob Ross"}
+
+
 def test_github_s_merge_states_read_in_the_snapshot_s_words(detection):
     states = {}
     for state in ("clean", "dirty", "behind", "blocked", "unstable", "draft"):

@@ -1,4 +1,4 @@
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from datetime import UTC, datetime
 from typing import TypedDict
 
@@ -18,29 +18,35 @@ from github_orchestrator.working_copies import FileDiff, PrCheckout
 
 MAX_FILE_LINES = 2000
 
-def _named(conversations: Sequence[Conversation], first_names_only: bool) -> dict[str, str]:
+def _named(conversations: Sequence[Conversation], github_named: Mapping[str, str],
+           first_names_only: bool) -> dict[str, str]:
     names: dict[str, str] = {}
     for conversation in conversations:
         for login, name in ((conversation.author, conversation.reviewer_name),
                             *((c.author, c.author_name)
                               for c in conversation.comments)):
             if login and name and login not in names:
-                names[login] = name.split()[0] if first_names_only else name
-    return names
+                names[login] = name
+    names |= {login: name for login, name in github_named.items() if name}
+    return {login: name.split()[0] if first_names_only else name
+            for login, name in names.items()}
 
 
-def people_of(conversations: Sequence[Conversation], first_names_only: bool) -> list[Person]:
-    names = _named(conversations, first_names_only)
+def people_of(conversations: Sequence[Conversation], github_named: Mapping[str, str],
+              first_names_only: bool) -> list[Person]:
+    names = _named(conversations, github_named, first_names_only)
     logins = {conversation.author for conversation in conversations}
     logins |= {comment.author for conversation in conversations
                for comment in conversation.comments}
+    logins |= set(github_named)
     return [Person(login=login, name=names.get(login))
             for login in sorted(logins - {""})]
 
 
-def viewer_of(conversations: Sequence[Conversation], account: str,
-              first_names_only: bool) -> Person:
-    return Person(login=account, name=_named(conversations, first_names_only).get(account))
+def viewer_of(conversations: Sequence[Conversation], github_named: Mapping[str, str],
+              account: str, first_names_only: bool) -> Person:
+    return Person(login=account,
+                  name=_named(conversations, github_named, first_names_only).get(account))
 
 
 def _kind_of(conversation: Conversation) -> contract.ThreadKind:

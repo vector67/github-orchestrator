@@ -420,8 +420,8 @@ def read_viewer(board: Serving) -> Person:
     login of "me". No `ETag`: it is one login the board was configured with,
     and a poll has nothing to save.
     """
-    return viewer_of(board.conversations.all(), board.conversations.facts().account,
-                     board.first_names_only)
+    return viewer_of(board.conversations.all(), board.manager.dashboard().names,
+                     board.conversations.facts().account, board.first_names_only)
 
 
 @reads.get("/health", tags=["board"], operation_id="readHealth",
@@ -447,6 +447,7 @@ def list_people(request: Request, board: Serving) -> Response:
     """
     return etag.answered(request,
                          PersonList(people_of(board.conversations.all(),
+                                              board.manager.dashboard().names,
                                               board.first_names_only)))
 
 
@@ -471,7 +472,8 @@ def read_person(login: str, board: Serving) -> Person:
     """Whoever the records name. Someone who has said nothing on this pull
     request is not here, including the viewer, who is on `/viewer`.
     """
-    for person in people_of(board.conversations.all(), board.first_names_only):
+    for person in people_of(board.conversations.all(), board.manager.dashboard().names,
+                            board.first_names_only):
         if person.login == login:
             return person
     raise Refusal(404, ErrorCode.NOT_FOUND,
