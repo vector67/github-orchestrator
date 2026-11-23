@@ -125,6 +125,7 @@ const DONE_SAYING: Record<UndonePrVerb, (number: number) => string> = {
 
 const DISMISSALS: Record<DismissUntil, Dismissal> = {
   'next-event': 'until its next event',
+  'ci-passes': 'until its CI passes',
   'ready-for-review': 'until it is ready for review',
   forever: 'forever',
 };

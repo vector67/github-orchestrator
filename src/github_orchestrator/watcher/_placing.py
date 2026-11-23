@@ -37,7 +37,8 @@ class WindowPlacement:
         facts = self._change_detection.facts(pr)
         if not for_a_mention and self._dismissals.is_hidden(
                 pr, events_waiting=bool(self._worklist.waiting(pr).count),
-                draft=facts is None or facts.draft):
+                draft=facts is None or facts.draft,
+                ci_passing=facts is not None and facts.ci_passed):
             if (not self._dismissals.is_dismissed_forever(pr)
                     and self._pr_processes.manager(pr) is ManagerPane.EXITED):
                 log.info("ensure_pr_window %s: dismissed and its manager has exited; "

@@ -1043,20 +1043,17 @@ module('Acceptance | dashboard', function (hooks) {
         .contains(document.activeElement),
       'the question takes the focus',
     );
-    assert.dom('[data-test-dismiss-confirm]').containsText('Dismiss #7?');
-    assert.dom('[data-test-dismiss-option="u"]').hasText('until next event u');
+    assert.dom('[data-test-dismiss-confirm] .question').hasText('Dismiss #7');
+    assert
+      .dom('[data-test-dismiss-option="u"]')
+      .hasText('Until the next event something new happens on the PR u');
     assert
       .dom('[data-test-dismiss-option="f"]')
-      .hasText('forever — removes the worktree f');
+      .hasText('Forever stops tracking it and removes the worktree f');
+    assert.dom('[data-test-dismiss-option]').exists({ count: 2 });
     assert
-      .dom('[data-test-dismiss-confirm] .dialog-actions button')
-      .exists({ count: 2 });
-    assert
-      .dom('[data-test-dismiss-option="f"]')
-      .hasAttribute(
-        'title',
-        'Stops the watcher tracking this PR. Reverse it with: github-orchestrator undismiss 7',
-      );
+      .dom('[data-test-dismiss-undo]')
+      .hasText('Undo forever with github-orchestrator undismiss 7');
 
     await press('Escape');
 
@@ -1105,10 +1102,8 @@ module('Acceptance | dashboard', function (hooks) {
 
     assert
       .dom('[data-test-dismiss-option="r"]')
-      .hasText('until ready for review r');
-    assert
-      .dom('[data-test-dismiss-confirm] .dialog-actions button')
-      .exists({ count: 3 });
+      .hasText('Until ready for review it is a draft now r');
+    assert.dom('[data-test-dismiss-option]').exists({ count: 3 });
 
     await press('r');
 
@@ -1129,6 +1124,40 @@ module('Acceptance | dashboard', function (hooks) {
 
     await press('d');
     await press('r');
+
+    assert.dom('[data-test-dismiss-confirm]').exists();
+    assert.deepEqual(verbs(), []);
+  });
+
+  test('with CI failing, d then c dismisses until CI passes', async function (assert) {
+    onTheHub({ facts: { ci_status: 'failing' } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('d');
+
+    assert
+      .dom('[data-test-dismiss-option="c"]')
+      .hasText('Until CI passes it is failing now c');
+    assert.dom('[data-test-dismiss-option]').exists({ count: 3 });
+
+    await press('c');
+
+    assert.deepEqual(board().posted.at(-1)?.verb, 'dismiss');
+    assert.deepEqual(board().posted.at(-1)?.body, { until: 'ci-passes' });
+    assert
+      .dom('[data-test-toast]')
+      .hasText('Dismissed #7 until its CI passes. Its manager has exited.');
+  });
+
+  test('c answers nothing in the dismiss question while CI is not failing', async function (assert) {
+    onTheHub({ facts: { ci_status: 'passing' } });
+    await visit('/pr/o/r/7/dashboard');
+
+    await press('d');
+
+    assert.dom('[data-test-dismiss-option="c"]').doesNotExist();
+
+    await press('c');
 
     assert.dom('[data-test-dismiss-confirm]').exists();
     assert.deepEqual(verbs(), []);

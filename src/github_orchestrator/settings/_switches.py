@@ -132,7 +132,10 @@ class FlagFileDismissals:
     def dismiss_until_ready_for_review(self, pr: Pr) -> None:
         self._dismiss(pr, DismissUntil.READY_FOR_REVIEW)
 
-    def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool) -> bool:
+    def dismiss_until_ci_passes(self, pr: Pr) -> None:
+        self._dismiss(pr, DismissUntil.CI_PASSES)
+
+    def is_hidden(self, pr: Pr, *, events_waiting: bool, draft: bool, ci_passing: bool) -> bool:
         dismissal = self.dismissal(pr)
         if dismissal is DismissUntil.NEXT_EVENT and events_waiting:
             log.info("%s: an event is waiting — ending its dismissal until the next event", pr)
@@ -140,6 +143,10 @@ class FlagFileDismissals:
             return False
         if dismissal is DismissUntil.READY_FOR_REVIEW and not draft:
             log.info("%s: no longer a draft — ending its dismissal until ready for review", pr)
+            self.undismiss(pr)
+            return False
+        if dismissal is DismissUntil.CI_PASSES and ci_passing:
+            log.info("%s: CI passes — ending its dismissal until CI passes", pr)
             self.undismiss(pr)
             return False
         return dismissal is not None

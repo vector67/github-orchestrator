@@ -253,6 +253,7 @@ class Sleep:
 class DismissUntil(StrEnum):
     NEXT_EVENT = "next-event"
     READY_FOR_REVIEW = "ready-for-review"
+    CI_PASSES = "ci-passes"
     FOREVER = "forever"
 
 

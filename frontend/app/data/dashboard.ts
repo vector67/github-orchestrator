@@ -1,6 +1,7 @@
 import type {
   DashboardStatus,
   DashboardSystem,
+  DismissUntil,
   FinishedRun,
   FixChecks,
   FrozenWorktree,
@@ -733,20 +734,52 @@ function whoseOf(
   return state && NOT_REVIEWING.includes(state) ? null : 'reviewing';
 }
 
-export interface DismissWording {
-  untilNextEvent: string;
-  untilReady: string | null;
-  forever: string;
-  foreverDetail: string;
+export interface DismissChoice {
+  until: DismissUntil;
+  key: string;
+  label: string;
+  hint: string;
 }
 
+export interface DismissWording {
+  choices: DismissChoice[];
+  undismissCommand: string;
+}
+
+const NEXT_EVENT: DismissChoice = {
+  until: 'next-event',
+  key: 'u',
+  label: 'Until the next event',
+  hint: 'something new happens on the PR',
+};
+
+const CI_PASSES: DismissChoice = {
+  until: 'ci-passes',
+  key: 'c',
+  label: 'Until CI passes',
+  hint: 'it is failing now',
+};
+
+const READY_FOR_REVIEW: DismissChoice = {
+  until: 'ready-for-review',
+  key: 'r',
+  label: 'Until ready for review',
+  hint: 'it is a draft now',
+};
+
+const FOREVER: DismissChoice = {
+  until: 'forever',
+  key: 'f',
+  label: 'Forever',
+  hint: 'stops tracking it and removes the worktree',
+};
+
 function dismissOf(shown: ShownPr): DismissWording {
-  return {
-    untilNextEvent: 'until next event',
-    untilReady: shown.facts?.draft ? 'until ready for review' : null,
-    forever: 'forever — removes the worktree',
-    foreverDetail: `Stops the watcher tracking this PR. Reverse it with: ${shown.drawn.undismiss_command}`,
-  };
+  const choices = [NEXT_EVENT];
+  if (shown.facts?.ci_status === 'failing') choices.push(CI_PASSES);
+  if (shown.facts?.draft) choices.push(READY_FOR_REVIEW);
+  choices.push(FOREVER);
+  return { choices, undismissCommand: shown.drawn.undismiss_command };
 }
 
 const DETAILED_REVIEWER_HINT =
@@ -1524,7 +1557,10 @@ export function dashboardOf(
 }
 
 export type Dismissal =
-  'until its next event' | 'until it is ready for review' | 'forever';
+  | 'until its next event'
+  | 'until its CI passes'
+  | 'until it is ready for review'
+  | 'forever';
 
 export function dismissedSaying(number: number, how: Dismissal): string {
   return `Dismissed #${number} ${how}. Its manager has exited.`;

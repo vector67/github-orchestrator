@@ -17,15 +17,16 @@ interface DismissConfirmSignature {
 const answering =
   (dismiss: (until: DismissUntil) => void, wording: DismissWording) =>
   (key: string): boolean => {
-    if (key === 'u') dismiss('next-event');
-    else if (key === 'r' && wording.untilReady) dismiss('ready-for-review');
-    else if (key === 'f') dismiss('forever');
-    else return false;
+    const choice = wording.choices.find((one) => one.key === key);
+    if (!choice) return false;
+    dismiss(choice.until);
     return true;
   };
 
+const isForever = (until: DismissUntil): boolean => until === 'forever';
+
 const DismissConfirm: TOC<DismissConfirmSignature> = <template>
-  <div class="decide-dialog">
+  <div class="decide-dialog dismiss-confirm">
     <form
       role="dialog"
       aria-modal="true"
@@ -35,7 +36,7 @@ const DismissConfirm: TOC<DismissConfirmSignature> = <template>
       {{modal @cancel (answering @dismiss @wording)}}
     >
       <header class="dialog-head">
-        <p class="question" id="dismiss-confirm-question">Dismiss #{{@number}}?</p>
+        <p class="question" id="dismiss-confirm-question">Dismiss #{{@number}}</p>
         <button
           type="button"
           class="dialog-close"
@@ -43,27 +44,22 @@ const DismissConfirm: TOC<DismissConfirmSignature> = <template>
           {{on "click" @cancel}}
         >×</button>
       </header>
-      <div class="dialog-actions">
-        <button
-          type="button"
-          class="primary"
-          data-test-dismiss-option="u"
-          {{on "click" (fn @dismiss "next-event")}}
-        >{{@wording.untilNextEvent}} <kbd>u</kbd></button>
-        {{#if @wording.untilReady}}
+      <p class="note">Its manager stops and the PR leaves the board. For how
+        long?</p>
+      <div class="dismiss-choices">
+        {{#each @wording.choices key="until" as |choice|}}
           <button
             type="button"
-            data-test-dismiss-option="r"
-            {{on "click" (fn @dismiss "ready-for-review")}}
-          >{{@wording.untilReady}} <kbd>r</kbd></button>
-        {{/if}}
-        <button
-          type="button"
-          data-test-dismiss-option="f"
-          title={{@wording.foreverDetail}}
-          {{on "click" (fn @dismiss "forever")}}
-        >{{@wording.forever}} <kbd>f</kbd></button>
+            class="chip {{if (isForever choice.until) 'forever'}}"
+            data-test-dismiss-option={{choice.key}}
+            {{on "click" (fn @dismiss choice.until)}}
+          ><span class="chip-label">{{choice.label}}</span>
+            <span class="chip-hint">{{choice.hint}}</span>
+            <kbd>{{choice.key}}</kbd></button>
+        {{/each}}
       </div>
+      <p class="note" data-test-dismiss-undo>Undo forever with
+        <code>{{@wording.undismissCommand}}</code></p>
     </form>
   </div>
 </template>;

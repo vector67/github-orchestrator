@@ -2435,7 +2435,8 @@ class SessionCheck(BaseModel):
 class DismissRequest(BaseModel):
     until: DismissUntil = Field(
         description="How long the pull request stays dismissed: until its "
-                    "next event, until it is no longer a draft, or for good. "
+                    "next event, until it is no longer a draft, until its CI "
+                    "passes, or for good. "
                     "Whichever it is, the manager stops its run and exits, "
                     "and the board goes with it.")
 

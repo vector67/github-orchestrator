@@ -36,6 +36,7 @@ SHOWN_READ_ONLY = frozenset({"l", "d"})
 _DISMISS_COMMANDS = {
     DismissUntil.NEXT_EVENT: Command.DISMISS_UNTIL_NEXT_EVENT,
     DismissUntil.READY_FOR_REVIEW: Command.DISMISS_UNTIL_READY_FOR_REVIEW,
+    DismissUntil.CI_PASSES: Command.DISMISS_UNTIL_CI_PASSES,
     DismissUntil.FOREVER: Command.DISMISS_FOREVER,
 }
 

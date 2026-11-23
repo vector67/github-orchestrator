@@ -13,7 +13,8 @@ from github_orchestrator.watcher._poll import Fetched
 from github_orchestrator.watcher._teardown import Reason
 
 _LASTS = {DismissUntil.NEXT_EVENT: "until the next event", DismissUntil.FOREVER: "forever",
-          DismissUntil.READY_FOR_REVIEW: "until ready for review"}
+          DismissUntil.READY_FOR_REVIEW: "until ready for review",
+          DismissUntil.CI_PASSES: "until CI passes"}
 
 
 class WouldPlace:
@@ -31,7 +32,8 @@ class WouldPlace:
         waiting = self._worklist.waiting(pr).count + self._enqueued(pr)
         facts = self._change_detection.facts(pr)
         if not for_a_mention and self._dismissals.is_hidden(
-                pr, events_waiting=bool(waiting), draft=facts is None or facts.draft):
+                pr, events_waiting=bool(waiting), draft=facts is None or facts.draft,
+                ci_passing=facts is not None and facts.ci_passed):
             dismissal = self._dismissals.dismissal(pr)
             lasts = _LASTS[dismissal or DismissUntil.NEXT_EVENT]
             self._say(f"would leave PR {pr.number} alone (dismissed {lasts})")

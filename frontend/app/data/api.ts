@@ -402,7 +402,7 @@ export interface DismissRequest {
   until: DismissUntil;
 }
 
-export type DismissUntil = 'next-event' | 'ready-for-review' | 'forever';
+export type DismissUntil = 'next-event' | 'ready-for-review' | 'ci-passes' | 'forever';
 
 export interface DraftBody {
   body: string;
