@@ -138,7 +138,6 @@ class Serving(TypedDict, total=False):
     manager: FakeManagerPanel | None
     heartbeat_seconds: float
     sessions: TerminalSessions | None
-    first_names_only: bool
     clock: Callable[[], datetime]
     port: int
     pr: Pr
@@ -210,7 +209,6 @@ def board_app(conversation_managers: ConversationManagerFactory, working_copies:
         ServerAppWiring(agent_program="claude", app_root=serving.get("app_root", UNBUILT), font_dir=serving.get("font_dir"),
                         watching=(Repo("acme", "widgets"),), version="0.1.0",
                         check_presence=serving.get("check_presence", False),
-                        first_names_only=serving.get("first_names_only", False),
                         heartbeat_seconds=serving.get("heartbeat_seconds", 15.0),
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
     return server.app(serving.get("port", PORT), SERVER_PID)
@@ -307,7 +305,7 @@ def served_hub(app_root: Path = UNBUILT, *, clock: Callable[[], datetime] = at(M
         *(summaries or no_summaries()),
         clocks_of(clock),
         ServerAppWiring(agent_program="claude", app_root=app_root, font_dir=None, watching=watching, version="0.1.0",
-                        check_presence=False, first_names_only=False,
+                        check_presence=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
     return OneLoopClient(server.app(HUB_PORT, SERVER_PID), base_url=f"http://127.0.0.1:{HUB_PORT}")
 
@@ -549,7 +547,7 @@ def one_server(*held: Pr, app_root: Path = UNBUILT, port: int = HUB_PORT,
         *no_summaries(),
         clocks_of(at(MOMENT)),
         ServerAppWiring(agent_program="claude", app_root=app_root, font_dir=None, watching=(Repo("acme", "widgets"),),
-                        version="0.1.0", check_presence=False, first_names_only=False,
+                        version="0.1.0", check_presence=False,
                         check_seconds=STREAM_CHECK_SECONDS)).get(ServerApp)
     client = OneLoopClient(server.app(port, SERVER_PID),
                            base_url=f"http://{host or f'127.0.0.1:{port}'}")

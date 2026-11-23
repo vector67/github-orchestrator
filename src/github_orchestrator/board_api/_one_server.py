@@ -106,7 +106,7 @@ class OneServer:
                  conversation_managers: ConversationManagerFactory,
                  working_copies: WorkingCopies, terminals: Terminals, panels: ManagerPanels,
                  summaries: PrSummaries, lane: SummaryLane, shelves: Shelves,
-                 migration: NamesMigration, check_presence: bool, first_names_only: bool, heartbeat_seconds: float,
+                 migration: NamesMigration, check_presence: bool, heartbeat_seconds: float,
                  check_seconds: float) -> None:
         self._app_root = app_root
         self._fonts = routes.served_fonts(font_dir)
@@ -136,7 +136,6 @@ class OneServer:
         self._shelves = shelves
         self._migration = migration
         self._check_presence = check_presence
-        self._first_names_only = first_names_only
         self._heartbeat_seconds = heartbeat_seconds
         self._check_seconds = check_seconds
 
@@ -157,7 +156,6 @@ class OneServer:
                 manager=self._panels.of(pr), worktree=self._panels.worktree(pr),
                 app_root=self._app_root, hub_url=url,
                 fonts=self._fonts, check_presence=self._check_presence,
-                first_names_only=self._first_names_only,
                 heartbeat_seconds=self._heartbeat_seconds, check_seconds=self._check_seconds,
                 terminals=self._terminals.of(pr),
                 terminal_threads=anyio.CapacityLimiter(TERMINAL_THREADS),

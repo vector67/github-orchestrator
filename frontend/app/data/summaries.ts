@@ -37,6 +37,7 @@ import {
   type Pressings,
 } from 'frontend/data/decisions';
 import { groupOf, type Role } from 'frontend/data/groups';
+import type { NameStyle } from 'frontend/data/names';
 import {
   wakeText,
   type Details,
@@ -2492,6 +2493,20 @@ export interface Reviewer extends Person {
 export interface ReviewerGroup {
   label: string | null;
   people: Reviewer[];
+}
+
+export function styledNames(
+  names: Record<string, string | null>,
+  style: NameStyle,
+): Record<string, string | null> {
+  if (style === 'login') return {};
+  if (style === 'full') return names;
+  return Object.fromEntries(
+    Object.entries(names).map(([login, name]) => [
+      login,
+      name && (name.split(' ')[0] ?? name),
+    ]),
+  );
 }
 
 const byLogin = (one: Reviewer, other: Reviewer): number =>

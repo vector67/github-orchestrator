@@ -19,6 +19,7 @@ const AGENT_SESSION = 'agent-session';
 const TERMINAL_THEME = 'terminal-theme';
 const TERMINAL_LIGHT_THEME = 'terminal-light-theme';
 const TERMINAL_DARK_THEME = 'terminal-dark-theme';
+const NAME_STYLE = 'name-style';
 
 function forgetDialogDrafts(hooks: NestedHooks) {
   hooks.beforeEach(function () {
@@ -37,6 +38,7 @@ function forgetDialogDrafts(hooks: NestedHooks) {
     localStorage.removeItem(TERMINAL_THEME);
     localStorage.removeItem(TERMINAL_LIGHT_THEME);
     localStorage.removeItem(TERMINAL_DARK_THEME);
+    localStorage.removeItem(NAME_STYLE);
   });
 }
 

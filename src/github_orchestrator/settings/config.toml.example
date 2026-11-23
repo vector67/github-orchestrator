@@ -166,10 +166,6 @@ gh_account = "your-github-username"
 # the rest before it is posted.
 # not_fixed_opener = "Not fixed — "
 
-# Name people on the review board by the first word of their GitHub name only:
-# "Ada Lovelace King" reads as "Ada". Off, the board uses the whole name.
-# first_names_only = false
-
 # Where the comment agent searches for tickets and proposes new ones, for work
 # a review comment asks for that belongs outside the pull request: "github"
 # for issues on the pull request's repo, "jira" for a Jira project through the Atlassian

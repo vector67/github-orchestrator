@@ -247,7 +247,9 @@ module('Acceptance | dialog', function (hooks) {
 
     await click('[data-test-decision="approve"]');
 
-    assert.dom('[data-test-reply-kicker]').hasText('Reply to Anna on GitHub');
+    assert
+      .dom('[data-test-reply-kicker]')
+      .hasText('Reply to Anna Example on GitHub');
   });
 
   test('the accept dialog submits with Accept, with or without a reply typed', async function (assert) {

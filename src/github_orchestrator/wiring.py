@@ -1199,7 +1199,6 @@ class ServerAppWiring(Wiring):
     watching: Collection[Repo]
     version: str | None
     check_presence: bool
-    first_names_only: bool
     heartbeat_seconds: float = HEARTBEAT_SECONDS
     check_seconds: float = STREAM_CHECK_SECONDS
 
@@ -1233,7 +1232,6 @@ class ServerAppProvider(Provider):
                          working_copies=working_copies, terminals=terminals, panels=panels,
                          summaries=summaries, lane=lane, shelves=RecordShelves(shelves),
                          migration=migration, check_presence=wiring.check_presence,
-                         first_names_only=wiring.first_names_only,
                          heartbeat_seconds=wiring.heartbeat_seconds,
                          check_seconds=wiring.check_seconds)
 
@@ -1888,8 +1886,7 @@ def preview_container(env: Mapping[str, str], home: Path, *, data_dir: Path,
                                terminal_sessions_dir(settings), None),
         ServerAppWiring(agent_program=command_program(settings.config.agent_command),
                         app_root=APP_ROOT, font_dir=board_font_dir(settings),
-                        watching=(repo,), version=installed_version(), check_presence=False,
-                        first_names_only=settings.config.first_names_only),
+                        watching=(repo,), version=installed_version(), check_presence=False),
         dashboard_source_wiring(settings),
         harvest_wiring(settings, home),
         hub,
@@ -1964,8 +1961,7 @@ def make_container(env: Mapping[str, str], home: Path,
         ServerAppWiring(agent_program=command_program(settings.config.agent_command),
                         app_root=APP_ROOT, font_dir=board_font_dir(settings),
                         watching=tuple(settings.repos), version=installed_version(),
-                        check_presence=check_presence,
-                        first_names_only=settings.config.first_names_only),
+                        check_presence=check_presence),
         dashboard_source_wiring(settings),
         harvest_wiring(settings, home),
         ManagerPanelsWiring(subprocess.run),

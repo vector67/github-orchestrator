@@ -128,20 +128,6 @@ def test_the_people_read_names_whoever_github_named_with_the_pull_request():
     assert client.get("/api/viewer").json() == {"login": "octocat", "name": "Octo Cat"}
 
 
-def test_a_board_set_to_first_names_names_everyone_by_the_first_word_of_their_name():
-    board = board_for(first_names_only=True)
-    card(board, said(1, "one", author="octocat", author_name="Octo Cat"),
-         said(2, "two", author="ada", author_name="Ada Lovelace King"),
-         said(3, "three", author="reviewer"))
-    client = client_of(board)
-
-    assert client.get("/api/people").json() == [
-        {"login": "ada", "name": "Ada"},
-        {"login": "octocat", "name": "Octo"},
-        {"login": "reviewer", "name": None}]
-    assert client.get("/api/people/ada").json() == {"login": "ada", "name": "Ada"}
-    assert client.get("/api/viewer").json() == {"login": "octocat", "name": "Octo"}
-
 
 def test_the_mentionable_are_everyone_github_lets_the_repo_assign():
     mentionable = FakeMentionable({THE_PR.repo: ["hubot", "octocat"]})

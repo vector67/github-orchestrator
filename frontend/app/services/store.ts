@@ -1,7 +1,7 @@
 import Service, { service } from '@ember/service';
 import type Owner from '@ember/owner';
 import type RouterService from '@ember/routing/router-service';
-import { tracked } from '@glimmer/tracking';
+import { cached, tracked } from '@glimmer/tracking';
 import { waitForPromise } from '@ember/test-waiters';
 import type {
   AgentOutput,
@@ -148,6 +148,7 @@ import {
   setupPressedOf,
   shownOf,
   stepperOf,
+  styledNames,
   commitNoteOf,
   mergeNoteOf,
   pickedRangeOf,
@@ -185,6 +186,7 @@ import type { Picked, Timeline } from 'frontend/data/timeline';
 import { failingOf, type Numbered } from 'frontend/data/wall';
 import { dashboardOf, noticeOf, type Reading } from 'frontend/data/dashboard';
 import type HereService from 'frontend/services/here';
+import type NameStyleService from 'frontend/services/name-style';
 import { DOWN } from 'frontend/services/reachability';
 
 export type {
@@ -480,6 +482,7 @@ function replied(body: Record<string, unknown>): { reply?: string } {
 export default class StoreService extends Service {
   @service declare here: HereService;
   @service declare router: RouterService;
+  @service declare nameStyle: NameStyleService;
 
   @tracked private prs: Record<string, PrEntity> = {};
   @tracked private threads: ByKey<Thread> = {};
@@ -501,7 +504,7 @@ export default class StoreService extends Service {
   @tracked unheld: Unheld | null = null;
   @tracked configProblem: string | null = null;
   @tracked viewer: string | null = null;
-  @tracked names: Record<string, string | null> = {};
+  @tracked private fullNames: Record<string, string | null> = {};
   @tracked private remembered: string | null = recall(CHOSEN_REPOS);
   @tracked setup: Setup | null = null;
   @tracked accounts: Record<string, SetupAccount> = {};
@@ -1107,13 +1110,18 @@ export default class StoreService extends Service {
     }
   }
 
+  @cached
+  get names(): Record<string, string | null> {
+    return styledNames(this.fullNames, this.nameStyle.chosen);
+  }
+
   mentionable(pr: Numbered): Person[] {
     const key = keyOf(pr.repo, pr.number);
     return mentionableOf(
       this.prs[key],
       this.threads[key],
       this.mentionables[pr.repo]?.logins ?? [],
-      this.names,
+      this.fullNames,
     );
   }
 
@@ -1126,7 +1134,7 @@ export default class StoreService extends Service {
     return reviewersOf(
       this.prs[keyOf(pr.repo, pr.number)],
       listed ?? { logins: [], reviewers: [] },
-      this.names,
+      this.fullNames,
     );
   }
 
@@ -2069,8 +2077,8 @@ export default class StoreService extends Service {
   }
 
   private takePeople(people: Person[]): void {
-    this.names = {
-      ...this.names,
+    this.fullNames = {
+      ...this.fullNames,
       ...Object.fromEntries(people.map((one) => [one.login, one.name])),
     };
   }

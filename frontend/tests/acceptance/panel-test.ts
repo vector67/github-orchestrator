@@ -114,6 +114,24 @@ module('Acceptance | panel', function (hooks) {
     assert.dom('[data-test-panel-author]').hasText('Anna Example');
   });
 
+  test('the names setting shows people by first name, full name or username, and is remembered', async function (assert) {
+    await visit(`/pr/o/r/7/conversations/${KEY}`);
+    const shownAs = async (style: string) => {
+      await click('[data-test-settings-open]');
+      await click('[data-test-name-style-open]');
+      await click(`[data-test-name-style="${style}"]`);
+      await click('[aria-label="close the settings"]');
+      return document
+        .querySelector('#panel-talk [data-test-panel-author]')
+        ?.textContent?.trim();
+    };
+
+    assert.strictEqual(await shownAs('first'), 'Anna');
+    assert.strictEqual(await shownAs('login'), 'anna');
+    assert.strictEqual(await shownAs('full'), 'Anna Example');
+    assert.strictEqual(localStorage.getItem('name-style'), 'full');
+  });
+
   test('the header says where the row sits and where it points', async function (assert) {
     await visit(`/pr/o/r/7/conversations/${KEY}`);
 

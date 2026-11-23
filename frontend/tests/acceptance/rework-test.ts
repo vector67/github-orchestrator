@@ -329,8 +329,12 @@ module('Acceptance | rework', function (hooks) {
     await click('[data-test-decision="rework"]');
 
     assert.dom('[data-test-include]').exists({ count: 2 });
-    assert.dom('[data-test-include="anna"]').hasText("Include Anna's replies");
-    assert.dom('[data-test-include="mira"]').hasText("Include Mira's replies");
+    assert
+      .dom('[data-test-include="anna"]')
+      .hasText("Include Anna Example's replies");
+    assert
+      .dom('[data-test-include="mira"]')
+      .hasText("Include Mira Sample's replies");
   });
 
   test('a conversation nobody replied to offers no tick at all', async function (assert) {

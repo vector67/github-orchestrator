@@ -516,10 +516,6 @@ function counted(count: number, noun: string): string {
   return `${count} ${noun}${count === 1 ? '' : 's'}`;
 }
 
-function firstName(name: string): string {
-  return name.split(' ')[0] ?? '';
-}
-
 function short(sha: string | null | undefined): string {
   return (sha ?? '').slice(0, SHORT_SHA);
 }
@@ -1137,11 +1133,11 @@ function repliersOf(comments: Comment[], context: Context): Reviewer[] {
     if (!one.author || one.author === context.viewer || seen.has(one.author)) {
       continue;
     }
-    seen.set(one.author, firstName(nameOf(one.author, context.names)));
+    seen.set(one.author, nameOf(one.author, context.names));
   }
-  return [...seen].map(([author, first]) => ({
+  return [...seen].map(([author, name]) => ({
     author,
-    label: `Include ${first}'s replies`,
+    label: `Include ${name}'s replies`,
   }));
 }
 
@@ -1180,16 +1176,17 @@ function acceptingOf(
   comments: Comment[],
   context: Context,
 ): AcceptView {
-  const first = firstName(reviewer);
   const changes = plan.length ? counted(plan.length, 'change') : 'the fix';
   const branch = context.pullRequest?.branch ?? 'the PR branch';
   const accept = {
     title: `Accept: push ${changes} to ${branch}`,
     lead:
       'One commit on the PR branch. Decide here how ' +
-      `${first || 'the reviewer'} hears about it.`,
+      `${reviewer || 'the reviewer'} hears about it.`,
     files,
-    reply_kicker: first ? `Reply to ${first} on GitHub` : 'Reply on GitHub',
+    reply_kicker: reviewer
+      ? `Reply to ${reviewer} on GitHub`
+      : 'Reply on GitHub',
     replying_to:
       transcriptOf(conversation, comments, context).findLast(
         (one) => one.author !== context.viewer,
@@ -1202,7 +1199,7 @@ function acceptingOf(
   if (phase === 'reply failed') {
     return {
       ...accept,
-      title: first ? `Retry the reply to ${first}` : 'Retry the reply',
+      title: reviewer ? `Retry the reply to ${reviewer}` : 'Retry the reply',
       lead: replying
         ? proposal?.kind === 'ticket'
           ? 'The ticket is already filed, so nothing is filed again: this ' +

@@ -24,6 +24,8 @@ import {
 import type RequestSessionService from 'frontend/services/request-session';
 import TerminalColours from 'frontend/components/terminal-colours';
 import eq from 'frontend/helpers/eq';
+import { NAME_STYLES, type NameStyle } from 'frontend/data/names';
+import type NameStyleService from 'frontend/services/name-style';
 
 const TOOTH_RADIUS = 5.75;
 const TEETH = 8;
@@ -66,6 +68,17 @@ const REQUEST_SESSION_CHOICES = REQUEST_SESSIONS.map((session) => ({
   name: REQUEST_SESSION_NAMES[session],
 }));
 
+const NAME_STYLE_NAMES: Record<NameStyle, string> = {
+  first: 'First name',
+  full: 'Full name',
+  login: 'Username',
+};
+
+const NAME_STYLE_CHOICES = NAME_STYLES.map((style) => ({
+  style,
+  name: NAME_STYLE_NAMES[style],
+}));
+
 export default class SettingsMenu extends Component {
   @service declare harvestSwitch: HarvestSwitchService;
   @service declare hub: HubService;
@@ -73,12 +86,14 @@ export default class SettingsMenu extends Component {
   @service declare theme: ThemeService;
   @service declare commitBox: CommitBoxService;
   @service declare requestSession: RequestSessionService;
+  @service declare nameStyle: NameStyleService;
 
   @tracked showing = false;
   @tracked sizing = false;
   @tracked autoReading = false;
   @tracked requesting = false;
   @tracked colouring = false;
+  @tracked naming = false;
 
   readonly tooth = `${TOOTH} ${TOOTH}`;
 
@@ -105,6 +120,7 @@ export default class SettingsMenu extends Component {
     this.sizing = false;
     this.autoReading = false;
     this.requesting = false;
+    this.naming = false;
     this.keys.drop(this.keymap);
   };
 
@@ -136,6 +152,12 @@ export default class SettingsMenu extends Component {
   chooseSession = (session: RequestSession) =>
     this.requestSession.choose(session);
 
+  openNaming = () => {
+    this.naming = !this.naming;
+  };
+
+  chooseNameStyle = (style: NameStyle) => this.nameStyle.choose(style);
+
   openColours = () => {
     this.close();
     this.colouring = true;
@@ -159,6 +181,10 @@ export default class SettingsMenu extends Component {
 
   get autoReadLabel(): string {
     return `Auto read: ${AUTO_READ_NAMES[this.commitBox.autoRead]}`;
+  }
+
+  get nameStyleLabel(): string {
+    return `Names: ${NAME_STYLE_NAMES[this.nameStyle.chosen]}`;
   }
 
   get sessionLabel(): string {
@@ -294,6 +320,32 @@ export default class SettingsMenu extends Component {
                     checked={{eq this.requestSession.chosen choice.session}}
                     data-test-agent-session-choice={{choice.session}}
                     {{on "change" (fn this.chooseSession choice.session)}}
+                  />
+                  {{choice.name}}
+                </label>
+              {{/each}}
+            </fieldset>
+          {{/if}}
+          <button
+            type="button"
+            class="setting"
+            aria-expanded={{if this.naming "true" "false"}}
+            data-test-setting
+            data-test-name-style-open
+            {{on "click" this.openNaming}}
+          >{{this.nameStyleLabel}}</button>
+          {{#if this.naming}}
+            <fieldset class="setting-choices" data-test-name-styles>
+              <legend class="visually-hidden">Names</legend>
+              {{#each NAME_STYLE_CHOICES key="style" as |choice|}}
+                <label class="setting-choice">
+                  <input
+                    type="radio"
+                    name="name-style"
+                    value={{choice.style}}
+                    checked={{eq this.nameStyle.chosen choice.style}}
+                    data-test-name-style={{choice.style}}
+                    {{on "change" (fn this.chooseNameStyle choice.style)}}
                   />
                   {{choice.name}}
                 </label>

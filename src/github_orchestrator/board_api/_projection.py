@@ -18,8 +18,8 @@ from github_orchestrator.working_copies import FileDiff, PrCheckout
 
 MAX_FILE_LINES = 2000
 
-def _named(conversations: Sequence[Conversation], github_named: Mapping[str, str],
-           first_names_only: bool) -> dict[str, str]:
+def _named(conversations: Sequence[Conversation],
+           github_named: Mapping[str, str]) -> dict[str, str]:
     names: dict[str, str] = {}
     for conversation in conversations:
         for login, name in ((conversation.author, conversation.reviewer_name),
@@ -27,14 +27,12 @@ def _named(conversations: Sequence[Conversation], github_named: Mapping[str, str
                               for c in conversation.comments)):
             if login and name and login not in names:
                 names[login] = name
-    names |= {login: name for login, name in github_named.items() if name}
-    return {login: name.split()[0] if first_names_only else name
-            for login, name in names.items()}
+    return names | {login: name for login, name in github_named.items() if name}
 
 
-def people_of(conversations: Sequence[Conversation], github_named: Mapping[str, str],
-              first_names_only: bool) -> list[Person]:
-    names = _named(conversations, github_named, first_names_only)
+def people_of(conversations: Sequence[Conversation],
+              github_named: Mapping[str, str]) -> list[Person]:
+    names = _named(conversations, github_named)
     logins = {conversation.author for conversation in conversations}
     logins |= {comment.author for conversation in conversations
                for comment in conversation.comments}
@@ -44,9 +42,8 @@ def people_of(conversations: Sequence[Conversation], github_named: Mapping[str, 
 
 
 def viewer_of(conversations: Sequence[Conversation], github_named: Mapping[str, str],
-              account: str, first_names_only: bool) -> Person:
-    return Person(login=account,
-                  name=_named(conversations, github_named, first_names_only).get(account))
+              account: str) -> Person:
+    return Person(login=account, name=_named(conversations, github_named).get(account))
 
 
 def _kind_of(conversation: Conversation) -> contract.ThreadKind:

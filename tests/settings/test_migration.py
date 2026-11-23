@@ -52,7 +52,7 @@ def _migrated(config: Path) -> list[str]:
 
 
 @pytest.mark.parametrize("line", ['pr_windows = "browser"\n', 'pr_windows = "tmux"\n',
-                                  "idle_threshold = 30\n"])
+                                  "idle_threshold = 30\n", "first_names_only = true\n"])
 def test_a_config_from_tmux_mode_is_refused_with_the_command_that_migrates_it(tmp_path, line):
     config = _config(tmp_path, line + CURRENT)
 
@@ -77,8 +77,8 @@ def test_migrating_keeps_every_setting_this_release_still_reads(tmp_path):
 
     loaded = load_config(config)
     assert (loaded.gh_account, loaded.agents_enabled, loaded.agent_command, loaded.hub_port,
-            loaded.board_font_dir, loaded.first_names_only) == (
-        "octocat", True, "CLAUDE_CONFIG_DIR=~/.claude-work claude", 8722, "~/design/fonts", True)
+            loaded.board_font_dir) == (
+        "octocat", True, "CLAUDE_CONFIG_DIR=~/.claude-work claude", 8722, "~/design/fonts")
     assert settings_read_from(config).repos == {
         Repo("acme", "widgets"): Clone(Path("/src/widgets"),
                                        "cp $GITHUB_ORCHESTRATOR_SOURCE_REPO/.env .")}
@@ -95,7 +95,6 @@ def test_migrating_writes_one_repos_entry_carrying_the_new_worktree_command(tmp_
         'gh_account = "octocat"\n'
         'board_font_dir = "~/design/fonts"\n'
         'hub_port = 8722\n'
-        'first_names_only = true\n'
         '\n'
         '[[repos]]\n'
         'repo = "acme/widgets"\n'

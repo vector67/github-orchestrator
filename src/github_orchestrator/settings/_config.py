@@ -80,7 +80,6 @@ class OrchestratorConfig:
     hub_port: int = 8720
     hub_host: str = "127.0.0.1"
     server_workers: int = 4
-    first_names_only: bool = False
     tracker: Tracker = Tracker.NONE
     tracker_project: str = ""
     check_for_updates: bool = True
@@ -107,16 +106,23 @@ class ConfigError(ValueError):
         return str(self)
 
 
-LEGACY_KEYS = ("pr_windows", "idle_threshold")
+RETIRED_BECAUSE = {
+    "pr_windows": "now that the agent managers always run in the background",
+    "idle_threshold": "now that the agent managers always run in the background",
+    "first_names_only": "now that each browser picks how names show in the board's settings menu",
+}
+LEGACY_KEYS = tuple(RETIRED_BECAUSE)
 LEFT_BY_TMUX_MODE = ("tmux_window_ids", "glow_theme")
 
 
 def _refuse_legacy_keys(config_path: Path, data: Mapping[str, object]) -> None:
     legacy = [key for key in LEGACY_KEYS if key in data]
     if legacy:
+        reason = RETIRED_BECAUSE[legacy[0]]
+        named = [key for key in legacy if RETIRED_BECAUSE[key] == reason]
         raise ConfigError(
-            f"{config_path}: {' and '.join(legacy)} {'is' if len(legacy) == 1 else 'are'} "
-            "no longer read, now that the agent managers always run in the background",
+            f"{config_path}: {' and '.join(named)} {'is' if len(named) == 1 else 'are'} "
+            f"no longer read, {reason}",
             until_restart="which rewrites the config without them and keeps the old one beside it")
 
 

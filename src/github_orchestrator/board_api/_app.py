@@ -219,7 +219,6 @@ class Board:
     check_seconds: float
     terminals: TerminalSessions
     terminal_threads: anyio.CapacityLimiter
-    first_names_only: bool
     clock: UtcClock
     summaries: PrSummaries
     lane: SummaryLane
@@ -421,7 +420,7 @@ def read_viewer(board: Serving) -> Person:
     and a poll has nothing to save.
     """
     return viewer_of(board.conversations.all(), board.manager.dashboard().names,
-                     board.conversations.facts().account, board.first_names_only)
+                     board.conversations.facts().account)
 
 
 @reads.get("/health", tags=["board"], operation_id="readHealth",
@@ -447,8 +446,7 @@ def list_people(request: Request, board: Serving) -> Response:
     """
     return etag.answered(request,
                          PersonList(people_of(board.conversations.all(),
-                                              board.manager.dashboard().names,
-                                              board.first_names_only)))
+                                              board.manager.dashboard().names)))
 
 
 @reads.get("/mentionable", response_model=MentionableList, tags=["people"],
@@ -472,8 +470,7 @@ def read_person(login: str, board: Serving) -> Person:
     """Whoever the records name. Someone who has said nothing on this pull
     request is not here, including the viewer, who is on `/viewer`.
     """
-    for person in people_of(board.conversations.all(), board.manager.dashboard().names,
-                            board.first_names_only):
+    for person in people_of(board.conversations.all(), board.manager.dashboard().names):
         if person.login == login:
             return person
     raise Refusal(404, ErrorCode.NOT_FOUND,
