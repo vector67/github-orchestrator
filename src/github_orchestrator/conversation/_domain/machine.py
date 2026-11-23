@@ -1015,6 +1015,15 @@ def _placed_by_an_agent(conversation: Conversation, command: Place) -> Refused |
     return None
 
 
+def _not_overruled(conversation: Conversation, command: ReportDeclined) -> Refused | None:
+    if conversation.fix.run.overrules is not None:
+        return Refused(
+            conversation, ErrorCode.INTERNAL_REFUSAL,
+            "the operator moved this thread to Needs a fix over the last skip: make the "
+            "change, reply, file a ticket, split or ask, but do not skip it again")
+    return None
+
+
 def _drafting(*wanted: str) -> Rule:
     def drafting(conversation: Conversation, change: Any) -> Refused | None:
         if conversation.state in wanted:
@@ -1080,7 +1089,7 @@ RULES: dict[type, tuple[Rule, ...]] = {
     MoveBase: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                _a_commit),
     ReportDeclined: (_reported_on((QUEUED, RUNNING, IN_SESSION), "no agent holds"),
-                     _a_split_report),
+                     _a_split_report, _not_overruled),
     ReportReply: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),
                   _a_split_report),
     ReportTicket: (_reported_on((RUNNING, IN_SESSION, PROPOSED), "nobody is working on"),

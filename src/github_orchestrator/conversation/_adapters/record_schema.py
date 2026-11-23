@@ -463,6 +463,7 @@ def _migrated(version: int, document: Document) -> Document:
         "fix_steps": sorted(steps),
         "run_kind": _run_kind(document),
         "run_resumes": bool(document.get("run_resumes")),
+        "run_overrules": document.get("run_overrules"),
         "reopened": bool(document.get("reopened")),
         "before_reply": str(document.get("before_reply") or ""),
         "replied_during_run": bool(document.get("replied_during_run")),

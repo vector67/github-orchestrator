@@ -81,6 +81,7 @@ class ThreadAgents:
             conflict=fix.run.conflict,
             classification=fix.classification,
             skipped_because=fix.reason if skipped and fix.reason else None,
+            overruled=fix.run.overrules,
             reply=None if fix.kind == ProposalKind.COMMIT else fix.reply,
             ticket_project=None if ticket is None else ticket.project,
             ticket_title=None if ticket is None else ticket.title,

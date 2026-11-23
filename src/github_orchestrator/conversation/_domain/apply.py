@@ -1094,12 +1094,17 @@ def _decision_failed(conversation: Conversation, reason: str) -> Accepted:
     return Accepted(with_fix(conversation, decision_error=reason))
 
 
-def _first(conversation: Conversation) -> Accepted:
+def _skip_reason(fix: Fix) -> str | None:
+    return None if fix.classification is None else fix.reason or ""
+
+
+def _first(conversation: Conversation, *, overrules: str | None = None) -> Accepted:
     return Accepted(
-        with_fix(conversation, state=QUEUED, run=Run(kind=OperationKind.FIRST), attempts=0,
-                  started_at=None, steps=frozenset(), landed_base=None,
-                  landed_sha=None, push_error=None, reply_error=None,
-                  decision_error=None, reply_note=None, pending_reply=""))
+        with_fix(conversation, state=QUEUED,
+                 run=Run(kind=OperationKind.FIRST, overrules=overrules), attempts=0,
+                 started_at=None, steps=frozenset(), landed_base=None,
+                 landed_sha=None, push_error=None, reply_error=None,
+                 decision_error=None, reply_note=None, pending_reply=""))
 
 
 def _answer_in_session(conversation: Conversation, answer: str | None = None) -> Accepted:
@@ -1624,7 +1629,8 @@ def _dispatch(conversation: Conversation, command: Change,
         case Confirm():
             return Accepted(replace(conversation, state=CONFIRMED))
         case Place(to=ConversationState.QUEUED):
-            return _first(replace(conversation, state=OPEN))
+            return _first(replace(conversation, state=OPEN),
+                          overrules=_skip_reason(conversation.fix))
         case Place():
             return Accepted(replace(conversation, state=PLACED_IN[command.to]))
         case ClosingReplyPosted():

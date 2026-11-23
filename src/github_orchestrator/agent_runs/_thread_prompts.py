@@ -591,6 +591,23 @@ If nothing is asked of the reviewer, or a reply would add nothing, report that w
 """
 
 
+def _overruled(fix: ThreadFix) -> str:
+    if fix.overruled is None:
+        return ""
+    return f"""## The operator overruled the last run
+
+The last run classified this comment **{fix.classification or 'not safe'}** and \
+skipped it: {fix.overruled}
+
+The operator read that verdict, rejected it, and moved the thread to Needs a fix: \
+they want this comment addressed. Do not reach the same verdict again, and do not \
+skip it: the board refuses a skip on this run. Make the change; if it belongs \
+outside this pull request, propose a ticket or a split; if you cannot tell what \
+to change, ask.
+
+"""
+
+
 def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int, *,
                   watched: bool = False) -> str:
     if fix.reviewing:
@@ -615,6 +632,13 @@ def thread_prompt(commands: ReportCommands, fix: ThreadFix, workers: int, *,
 
     path, line_text = _anchor(fix)
     parallelism_note = test_parallelism_note(workers)
+    overruled = _overruled(fix)
+    skipping = "" if fix.overruled is not None else f"""If the comment is **risky**, **needs-human** or an **acknowledgement**, change
+no code and report, then stop:
+
+    {skip_cmd}
+
+"""
 
     return f"""You are addressing one PR review thread on {pr} \
 {WATCHED if watched else UNATTENDED}
@@ -638,7 +662,7 @@ The last comment is the most recent thing the reviewer said. Earlier comments \
 are the context it was said in — read the whole thread before deciding what is \
 being asked.
 {_said_elsewhere(fix)}
-{tracker}## Step 1 — classify the comment before doing any work
+{overruled}{tracker}## Step 1 — classify the comment before doing any work
 
 - **safe** — address it. Examples: typos, missing types, a rename, extracting a
   small helper, adding a test for a stated case, simplifying an expression,
@@ -680,12 +704,7 @@ it, then stop:
 
 {_reply_advice(fix)}
 
-{out_of_scope}If the comment is **risky**, **needs-human** or an **acknowledgement**, change
-no code and report, then stop:
-
-    {skip_cmd}
-
-## Step 2 — if safe or a split, write down the steps before you touch any code
+{out_of_scope}{skipping}## Step 2 — if safe or a split, write down the steps before you touch any code
 
 {ONE_COMMIT} Say what you mean to do, one `--step` at a time, in the order you \
 mean to do them:

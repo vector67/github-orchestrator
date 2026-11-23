@@ -71,6 +71,7 @@ class ThreadFix:
     conflict: str | None = None
     classification: str | None = None
     skipped_because: str | None = None
+    overruled: str | None = None
     reply: str | None = None
     ticket_project: str | None = None
     ticket_title: str | None = None

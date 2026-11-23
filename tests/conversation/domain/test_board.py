@@ -203,6 +203,52 @@ def test_a_fix_you_steer_yourself_opens_a_session_in_its_own_workspace(here, bef
     assert (opened.fix.skipped_because == "touches the public API") == (before is _declined)
 
 
+def _acknowledged(here: Here) -> None:
+    here.heard()
+    start_run(here.world, here.threads)
+    here.asked(lambda conversation: conversation.not_a_fix(
+        Classification.ACKNOWLEDGEMENT, "fine to leave as is"))
+
+
+def _overruled(here: Here) -> None:
+    _acknowledged(here)
+    here.world.agent_runs.script(RunOutcome(finishes=False))
+    here.asked(lambda conversation: conversation.place(ConversationState.QUEUED))
+
+
+def test_moving_a_skipped_thread_to_needs_a_fix_tells_the_next_run_its_skip_was_overruled(here):
+    _overruled(here)
+
+    [*_, started] = here.world.agent_runs.started
+    assert started.work.fix.overruled == "fine to leave as is"
+
+
+def test_a_retry_after_a_failed_attempt_still_knows_which_skip_was_overruled(here):
+    _overruled(here)
+    with here.threads.editing(KEY) as editable:
+        editable.fail("run exited without reporting")
+    start_run(here.world, here.threads, finishes=False)
+
+    [*_, retried] = here.world.agent_runs.started
+    assert retried.work.fix.overruled == "fine to leave as is"
+
+
+def test_a_run_that_was_not_overruled_is_not_told_it_was(here):
+    _acknowledged(here)
+
+    [started] = here.world.agent_runs.started
+    assert started.work.fix.overruled is None
+
+
+def test_a_run_whose_skip_was_overruled_cannot_skip_again(here):
+    _overruled(here)
+
+    refused = _refused_and_left(here, lambda conversation: conversation.not_a_fix(
+        Classification.ACKNOWLEDGEMENT, "fine to leave as is"))
+
+    assert "Needs a fix" in refused.reason
+
+
 def test_no_session_is_opened_when_claude_is_disabled(here):
     _proposed(here)
     here.threads = here.world.threads(agents_enabled=False)
