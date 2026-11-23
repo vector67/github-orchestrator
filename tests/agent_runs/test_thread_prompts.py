@@ -381,6 +381,16 @@ def test_a_rework_from_a_reply_starts_from_the_reply_it_proposed(runs, claude, w
     assert prompt.index("It runs once per poll.") < prompt.index("say why it runs once")
 
 
+def test_a_thread_moved_to_needs_a_fix_over_a_skip_says_so_and_offers_no_skip(
+        runs, claude, worktree):
+    prompt = _fixed(runs, claude, worktree, classification="risky",
+                    overruled="touches the public API")
+
+    overruled = prompt[prompt.index("## The operator overruled the last run"):]
+    assert "risky" in overruled and "touches the public API" in overruled
+    assert "thread skip" not in prompt
+
+
 def test_a_thread_nobody_had_replied_to_says_nothing_about_before(runs, claude, worktree):
     assert "Before the newest reply" not in _fixed(runs, claude, worktree)
 

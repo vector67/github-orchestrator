@@ -364,6 +364,7 @@ class Run:
     conflict: str | None = None
     brief: Brief | None = None
     resumes: bool = False
+    overrules: str | None = None
 
     @property
     def is_rebase(self) -> bool:
