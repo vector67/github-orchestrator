@@ -1,0 +1,4 @@
+#!/bin/sh
+printf "%s\n" "npx $*" >> "$STUB_LOG"
+mkdir -p dist-tests
+printf "built\n" > dist-tests/index.html

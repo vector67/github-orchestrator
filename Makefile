@@ -5,6 +5,11 @@ SERVED_APP := $(CURDIR)/src/github_orchestrator/board_api/static/app
 PREVIEW_PORT ?= 8791
 RESTART_LOCK := $(CURDIR)/.restart-all.lock
 HOLDING_LOCK := $(if $(shell command -v lockf),lockf -k,flock -o)
+WARM_WORKTREE := sh $(CURDIR)/tools/warm_worktree.sh
+export MAIN_CHECKOUT := $(patsubst %/.git,%,$(shell git rev-parse --path-format=absolute --git-common-dir))
+export SHARED_CACHE := $(MAIN_CHECKOUT)/.shared-cache
+export MYPY_CACHE_DIR := $(SHARED_CACHE)/mypy
+export FRONTEND_LINT_CACHE := $(SHARED_CACHE)/frontend-lint
 
 .PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch preview contract
 
@@ -27,6 +32,7 @@ frontend_deps:
 		echo "npm not found; the review board front end needs node" >&2; \
 		exit 1; }
 	@[ $(FRONTEND_DIR)/node_modules/.package-lock.json -nt $(FRONTEND_DIR)/package-lock.json ] || \
+		$(WARM_WORKTREE) clone_node_modules $(FRONTEND_DIR) || \
 		(cd $(FRONTEND_DIR) && npm ci --silent)
 
 MD_FILES = $(shell git ls-files '*.md' ':!:src/github_orchestrator/cli/skills/**')
@@ -111,6 +117,7 @@ test:
 	[ "$$(cat "$$out/python-status")" -eq 0 ] && [ "$$(cat "$$out/ember-status")" -eq 0 ]
 
 test-python:
+	@$(WARM_WORKTREE) durations
 	uv run pytest tests/ -q --forks $(PYTEST_WORKERS) --ignore=tests/test_layering.py
 
 test-frontend:
@@ -119,7 +126,9 @@ test-frontend:
 	if [ -e dist-tests/.built-for-tests ] && [ -z "$$(find app tests public config index.html vite.config.mjs babel.config.mjs package-lock.json -newer dist-tests/.built-for-tests -print -quit)" ]; then \
 		echo "front end unchanged since its last test build"; \
 	else \
-		npx vite build --mode development --outDir dist-tests && touch dist-tests/.built-for-tests; \
+		$(WARM_WORKTREE) restore_test_build . || \
+		{ npx vite build --mode development --outDir dist-tests && touch dist-tests/.built-for-tests && \
+		$(WARM_WORKTREE) store_test_build .; }; \
 	fi && node_modules/.bin/testem ci -f testem.cjs --port 0
 
 record:
