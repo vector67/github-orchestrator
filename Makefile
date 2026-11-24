@@ -10,7 +10,6 @@ WARM_WORKTREE := sh $(CURDIR)/tools/warm_worktree.sh
 export MAIN_CHECKOUT := $(patsubst %/.git,%,$(shell git rev-parse --path-format=absolute --git-common-dir))
 export SHARED_CACHE := $(MAIN_CHECKOUT)/.shared-cache
 export MYPY_CACHE_DIR := $(SHARED_CACHE)/mypy
-export FRONTEND_LINT_CACHE := $(SHARED_CACHE)/frontend-lint
 TEST_LOCK := $(MAIN_CHECKOUT)/.make-test.lock
 IN_TEST_LOCK = if [ -n "$$HOLDING_TEST_LOCK" ]; then \
 		$(MAKE) --no-print-directory $@-holding-the-lock; \
