@@ -105,7 +105,14 @@ from github_orchestrator.board_api._contract import (
     side_of,
     verdict_of,
 )
-from github_orchestrator.board_api._description import DescriptionRecord, digest, served
+from github_orchestrator.board_api._description import (
+    DESCRIPTION as KEPT_DESCRIPTION,
+)
+from github_orchestrator.board_api._description import (
+    DescriptionRecord,
+    digest,
+    served,
+)
 from github_orchestrator.board_api._errors import (
     BAD_RANGE,
     DIFF_FAILED,
@@ -1257,16 +1264,17 @@ def save_description(board: Serving, asked: DescriptionSaveRequest) -> Descripti
     newer than the save reads it.
     """
     _encodable(asked.title, asked.body, asked.started_from)
-    edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
-                                                 started_from=asked.started_from)
-    if isinstance(edited, str):
-        raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
-    if isinstance(edited, DescriptionMoved):
-        return DescriptionSave(saved=False, on_github=edited.body,
-                               pull_request=_pull_request(board))
-    dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
-                        saved_title=asked.title, saved_body=asked.body,
-                        saved_at=board.clock().isoformat()).keep(board.shelf)
+    with board.shelf.lock(KEPT_DESCRIPTION):
+        edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
+                                                     started_from=asked.started_from)
+        if isinstance(edited, str):
+            raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
+        if isinstance(edited, DescriptionMoved):
+            return DescriptionSave(saved=False, on_github=edited.body,
+                                   pull_request=_pull_request(board))
+        dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
+                            saved_title=asked.title, saved_body=asked.body,
+                            saved_at=board.clock().isoformat()).keep(board.shelf)
     return DescriptionSave(saved=True, on_github=asked.body, pull_request=_pull_request(board))
 
 
@@ -1279,8 +1287,9 @@ def check_description(board: Serving, asked: DescriptionCheckRequest) -> PullReq
     served checks nothing that is shown.
     """
     _encodable(asked.body)
-    dataclasses.replace(DescriptionRecord.kept(board.shelf),
-                        checked=digest(asked.body)).keep(board.shelf)
+    with board.shelf.lock(KEPT_DESCRIPTION):
+        dataclasses.replace(DescriptionRecord.kept(board.shelf),
+                            checked=digest(asked.body)).keep(board.shelf)
     return _pull_request(board)
 
 

@@ -1,9 +1,14 @@
+import contextlib
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
 from datetime import datetime
 
 import pytest
 
+from github_orchestrator.domain import DescriptionMoved
+from github_orchestrator.thread_records.fake import FakePrRecords, FakeThreadRecords
 from tests.board_api.support import (
     THE_PR,
     TITLE,
@@ -172,3 +177,76 @@ def test_a_check_holding_a_lone_surrogate_is_refused():
 
     assert answer.status_code == 400
     assert answer.json()["errors"][0]["code"] == "malformed-request"
+
+
+class ReadThenWaitToWrite:
+    def __init__(self, github, both_read: threading.Barrier) -> None:
+        self.github = github
+        self.both_read = both_read
+
+    def edit_description(self, pr, title, body, *, started_from):
+        on_github = self.github.prs[pr].state.body
+        if on_github != started_from:
+            return DescriptionMoved(on_github)
+        with contextlib.suppress(threading.BrokenBarrierError):
+            self.both_read.wait(timeout=0.5)
+        record = self.github.prs[pr]
+        record.state = replace(record.state, title=title, body=body)
+        return None
+
+
+def test_of_two_saves_from_the_same_description_the_second_finds_the_first():
+    fake = fake_threads(clock=Clock(POLLED))
+    board = board_on(fake, body=WRITTEN, clock=at(SAVED),
+                     descriptions=ReadThenWaitToWrite(fake.github, threading.Barrier(2)))
+
+    with ThreadPoolExecutor(2) as saving:
+        answers = list(saving.map(
+            lambda body: board.client.post(SAVE, json={"title": TITLE, "body": body,
+                                                       "started_from": WRITTEN}).json(),
+            ["🤖 One tab's words.", "🤖 The other tab's words."]))
+
+    assert sorted(answer["saved"] for answer in answers) == [False, True]
+
+
+class ChecksWaitForASave(FakeThreadRecords):
+    def __init__(self) -> None:
+        super().__init__()
+        self.check_writing = threading.Event()
+        self.saved = threading.Event()
+
+    def pr(self, pr):
+        return self.prs.setdefault(pr, PausedRecords(self))
+
+
+class PausedRecords(FakePrRecords):
+    def __init__(self, waits: ChecksWaitForASave) -> None:
+        super().__init__()
+        self.waits = waits
+
+    def save(self, kind, key, document):
+        if kind == "description" and json.loads(document)["saved_body"] is None:
+            self.waits.check_writing.set()
+            self.waits.saved.wait(timeout=0.5)
+            super().save(kind, key, document)
+            return
+        super().save(kind, key, document)
+        if kind == "description":
+            self.waits.saved.set()
+
+
+def test_a_check_beside_a_save_keeps_the_save():
+    records = ChecksWaitForASave()
+    fake = fake_threads(clock=Clock(POLLED))
+    board = board_on(fake, body=WRITTEN, clock=at(SAVED), records=records)
+
+    with ThreadPoolExecutor(2) as both:
+        checking = both.submit(board.client.post, CHECK, json={"body": WRITTEN})
+        assert records.check_writing.wait(timeout=5)
+        both.submit(board.client.post, SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
+                                                   "started_from": WRITTEN}).result()
+        checking.result()
+
+    pull = board.client.get("/api/pull-request").json()
+    assert (pull["body"], pull["description_saved_at"]) == ("🤖 Renames it.",
+                                                            at(SAVED)().isoformat())
