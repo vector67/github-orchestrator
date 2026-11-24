@@ -82,13 +82,11 @@ class PrTeardown:
             ok = False
         if not self._worklist.forget(pr):
             ok = False
-        forgotten = [self._holds.forget(pr), self._manager_leftovers.forget(pr)]
+        forgotten = [self._holds.forget(pr), self._manager_leftovers.forget(pr),
+                     self._summaries.forget(pr)]
         if reason is Reason.CLOSED:
-            forgotten += [self._summaries.forget(pr), self._dismissals.forget(pr),
-                          self._picks.forget(pr), self._rerequests.forget(pr),
-                          self._ci_ignores.forget(pr)]
-        else:
-            forgotten.append(self._summaries.unwant(pr))
+            forgotten += [self._dismissals.forget(pr), self._picks.forget(pr),
+                          self._rerequests.forget(pr), self._ci_ignores.forget(pr)]
         if not all(forgotten):
             ok = False
 

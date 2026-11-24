@@ -3,12 +3,9 @@ from github_orchestrator.domain import DismissUntil
 from github_orchestrator.github import PullRequestState
 from github_orchestrator.pr_processes import ManagerPane
 from github_orchestrator.pr_processes.fake import FakePrProcesses
-from github_orchestrator.pr_summaries import PrSummaries, Summary
-from github_orchestrator.wiring import PrSummariesWiring, wire
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.builders import a_pr
 from tests.change_detection.support import disk_change_detection, polled_on_disk, seen
-from tests.conftest import clocks_of
 from tests.conversation.support import (
     conversation_managers_over,
     hear,
@@ -157,28 +154,6 @@ def test_a_pr_dismissed_until_its_next_event_has_its_window_closed_and_keeps_its
     assert world.managers == {}
     assert copies.branch_at(worktree) == BRANCH
     assert disk_dismissals(settings.data_dir).dismissal(THE_PR) is DismissUntil.NEXT_EVENT
-
-
-def test_a_dismissed_pr_keeps_its_summary_with_no_run_pending(settings):
-    github = watching(settings)
-    world = FakePrProcesses()
-    copies = FakeWorkingCopies(github)
-    _open_on_github(settings, github)
-    worktree = checked_out(copies, the_clone(settings).parent / BRANCH, BRANCH)
-    _window(world, worktree)
-    summaries: PrSummaries = wire(PrSummariesWiring(settings.summaries_dir), clocks_of()).get(PrSummaries)
-    summaries.save(THE_PR, Summary(markdown="# Summary\n"))
-    summaries.want(THE_PR)
-    summaries.ask(THE_PR, use_github_api=True)
-    disk_dismissals(settings.data_dir).dismiss_forever(THE_PR)
-
-    _cycle(settings, github, world, copies)
-
-    assert world.managers == {}
-    kept = summaries.load(THE_PR)
-    assert kept is not None
-    assert kept.markdown == "# Summary\n"
-    assert summaries.due(set()) == []
 
 
 def test_a_pr_dismissed_until_its_next_event_keeps_its_window_while_its_manager_runs(

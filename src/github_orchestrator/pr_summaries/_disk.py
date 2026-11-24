@@ -94,18 +94,6 @@ class DiskPrSummaries:
             write_atomically(self._file(pr), _encoded(replace(
                 stored, asked=None, asked_over_github_api=False)))
 
-    def unwant(self, pr: Pr) -> bool:
-        if not self._file(pr).exists():
-            return True
-        try:
-            with self._locked(pr):
-                stored = self.load(pr) or Summary()
-                write_atomically(self._file(pr), _encoded(replace(
-                    stored, wanted=None, asked=None, asked_over_github_api=False)))
-        except OSError:
-            return False
-        return True
-
     def forget(self, pr: Pr) -> bool:
         folder = working_folder(self._dir, pr)
         try:
