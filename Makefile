@@ -60,10 +60,10 @@ notifier_apps:
 	@sh src/github_orchestrator/desktop/notifier/build.sh
 
 fmt:
-	uv run mdformat $(MD_FILES)
+	@uv run mdformat $(MD_FILES)
 
 fmt-check:
-	uv run mdformat --check $(MD_FILES)
+	@uv run mdformat --check $(MD_FILES) || { echo "fix: make fmt"; exit 1; }
 
 lint:
 	@out=$$(mktemp -d) || exit 1; trap 'rm -rf "$$out"' EXIT; \
@@ -83,18 +83,24 @@ lint-python:
 	@out=$$(mktemp -d) || exit 1; trap 'rm -rf "$$out"' EXIT; \
 	{ uv run ruff check src tests plugins .claude/skills > "$$out/ruff" 2>&1; echo $$? > "$$out/ruff-status"; } & \
 	{ uv run mypy > "$$out/mypy" 2>&1; echo $$? > "$$out/mypy-status"; } & \
-	{ uv run pytest tests/test_layering.py -q -p no:randomly > "$$out/layering" 2>&1; echo $$? > "$$out/layering-status"; } & \
+	{ uv run pytest tests/test_layering.py -q -p no:randomly --tb=line -rN > "$$out/layering" 2>&1; echo $$? > "$$out/layering-status"; } & \
 	wait; \
 	echo "--> ruff"; cat "$$out/ruff"; \
 	echo "--> mypy"; cat "$$out/mypy"; \
 	echo "--> layering tests"; cat "$$out/layering"; \
 	verdict() { [ "$$(cat "$$out/$$1-status")" -eq 0 ] && echo ok || echo FAILED; }; \
 	echo "ruff: $$(verdict ruff) | mypy: $$(verdict mypy) | layering: $$(verdict layering)"; \
+	[ "$$(verdict ruff)" = ok ] || echo "fix: make lint-python-fix, then edit what ruff still reports"; \
 	[ "$$(verdict ruff)$$(verdict mypy)$$(verdict layering)" = okokok ]
 
 lint-frontend:
 	@$(MAKE) frontend_deps
-	@cd $(FRONTEND_DIR) && npm run lint
+	@cd $(FRONTEND_DIR) && log=$$(mktemp) && trap 'rm -f "$$log" "$$log.status"' EXIT; \
+	{ npm run lint; echo $$? > "$$log.status"; } 2>&1 | tee "$$log"; \
+	[ "$$(cat "$$log.status")" -eq 0 ] && exit 0; \
+	grep -qE 'lint:(format|js|css|hbs) exited with code [1-9]' "$$log" && \
+	echo "fix: make lint-frontend-fix fixes prettier and what eslint, stylelint and ember-template-lint can; edit the rest"; \
+	exit 1
 
 lint-fix:
 	@echo "==> Fixing python"
@@ -105,7 +111,7 @@ lint-fix:
 	@$(MAKE) fmt
 
 lint-python-fix:
-	uv run ruff check --fix src tests plugins .claude/skills
+	uv run ruff check --fix --exit-zero src tests plugins .claude/skills
 
 lint-frontend-fix:
 	@$(MAKE) frontend_deps

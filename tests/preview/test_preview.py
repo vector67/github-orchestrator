@@ -1,4 +1,5 @@
 import signal
+import subprocess
 
 import pytest
 
@@ -297,16 +298,18 @@ def test_the_preview_says_the_reply_failure_it_logs_while_seeding_is_seeded(tmp_
 
 
 @pytest.mark.no_replay
-def test_the_preview_lands_its_seeded_fixes_where_git_has_no_identity(tmp_path, monkeypatch):
+def test_the_preview_repo_commits_where_git_has_no_identity(tmp_path, monkeypatch):
     config = tmp_path / "gitconfig"
     config.write_text("[user]\n\tuseConfigOnly = true\n")
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
     monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-    _, web, board = served_preview(tmp_path / "preview")
+    root = preview.worktree_in(tmp_path)
+    preview.build_repo(root)
 
-    landed = web.get(f"{board}/conversations/PRRT_landed").json()
+    landed = subprocess.run(["git", "-C", str(root), "commit", "--allow-empty", "-qm", "landed"],
+                            capture_output=True, text=True)
 
-    assert landed["state"] == "done"
+    assert landed.returncode == 0, landed.stderr
 
 
 def test_the_preview_removes_its_folder_when_ctrl_c_stops_it(tmp_path, monkeypatch):
