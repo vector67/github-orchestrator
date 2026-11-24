@@ -105750,6 +105750,26 @@
     }
    ]
   },
+  "tests/test_makefile_checks.py::test_lint_python_runs_mypy_even_when_ruff_fails#5dd850efd065": {
+   "[[\"make\", \"-f\", \"<REPO>/Makefile\", \"lint-python\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "-f",
+      "<REPO>/Makefile",
+      "lint-python"
+     ],
+     "fs": {
+      "calls": {
+       "text": "run ruff check src tests plugins .claude/skills\nrun mypy\nrun pytest tests/test_layering.py -q -p no:randomly --tb=line -rN\n"
+      }
+     },
+     "returncode": 2,
+     "stderr": "make: *** [lint-python] Error 1\n",
+     "stdout": "uv run ruff check src tests plugins .claude/skills; ruff=$?; uv run mypy; mypy=$?; \\\n\tuv run pytest tests/test_layering.py -q -p no:randomly --tb=line -rN; layering=$?; \\\n\t[ $ruff -eq 0 ] || echo \"fix: make lint-python-fix, then edit what ruff still reports\"; \\\n\t[ $ruff -eq 0 ] && [ $mypy -eq 0 ] && [ $layering -eq 0 ]\nfix: make lint-python-fix, then edit what ruff still reports\n"
+    }
+   ]
+  },
   "tests/test_makefile_checks.py::test_lint_python_runs_mypy_even_when_ruff_fails#c2790d0c2012": {
    "[[\"make\", \"-f\", \"<REPO>/Makefile\", \"lint-python\"], \"<REPO>\", null]": [
     {
@@ -105822,6 +105842,32 @@
     }
    ]
   },
+  "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[build_frontend]#beca0e4b9d1d": {
+   "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "build_frontend",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "npm ci --silent\nnpm run build --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
   "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[frontend_deps]#0178385a5c1d": {
    "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
     {
@@ -105843,6 +105889,26 @@
    ]
   },
   "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[frontend_deps]#a439296b5df6": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "stub.log": {
+       "text": "npm ci --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_a_lockfile_newer_than_the_install_installs_again[frontend_deps]#beca0e4b9d1d": {
    "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
     {
      "argv": [
@@ -105914,6 +105980,32 @@
     }
    ]
   },
+  "tests/test_makefile_frontend.py::test_an_install_as_new_as_the_lockfile_is_not_repeated[build_frontend]#beca0e4b9d1d": {
+   "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "build_frontend",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "npm run build --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
   "tests/test_makefile_frontend.py::test_an_install_as_new_as_the_lockfile_is_not_repeated[frontend_deps]#0178385a5c1d": {
    "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
     {
@@ -105943,6 +106035,146 @@
      "returncode": 0,
      "stderr": "",
      "stdout": ""
+    }
+   ]
+  },
+  "tests/test_makefile_frontend.py::test_an_install_as_new_as_the_lockfile_is_not_repeated[frontend_deps]#beca0e4b9d1d": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/test_makefile_restart_all.py::test_restart_all_syncs_and_builds_the_checkout_then_runs_the_cli_restart_all#30796dd9c203": {
+   "[[\"make\", \"restart-all\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\", \"VENV_PYTHON=<REPO>/tests/stubs/restart-all/python\", \"RESTART_LOCK=<TMP>/restart-all.lock\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "restart-all",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served",
+      "VENV_PYTHON=<REPO>/tests/stubs/restart-all/python",
+      "RESTART_LOCK=<TMP>/restart-all.lock"
+     ],
+     "fs": {
+      "Applications": {
+       "dir": true
+      },
+      "Applications/GHO Comments.app": {
+       "dir": true
+      },
+      "Applications/GHO Comments.app/Contents": {
+       "dir": true
+      },
+      "Applications/GHO Comments.app/Contents/Info.plist": {
+       "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.vector67.github-orchestrator.comments</string>\n<key>CFBundleName</key><string>GHO Comments</string>\n<key>CFBundleExecutable</key><string>notify</string>\n<key>CFBundleIconFile</key><string>AppIcon</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n<key>CFBundleShortVersionString</key><string>1.0</string>\n<key>LSUIElement</key><true/>\n</dict></plist>\n"
+      },
+      "Applications/GHO Comments.app/Contents/MacOS": {
+       "dir": true
+      },
+      "Applications/GHO Comments.app/Contents/MacOS/notify": {
+       "text": "#!/bin/sh\n"
+      },
+      "Applications/GHO Comments.app/Contents/Resources": {
+       "dir": true
+      },
+      "Applications/GHO Failed.app": {
+       "dir": true
+      },
+      "Applications/GHO Failed.app/Contents": {
+       "dir": true
+      },
+      "Applications/GHO Failed.app/Contents/Info.plist": {
+       "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.vector67.github-orchestrator.failed</string>\n<key>CFBundleName</key><string>GHO Failed</string>\n<key>CFBundleExecutable</key><string>notify</string>\n<key>CFBundleIconFile</key><string>AppIcon</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n<key>CFBundleShortVersionString</key><string>1.0</string>\n<key>LSUIElement</key><true/>\n</dict></plist>\n"
+      },
+      "Applications/GHO Failed.app/Contents/MacOS": {
+       "dir": true
+      },
+      "Applications/GHO Failed.app/Contents/MacOS/notify": {
+       "text": "#!/bin/sh\n"
+      },
+      "Applications/GHO Failed.app/Contents/Resources": {
+       "dir": true
+      },
+      "Applications/GHO Info.app": {
+       "dir": true
+      },
+      "Applications/GHO Info.app/Contents": {
+       "dir": true
+      },
+      "Applications/GHO Info.app/Contents/Info.plist": {
+       "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.vector67.github-orchestrator.info</string>\n<key>CFBundleName</key><string>GHO Info</string>\n<key>CFBundleExecutable</key><string>notify</string>\n<key>CFBundleIconFile</key><string>AppIcon</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n<key>CFBundleShortVersionString</key><string>1.0</string>\n<key>LSUIElement</key><true/>\n</dict></plist>\n"
+      },
+      "Applications/GHO Info.app/Contents/MacOS": {
+       "dir": true
+      },
+      "Applications/GHO Info.app/Contents/MacOS/notify": {
+       "text": "#!/bin/sh\n"
+      },
+      "Applications/GHO Info.app/Contents/Resources": {
+       "dir": true
+      },
+      "Applications/GHO Needs You.app": {
+       "dir": true
+      },
+      "Applications/GHO Needs You.app/Contents": {
+       "dir": true
+      },
+      "Applications/GHO Needs You.app/Contents/Info.plist": {
+       "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.vector67.github-orchestrator.needs-you</string>\n<key>CFBundleName</key><string>GHO Needs You</string>\n<key>CFBundleExecutable</key><string>notify</string>\n<key>CFBundleIconFile</key><string>AppIcon</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n<key>CFBundleShortVersionString</key><string>1.0</string>\n<key>LSUIElement</key><true/>\n</dict></plist>\n"
+      },
+      "Applications/GHO Needs You.app/Contents/MacOS": {
+       "dir": true
+      },
+      "Applications/GHO Needs You.app/Contents/MacOS/notify": {
+       "text": "#!/bin/sh\n"
+      },
+      "Applications/GHO Needs You.app/Contents/Resources": {
+       "dir": true
+      },
+      "Applications/GHO Ready.app": {
+       "dir": true
+      },
+      "Applications/GHO Ready.app/Contents": {
+       "dir": true
+      },
+      "Applications/GHO Ready.app/Contents/Info.plist": {
+       "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><dict>\n<key>CFBundleIdentifier</key><string>com.vector67.github-orchestrator.ready</string>\n<key>CFBundleName</key><string>GHO Ready</string>\n<key>CFBundleExecutable</key><string>notify</string>\n<key>CFBundleIconFile</key><string>AppIcon</string>\n<key>CFBundlePackageType</key><string>APPL</string>\n<key>CFBundleShortVersionString</key><string>1.0</string>\n<key>LSUIElement</key><true/>\n</dict></plist>\n"
+      },
+      "Applications/GHO Ready.app/Contents/MacOS": {
+       "dir": true
+      },
+      "Applications/GHO Ready.app/Contents/MacOS/notify": {
+       "text": "#!/bin/sh\n"
+      },
+      "Applications/GHO Ready.app/Contents/Resources": {
+       "dir": true
+      },
+      "restart-all.lock": {
+       "text": ""
+      },
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "uv sync\nnpm ci --silent\nnpm run build --silent\npython -m github_orchestrator.cli restart-all\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "==> Syncing dependencies\n==> Rebuilding the review board front end\nfront end built into <TMP>/served\n==> Building the notification apps\nbuilt <TMP>/Applications/GHO Ready.app\nbuilt <TMP>/Applications/GHO Failed.app\nbuilt <TMP>/Applications/GHO Needs You.app\nbuilt <TMP>/Applications/GHO Info.app\nbuilt <TMP>/Applications/GHO Comments.app\n"
     }
    ]
   },
@@ -106194,6 +106426,34 @@
     }
    ]
   },
+  "tests/test_makefile_restart_all.py::test_the_rebuild_serves_the_build_it_just_made#30796dd9c203": {
+   "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\", \"VENV_PYTHON=<REPO>/tests/stubs/restart-all/python\", \"RESTART_LOCK=<TMP>/restart-all.lock\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "build_frontend",
+      "FRONTEND_DIR=<TMP>/frontend",
+      "SERVED_APP=<TMP>/served",
+      "VENV_PYTHON=<REPO>/tests/stubs/restart-all/python",
+      "RESTART_LOCK=<TMP>/restart-all.lock"
+     ],
+     "fs": {
+      "served": {
+       "dir": true
+      },
+      "served/index.html": {
+       "text": "built"
+      },
+      "stub.log": {
+       "text": "npm ci --silent\nnpm run build --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
   "tests/test_makefile_restart_all.py::test_the_rebuild_serves_the_build_it_just_made#45c698929a6f": {
    "[[\"make\", \"build_frontend\", \"FRONTEND_DIR=<TMP>/frontend\", \"SERVED_APP=<TMP>/served\", \"VENV_PYTHON=<REPO>/tests/stubs/restart-all/python\", \"RESTART_LOCK=<TMP>/restart-all.lock\"], \"<REPO>\", null]": [
     {
@@ -106247,6 +106507,39 @@
      "returncode": 0,
      "stderr": "",
      "stdout": "front end built into <TMP>/served\n"
+    }
+   ]
+  },
+  "tests/test_makefile_warm_worktree.py::test_a_fresh_worktree_clones_the_main_checkouts_packages_when_the_lockfiles_match#0490ee58ebfe": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/tree/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/tree/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "tree/frontend/node_modules": {
+       "dir": true
+      },
+      "tree/frontend/node_modules/.bin": {
+       "dir": true
+      },
+      "tree/frontend/node_modules/.bin/testem": {
+       "text": "#!/bin/sh\n"
+      },
+      "tree/frontend/node_modules/.package-lock.json": {
+       "text": "{}"
+      },
+      "tree/frontend/node_modules/left-pad.js": {
+       "text": "module.exports = 1;\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "cloned node_modules from the main checkout\n"
     }
    ]
   },
@@ -106316,6 +106609,27 @@
     }
    ]
   },
+  "tests/test_makefile_warm_worktree.py::test_a_fresh_worktree_installs_when_its_lockfile_differs_from_the_main_checkouts#0490ee58ebfe": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/tree/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/tree/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "stub.log": {
+       "text": "npm ci --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
   "tests/test_makefile_warm_worktree.py::test_a_fresh_worktree_installs_when_its_lockfile_differs_from_the_main_checkouts#643463ec357a": {
    "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/tree/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
     {
@@ -106350,6 +106664,88 @@
      "fs": {
       "stub.log": {
        "text": "npm ci --silent\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ]
+  },
+  "tests/test_makefile_warm_worktree.py::test_a_test_build_of_other_sources_is_not_reused#0490ee58ebfe": {
+   "[[\"make\", \"test-frontend\", \"FRONTEND_DIR=<TMP>/first/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "test-frontend",
+      "FRONTEND_DIR=<TMP>/first/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "first/frontend/dist-tests": {
+       "dir": true
+      },
+      "first/frontend/dist-tests/.built-for-tests": {
+       "text": ""
+      },
+      "first/frontend/dist-tests/index.html": {
+       "text": "built\n"
+      },
+      "shared": {
+       "dir": true
+      },
+      "shared/dist-tests": {
+       "dir": true
+      },
+      "shared/dist-tests/0dea930d62d3c35b": {
+       "dir": true
+      },
+      "shared/dist-tests/0dea930d62d3c35b/.built-for-tests": {
+       "text": ""
+      },
+      "shared/dist-tests/0dea930d62d3c35b/index.html": {
+       "text": "built\n"
+      },
+      "stub.log": {
+       "text": "npx vite build --mode development --outDir dist-tests\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"make\", \"test-frontend\", \"FRONTEND_DIR=<TMP>/second/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "test-frontend",
+      "FRONTEND_DIR=<TMP>/second/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "second/frontend/dist-tests": {
+       "dir": true
+      },
+      "second/frontend/dist-tests/.built-for-tests": {
+       "text": ""
+      },
+      "second/frontend/dist-tests/index.html": {
+       "text": "built\n"
+      },
+      "shared/dist-tests/e34d7babac2d9681": {
+       "dir": true
+      },
+      "shared/dist-tests/e34d7babac2d9681/.built-for-tests": {
+       "text": ""
+      },
+      "shared/dist-tests/e34d7babac2d9681/index.html": {
+       "text": "built\n"
+      },
+      "stub.log": {
+       "text": "npx vite build --mode development --outDir dist-tests\n"
       }
      },
      "returncode": 0,
@@ -106522,6 +106918,76 @@
     }
    ]
   },
+  "tests/test_makefile_warm_worktree.py::test_a_test_build_of_the_same_sources_is_reused_by_the_next_worktree#0490ee58ebfe": {
+   "[[\"make\", \"test-frontend\", \"FRONTEND_DIR=<TMP>/first/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "test-frontend",
+      "FRONTEND_DIR=<TMP>/first/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "first/frontend/dist-tests": {
+       "dir": true
+      },
+      "first/frontend/dist-tests/.built-for-tests": {
+       "text": ""
+      },
+      "first/frontend/dist-tests/index.html": {
+       "text": "built\n"
+      },
+      "shared": {
+       "dir": true
+      },
+      "shared/dist-tests": {
+       "dir": true
+      },
+      "shared/dist-tests/0dea930d62d3c35b": {
+       "dir": true
+      },
+      "shared/dist-tests/0dea930d62d3c35b/.built-for-tests": {
+       "text": ""
+      },
+      "shared/dist-tests/0dea930d62d3c35b/index.html": {
+       "text": "built\n"
+      },
+      "stub.log": {
+       "text": "npx vite build --mode development --outDir dist-tests\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
+    }
+   ],
+   "[[\"make\", \"test-frontend\", \"FRONTEND_DIR=<TMP>/second/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "test-frontend",
+      "FRONTEND_DIR=<TMP>/second/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "second/frontend/dist-tests": {
+       "dir": true
+      },
+      "second/frontend/dist-tests/.built-for-tests": {
+       "text": ""
+      },
+      "second/frontend/dist-tests/index.html": {
+       "text": "built\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "reused the test build of these sources from another worktree\n"
+    }
+   ]
+  },
   "tests/test_makefile_warm_worktree.py::test_a_test_build_of_the_same_sources_is_reused_by_the_next_worktree#643463ec357a": {
    "[[\"make\", \"test-frontend\", \"FRONTEND_DIR=<TMP>/first/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
     {
@@ -106662,6 +107128,21 @@
     }
    ]
   },
+  "tests/test_makefile_warm_worktree.py::test_a_worktree_keeps_its_own_test_durations#0490ee58ebfe": {
+   "[[\"sh\", \"<REPO>/tools/warm_worktree.sh\", \"durations\"], \"<TMP>/tree\", null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/tools/warm_worktree.sh",
+      "durations"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ]
+  },
   "tests/test_makefile_warm_worktree.py::test_a_worktree_keeps_its_own_test_durations#643463ec357a": {
    "[[\"sh\", \"<REPO>/tools/warm_worktree.sh\", \"durations\"], \"<TMP>/tree\", null]": [
     {
@@ -106686,6 +107167,34 @@
       "durations"
      ],
      "fs": {},
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ]
+  },
+  "tests/test_makefile_warm_worktree.py::test_a_worktree_without_test_durations_starts_from_the_main_checkouts#0490ee58ebfe": {
+   "[[\"sh\", \"<REPO>/tools/warm_worktree.sh\", \"durations\"], \"<TMP>/tree\", null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/tools/warm_worktree.sh",
+      "durations"
+     ],
+     "fs": {
+      "tree/.pytest_cache": {
+       "dir": true
+      },
+      "tree/.pytest_cache/v": {
+       "dir": true
+      },
+      "tree/.pytest_cache/v/forked_run": {
+       "dir": true
+      },
+      "tree/.pytest_cache/v/forked_run/seconds": {
+       "text": "{\"tests/test_a.py::test_slow\": 9.0}"
+      }
+     },
      "returncode": 0,
      "stderr": null,
      "stdout": null
@@ -106745,6 +107254,52 @@
      "returncode": 0,
      "stderr": null,
      "stdout": null
+    }
+   ]
+  },
+  "tests/test_makefile_warm_worktree.py::test_cloned_packages_count_as_installed_on_the_next_run#0490ee58ebfe": {
+   "[[\"make\", \"frontend_deps\", \"FRONTEND_DIR=<TMP>/tree/frontend\", \"MAIN_CHECKOUT=<TMP>/main\", \"SHARED_CACHE=<TMP>/shared\"], \"<REPO>\", null]": [
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/tree/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {
+      "tree/frontend/node_modules": {
+       "dir": true
+      },
+      "tree/frontend/node_modules/.bin": {
+       "dir": true
+      },
+      "tree/frontend/node_modules/.bin/testem": {
+       "text": "#!/bin/sh\n"
+      },
+      "tree/frontend/node_modules/.package-lock.json": {
+       "text": "{}"
+      },
+      "tree/frontend/node_modules/left-pad.js": {
+       "text": "module.exports = 1;\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": "",
+     "stdout": "cloned node_modules from the main checkout\n"
+    },
+    {
+     "argv": [
+      "make",
+      "frontend_deps",
+      "FRONTEND_DIR=<TMP>/tree/frontend",
+      "MAIN_CHECKOUT=<TMP>/main",
+      "SHARED_CACHE=<TMP>/shared"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": "",
+     "stdout": ""
     }
    ]
   },
