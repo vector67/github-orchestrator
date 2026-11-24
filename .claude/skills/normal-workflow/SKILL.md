@@ -35,7 +35,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    each commit, and the full `make lint` and `make test` when anything under
    `frontend/` changed since the last full run: the layering tests run in
    `make lint-python`, not `make test-python`, and only the full targets run the front end's import rules,
-   which are what refuse a new import, export or test file. A commit that only
+   which are what refuse a new import, export or test file. Run `make lint-fix`
+   before every lint run, so formatting and other fixable findings never fail
+   one; when lint still fails, its last `fix:` line or failure message names the
+   command or edit that fixes it. A commit that only
    marks items done in a spec belongs in the same commit as the code it records.
    A change to an agent prompt (an agent, skill or brief) is not verified until
    you have run it as the system runs it, or in a subagent given the same prompt
