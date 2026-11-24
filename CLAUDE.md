@@ -17,7 +17,8 @@ make interface-report  # each package's exports and each class's methods against
 make contract  # regenerate the front end's API types and the fake board's contract copy
 ```
 
-Either aggregate stops at the first stage that fails. `lint-python`,
+Either aggregate runs its stages side by side, prints each stage's output whole,
+then one summary line, and fails when any stage fails. `lint-python`,
 `lint-frontend`, `fmt-check`, `test-python` and `test-frontend` run one stage.
 
 `make test` replays recorded git and sh output from
