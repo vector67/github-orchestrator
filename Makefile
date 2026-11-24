@@ -72,18 +72,32 @@ fmt-check:
 	@uv run mdformat --check $(MD_FILES) || { echo "fix: make fmt"; exit 1; }
 
 lint:
-	@echo "==> Linting python"
-	@$(MAKE) lint-python
-	@echo "==> Linting the front end"
-	@$(MAKE) lint-frontend
-	@echo "==> Checking markdown formatting"
-	@$(MAKE) fmt-check
+	@out=$$(mktemp -d) || exit 1; trap 'rm -rf "$$out"' EXIT; \
+	echo "==> Linting python, the front end and markdown formatting alongside each other"; \
+	{ $(MAKE) --no-print-directory lint-python > "$$out/python" 2>&1; echo $$? > "$$out/python-status"; } & \
+	{ $(MAKE) --no-print-directory lint-frontend > "$$out/frontend" 2>&1; echo $$? > "$$out/frontend-status"; } & \
+	{ $(MAKE) --no-print-directory fmt-check > "$$out/markdown" 2>&1; echo $$? > "$$out/markdown-status"; } & \
+	wait; \
+	echo "==> Linting python"; cat "$$out/python"; \
+	echo "==> Linting the front end"; cat "$$out/frontend"; \
+	echo "==> Checking markdown formatting"; cat "$$out/markdown"; \
+	verdict() { [ "$$(cat "$$out/$$1-status")" -eq 0 ] && echo ok || echo FAILED; }; \
+	echo "python: $$(verdict python) | front end: $$(verdict frontend) | markdown: $$(verdict markdown)"; \
+	[ "$$(verdict python)$$(verdict frontend)$$(verdict markdown)" = okokok ]
 
 lint-python:
-	uv run ruff check src tests plugins .claude/skills; ruff=$$?; uv run mypy; mypy=$$?; \
-	uv run pytest tests/test_layering.py -q -p no:randomly --tb=line -rN; layering=$$?; \
-	[ $$ruff -eq 0 ] || echo "fix: make lint-python-fix, then edit what ruff still reports"; \
-	[ $$ruff -eq 0 ] && [ $$mypy -eq 0 ] && [ $$layering -eq 0 ]
+	@out=$$(mktemp -d) || exit 1; trap 'rm -rf "$$out"' EXIT; \
+	{ uv run ruff check src tests plugins .claude/skills > "$$out/ruff" 2>&1; echo $$? > "$$out/ruff-status"; } & \
+	{ uv run mypy > "$$out/mypy" 2>&1; echo $$? > "$$out/mypy-status"; } & \
+	{ uv run pytest tests/test_layering.py -q -p no:randomly --tb=line -rN > "$$out/layering" 2>&1; echo $$? > "$$out/layering-status"; } & \
+	wait; \
+	echo "--> ruff"; cat "$$out/ruff"; \
+	echo "--> mypy"; cat "$$out/mypy"; \
+	echo "--> layering tests"; cat "$$out/layering"; \
+	verdict() { [ "$$(cat "$$out/$$1-status")" -eq 0 ] && echo ok || echo FAILED; }; \
+	echo "ruff: $$(verdict ruff) | mypy: $$(verdict mypy) | layering: $$(verdict layering)"; \
+	[ "$$(verdict ruff)" = ok ] || echo "fix: make lint-python-fix, then edit what ruff still reports"; \
+	[ "$$(verdict ruff)$$(verdict mypy)$$(verdict layering)" = okokok ]
 
 lint-frontend:
 	@$(MAKE) frontend_deps

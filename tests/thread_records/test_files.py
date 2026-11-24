@@ -2,6 +2,8 @@ import errno
 import fcntl
 import os
 import threading
+import time
+from pathlib import Path
 
 import pytest
 
@@ -312,3 +314,104 @@ def test_a_file_spelling_a_key_that_names_no_file_of_its_own_is_passed_over(tmp_
     _write(thread_dir(tmp_path, THE_PR) / "%2E%2E-0.json", b"stray")
 
     assert _records(tmp_path).list("json") == {KEY: b"mine"}
+
+
+A_TICK_LATER = 10**10
+
+
+@pytest.fixture
+def a_tick_later(monkeypatch):
+    real_time_ns = time.time_ns
+    monkeypatch.setattr(time, "time_ns", lambda: real_time_ns() + A_TICK_LATER)
+
+
+def _counting_reads(monkeypatch):
+    read = []
+    real_read_bytes = Path.read_bytes
+
+    def counting(path):
+        read.append(path.name)
+        return real_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counting)
+    return read
+
+
+def test_a_listing_reads_again_only_the_documents_that_changed(
+    tmp_path, monkeypatch, a_tick_later,
+):
+    records = _records(tmp_path)
+    records.save("json", "first", b"one")
+    records.save("json", "second", b"two")
+    records.list("json")
+    read = _counting_reads(monkeypatch)
+
+    records.save("json", "second", b"deux")
+
+    assert records.list("json") == {"first": b"one", "second": b"deux"}
+    assert read == [thread_file(tmp_path, THE_PR, "second").name]
+
+
+def test_a_rewrite_in_place_that_keeps_the_size_and_mtime_is_read(tmp_path, a_tick_later):
+    records = _records(tmp_path)
+    records.save("json", KEY, b"approve")
+    records.list("json")
+    record = thread_file(tmp_path, THE_PR, KEY)
+    before = record.stat()
+
+    with record.open("r+b") as file:
+        file.write(b"rebased")
+    os.utime(record, ns=(before.st_atime_ns, before.st_mtime_ns))
+
+    assert (record.stat().st_size, record.stat().st_mtime_ns) == (before.st_size, before.st_mtime_ns)
+    assert records.list("json") == {KEY: b"rebased"}
+
+
+def test_a_document_renamed_over_another_of_the_same_size_and_mtime_is_read(
+    tmp_path, a_tick_later,
+):
+    records = _records(tmp_path)
+    records.save("json", KEY, b"approve")
+    records.list("json")
+    record = thread_file(tmp_path, THE_PR, KEY)
+    replacement = _write(record.with_name("replacement"), b"rebased")
+    os.utime(replacement, ns=(record.stat().st_atime_ns, record.stat().st_mtime_ns))
+
+    os.replace(replacement, record)
+
+    assert records.list("json") == {KEY: b"rebased"}
+
+
+def test_a_deleted_document_leaves_the_listing(tmp_path, a_tick_later):
+    records = _records(tmp_path)
+    records.save("json", "kept", b"one")
+    records.save("json", "gone", b"two")
+    records.list("json")
+
+    thread_file(tmp_path, THE_PR, "gone").unlink()
+
+    assert records.list("json") == {"kept": b"one"}
+
+
+def test_a_forgotten_pr_holds_none_of_its_documents_in_memory(tmp_path, a_tick_later):
+    store = disk_thread_records(tmp_path)
+    store.of(THE_PR).save("json", KEY, b"approve")
+    store.of(THE_PR).list("json")
+
+    store.forget(THE_PR)
+
+    assert store._seen == {}
+
+
+def test_a_document_changed_within_the_clock_tick_of_its_listing_is_read_again(
+    tmp_path, monkeypatch,
+):
+    record = thread_file(tmp_path, THE_PR, KEY)
+    records = _records(tmp_path)
+    records.save("json", KEY, b"approve")
+    monkeypatch.setattr(time, "time_ns", lambda: record.stat().st_ctime_ns)
+    records.list("json")
+    read = _counting_reads(monkeypatch)
+
+    assert records.list("json") == {KEY: b"approve"}
+    assert read == [record.name]
