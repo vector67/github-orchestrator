@@ -79,6 +79,8 @@ module('Acceptance | streams shared across tabs', function (hooks) {
   test('a tab on the same pull request is sent what the connection already heard', async function (assert) {
     board().changes = 'Split the writer.';
     await visit('/pr/o/r/7/dashboard');
+    await waitUntil(() => other().heard(SEVEN_NOTES).length > 0);
+    other().forget();
 
     other().tell({ kind: 'want', tab: 'other', paths: [SEVEN_NOTES] });
     await waitUntil(() => other().heard(SEVEN_NOTES).length > 0);

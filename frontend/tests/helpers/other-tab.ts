@@ -37,6 +37,10 @@ export class OtherTab {
     );
   }
 
+  forget(): void {
+    this.said.length = 0;
+  }
+
   lead(answer: (path: string) => unknown): Promise<void> {
     this.answer = answer;
     return new Promise((held) => {
