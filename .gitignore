@@ -22,7 +22,7 @@ src/github_orchestrator/board_api/static/app/
 # make restart-all's lock, held from the sync through the cli restart
 /.restart-all.lock
 
-# make test's lock, shared by every worktree, naming the tree that holds it
+# make test's lock, shared by every worktree
 /.make-test.lock
 
 # caches every worktree of the checkout shares (make lint, make test)

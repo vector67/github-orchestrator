@@ -15,9 +15,9 @@ TEST_LOCK := $(MAIN_CHECKOUT)/.make-test.lock
 IN_TEST_LOCK = if [ -n "$$HOLDING_TEST_LOCK" ]; then \
 		$(MAKE) --no-print-directory $@-holding-the-lock; \
 	else \
-		$(TRYING_LOCK) $(TEST_LOCK) true || echo "waiting for another make test, running in $$(cat $(TEST_LOCK))"; \
-		HOLDING_TEST_LOCK=1 $(HOLDING_LOCK) $(TEST_LOCK) \
-			sh -c 'echo "$(CURDIR)" > "$(TEST_LOCK)" && exec $(MAKE) --no-print-directory $@-holding-the-lock'; \
+		$(TRYING_LOCK) $(TEST_LOCK) true || \
+			echo "waiting for another make test, running in $$(lsof -a -d cwd -Fn -p "$$(lsof -t $(TEST_LOCK) | head -n 1)" | sed -n 's/^n//p')"; \
+		HOLDING_TEST_LOCK=1 $(HOLDING_LOCK) $(TEST_LOCK) $(MAKE) --no-print-directory $@-holding-the-lock; \
 	fi
 
 .PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend test-holding-the-lock test-python-holding-the-lock test-frontend-holding-the-lock record interface-report measure-test-speed measure-test-speed-holding-the-lock watch preview contract

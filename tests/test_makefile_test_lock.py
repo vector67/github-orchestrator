@@ -2,6 +2,7 @@ import os
 import shutil
 import signal
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
@@ -50,6 +51,29 @@ def test_a_second_run_says_which_tree_it_waits_for_and_runs_once_the_first_ends(
     assert first.wait(timeout=30) == 0
     assert second.wait(timeout=30) == 0
     assert _suites_started(tmp_path) == 2
+
+
+def test_a_waiting_run_names_the_holders_tree_even_before_the_holder_has_started(tmp_path):
+    holders_tree = (tmp_path / "other-tree").resolve()
+    holders_tree.mkdir()
+    holder = subprocess.Popen(
+        [sys.executable, "-c",
+         "import fcntl, sys\n"
+         f"lock = open({str(tmp_path / 'make-test.lock')!r}, 'w')\n"
+         "fcntl.flock(lock, fcntl.LOCK_EX)\n"
+         "print('held', flush=True)\n"
+         "sys.stdin.readline()\n"],
+        cwd=holders_tree, stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True)
+    assert holder.stdout is not None and holder.stdin is not None
+    assert holder.stdout.readline() == "held\n"
+
+    waiting = _run(tmp_path)
+    assert waiting.stdout is not None
+    assert waiting.stdout.readline() == f"waiting for another make test, running in {holders_tree}\n"
+
+    holder.stdin.close()
+    holder.wait(timeout=10)
+    assert waiting.wait(timeout=30) == 0
 
 
 def test_an_interrupted_run_lets_the_next_one_start_at_once(tmp_path):
