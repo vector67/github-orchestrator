@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import logging
+import os
 import re
 import shutil
 import stat
+import time
 from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -14,6 +18,7 @@ from github_orchestrator.thread_records.interface import PrRecords, UnreadableTh
 log = logging.getLogger(__name__)
 
 _KIND = re.compile(r"[a-z]+")
+_TIMESTAMP_TICK_NS = 10_000_000
 
 
 def _repo_dir(base: Path, repo: Repo) -> Path:
@@ -40,9 +45,32 @@ def _read(path: Path) -> bytes:
 
 
 @dataclass(frozen=True)
+class _Stamp:
+    inode: int
+    size: int
+    mtime_ns: int
+    ctime_ns: int
+
+    @classmethod
+    def of(cls, status: os.stat_result) -> _Stamp:
+        return cls(status.st_ino, status.st_size, status.st_mtime_ns, status.st_ctime_ns)
+
+
+@dataclass(frozen=True)
+class _Seen:
+    stamp: _Stamp
+    key: str
+    document: bytes
+
+
+_Listing = tuple[Path, str]
+
+
+@dataclass(frozen=True)
 class DiskPrRecords:
     threads_dir: Path
     pr: Pr
+    seen: dict[_Listing, dict[str, _Seen]]
 
     @property
     def _dir(self) -> Path:
@@ -66,26 +94,42 @@ class DiskPrRecords:
 
     def list(self, kind: str) -> dict[str, bytes | None]:
         suffix = _suffix(kind)
+        listing = (self._dir, suffix)
         if not self._dir.exists():
+            self.seen.pop(listing, None)
             return {}
+        before = self.seen.get(listing, {})
+        now = time.time_ns()
         found = []
         for path in self._dir.glob(f"*{suffix}"):
             try:
-                found.append((path.lstat().st_mtime, path.name, path))
+                found.append((path.lstat(), path.name, path))
             except OSError as exc:
                 log.warning("Passing over %s: %s", path, exc)
         listed: dict[str, bytes | None] = {}
-        for _, _, path in sorted(found):
+        settled: dict[str, _Seen] = {}
+        for status, name, path in sorted(found, key=lambda each: (each[0].st_mtime, each[1])):
+            stamp = _Stamp.of(status)
+            seen = before.get(name)
+            if seen is not None and seen.stamp == stamp:
+                settled[name] = seen
+                listed[seen.key] = seen.document
+                continue
             named = ThreadName.parse(path.stem)
             if named is None:
                 log.warning("Passing over %s: it is not named by a thread key", path)
                 continue
             key = named.key
             try:
-                listed[key] = _read(path)
+                document = _read(path)
             except UnreadableThread as exc:
                 log.warning("Standing in for the unreadable %s: %s", path, exc)
                 listed[key] = None
+                continue
+            listed[key] = document
+            if stamp.ctime_ns + _TIMESTAMP_TICK_NS <= now:
+                settled[name] = _Seen(stamp, key, document)
+        self.seen[listing] = settled
         return listed
 
     @contextmanager
@@ -107,12 +151,16 @@ class DiskPrRecords:
 class DiskThreadRecords:
     def __init__(self, threads_dir: Path):
         self._threads_dir = threads_dir
+        self._seen: dict[_Listing, dict[str, _Seen]] = {}
 
     def of(self, pr: Pr) -> PrRecords:
-        return DiskPrRecords(self._threads_dir, pr)
+        return DiskPrRecords(self._threads_dir, pr, self._seen)
 
     def forget(self, pr: Pr) -> bool:
         records = thread_dir(self._threads_dir, pr)
+        for listing in list(self._seen):
+            if listing[0] == records:
+                self._seen.pop(listing, None)
         if not records.exists():
             return True
         try:
