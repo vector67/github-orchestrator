@@ -1,0 +1,4 @@
+#!/bin/sh
+printf "%s\n" "uv $*" >> "$STUB_LOG"
+while [ -n "$STUB_HOLD_UNTIL" ] && [ ! -e "$STUB_HOLD_UNTIL" ]; do sleep 0.05; done
+exit "${STUB_EXIT:-0}"

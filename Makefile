@@ -5,13 +5,22 @@ SERVED_APP := $(CURDIR)/src/github_orchestrator/board_api/static/app
 PREVIEW_PORT ?= 8791
 RESTART_LOCK := $(CURDIR)/.restart-all.lock
 HOLDING_LOCK := $(if $(shell command -v lockf),lockf -k,flock -o)
+TRYING_LOCK := $(if $(shell command -v lockf),lockf -k -s -t 0,flock -o -n)
 WARM_WORKTREE := sh $(CURDIR)/tools/warm_worktree.sh
 export MAIN_CHECKOUT := $(patsubst %/.git,%,$(shell git rev-parse --path-format=absolute --git-common-dir))
 export SHARED_CACHE := $(MAIN_CHECKOUT)/.shared-cache
 export MYPY_CACHE_DIR := $(SHARED_CACHE)/mypy
 export FRONTEND_LINT_CACHE := $(SHARED_CACHE)/frontend-lint
+TEST_LOCK := $(MAIN_CHECKOUT)/.make-test.lock
+IN_TEST_LOCK = if [ -n "$$HOLDING_TEST_LOCK" ]; then \
+		$(MAKE) --no-print-directory $@-holding-the-lock; \
+	else \
+		$(TRYING_LOCK) $(TEST_LOCK) true || echo "waiting for another make test, running in $$(cat $(TEST_LOCK))"; \
+		HOLDING_TEST_LOCK=1 $(HOLDING_LOCK) $(TEST_LOCK) \
+			sh -c 'echo "$(CURDIR)" > "$(TEST_LOCK)" && exec $(MAKE) --no-print-directory $@-holding-the-lock'; \
+	fi
 
-.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend record interface-report measure-test-speed watch preview contract
+.PHONY: dev-install build_frontend frontend_deps install_hooks restart-all restart-all-holding-the-lock notifier_apps fmt fmt-check lint lint-python lint-frontend lint-fix lint-python-fix lint-frontend-fix test test-python test-frontend test-holding-the-lock test-python-holding-the-lock test-frontend-holding-the-lock record interface-report measure-test-speed measure-test-speed-holding-the-lock watch preview contract
 
 dev-install:
 	uv tool install --force --editable .
@@ -124,6 +133,9 @@ lint-frontend-fix:
 	@cd $(FRONTEND_DIR) && npm run lint:fix
 
 test:
+	@$(IN_TEST_LOCK)
+
+test-holding-the-lock:
 	@out=$$(mktemp -d) || exit 1; trap 'rm -rf "$$out"' EXIT; \
 	echo "==> Running the python suite, with the front end suite alongside"; \
 	{ $(MAKE) test-frontend > "$$out/ember" 2>&1; echo $$? > "$$out/ember-status"; } & \
@@ -137,10 +149,16 @@ test:
 	[ "$$(cat "$$out/python-status")" -eq 0 ] && [ "$$(cat "$$out/ember-status")" -eq 0 ]
 
 test-python:
+	@$(IN_TEST_LOCK)
+
+test-python-holding-the-lock:
 	@$(WARM_WORKTREE) durations
 	uv run pytest tests/ -q --forks $(PYTEST_WORKERS) --ignore=tests/test_layering.py
 
 test-frontend:
+	@$(IN_TEST_LOCK)
+
+test-frontend-holding-the-lock:
 	@$(MAKE) frontend_deps
 	@cd $(FRONTEND_DIR) && \
 	if [ -e dist-tests/.built-for-tests ] && [ -z "$$(find app tests public config index.html vite.config.mjs babel.config.mjs package-lock.json -newer dist-tests/.built-for-tests -print -quit)" ]; then \
@@ -166,6 +184,9 @@ interface-report:
 	uv run python -m tests.interface_report
 
 measure-test-speed:
+	@$(IN_TEST_LOCK)
+
+measure-test-speed-holding-the-lock:
 	uv run python tools/measure_make_test.py 3 5
 
 watch:

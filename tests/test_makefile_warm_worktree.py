@@ -38,7 +38,7 @@ def _make(tmp_path, target, frontend, main):
     log.touch()
     result = subprocess.run(
         ["make", target, f"FRONTEND_DIR={frontend}", f"MAIN_CHECKOUT={main}",
-         f"SHARED_CACHE={tmp_path / 'shared'}"],
+         f"SHARED_CACHE={tmp_path / 'shared'}", f"TEST_LOCK={tmp_path / 'make-test.lock'}"],
         cwd=REPO_ROOT,
         env={**os.environ, "PATH": f"{STUBS}:{os.environ['PATH']}", "STUB_LOG": str(log)},
         capture_output=True,

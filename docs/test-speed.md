@@ -15,6 +15,13 @@ at least a minute's rest with the CPU at or below 65 °C) and five **warm** runs
 back to back. It prints one JSON line per run with the load average and CPU
 temperature taken just before it, then the median and range of each kind.
 
+`make test`, `make test-python` and `make test-frontend` take one lock shared
+by every worktree of the checkout, so a second run waits for the first instead
+of halving its speed; two overlapping runs each took a median 42.6 s against
+21.9 s queued, with both done at about the same time (#471).
+`make measure-test-speed` holds that lock for its whole series, so no other
+suite runs between its rests and its runs.
+
 Timings on this machine swing with load: a fanless laptop throttles when
 hot, and every process spawned elsewhere costs the suite kernel time. Measure
 with no other test runs or agents going, and compare against a baseline taken at
