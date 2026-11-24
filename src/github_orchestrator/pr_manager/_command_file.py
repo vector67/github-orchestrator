@@ -22,6 +22,7 @@ class Command(StrEnum):
     START_REVIEW = "start-review"
     DISMISS_UNTIL_NEXT_EVENT = "dismiss-until-next-event"
     DISMISS_UNTIL_READY_FOR_REVIEW = "dismiss-until-ready-for-review"
+    DISMISS_UNTIL_CI_PASSES = "dismiss-until-ci-passes"
     DISMISS_FOREVER = "dismiss-forever"
     CLOSE = "close"
     REOPEN = "reopen"

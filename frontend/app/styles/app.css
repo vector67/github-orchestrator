@@ -2529,7 +2529,8 @@ details.diff-file > summary .diff-file-path {
 }
 
 .rework-dialog .chip,
-.defer-mention .chip {
+.defer-mention .chip,
+.dismiss-confirm .chip {
   display: flex;
   gap: 6px;
   max-width: 260px;
@@ -3522,19 +3523,47 @@ kbd {
   gap: 8px;
 }
 
-.defer-mention .chip {
+.defer-mention .chip,
+.dismiss-confirm .chip {
   padding: 4px 10px;
   font-family: inherit;
   font-size: var(--fs-m);
 }
 
-.defer-mention .chip:hover {
+.dismiss-confirm .chip {
+  align-items: baseline;
+  max-width: none;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.defer-mention .chip:hover,
+.dismiss-confirm .chip:hover {
   border-color: var(--text);
 }
 
 .defer-mention .chip-hint,
-.defer-mention .defer-lands {
+.defer-mention .defer-lands,
+.dismiss-confirm .chip-hint {
   color: var(--muted);
+}
+
+.dismiss-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dismiss-choices kbd {
+  margin-left: auto;
+}
+
+.dismiss-confirm .chip.forever .chip-label {
+  color: var(--red-text);
+}
+
+.dismiss-confirm .chip.forever:hover {
+  border-color: var(--red-text);
 }
 
 .defer-mention .defer-typed {

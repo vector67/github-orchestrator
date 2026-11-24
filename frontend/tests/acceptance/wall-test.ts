@@ -1833,7 +1833,7 @@ module('Acceptance | wall', function (hooks) {
     await click(
       '[data-test-wall-row="o/r#8"] [data-test-wall-control="dismiss"]',
     );
-    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #8?');
+    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #8');
   });
 
   test('the selection stays on its pull request when the feed moves rows around it', async function (assert) {
@@ -2190,7 +2190,7 @@ module('Acceptance | wall', function (hooks) {
     ];
     await clock().tick(LIST);
 
-    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7?');
+    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7');
     assert.ok(
       find('[data-test-dismiss-confirm]')!.contains(document.activeElement),
       'the focus is still in the question',
@@ -2208,13 +2208,13 @@ module('Acceptance | wall', function (hooks) {
 
     await press('d');
 
-    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7?');
+    assert.dom('[data-test-dismiss-confirm]').includesText('Dismiss #7');
     assert
       .dom('[data-test-dismiss-confirm] [data-test-dismiss-option="u"]')
-      .hasText('until next event u');
+      .includesText('Until the next event');
     assert
       .dom('[data-test-dismiss-confirm] [data-test-dismiss-option="f"]')
-      .includesText('forever — removes the worktree');
+      .includesText('removes the worktree');
 
     await press('Escape');
     assert.dom('[data-test-dismiss-confirm]').doesNotExist();
@@ -2244,7 +2244,7 @@ module('Acceptance | wall', function (hooks) {
 
     assert
       .dom('[data-test-dismiss-confirm] [data-test-dismiss-option="r"]')
-      .hasText('until ready for review r');
+      .includesText('Until ready for review');
 
     await press('r');
 

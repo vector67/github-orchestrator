@@ -493,6 +493,18 @@ def test_dry_run_leaves_a_draft_dismissed_until_ready_for_review_alone(settings,
     assert "would start or revive PR 23's agent manager" not in out
 
 
+def test_dry_run_leaves_a_pr_dismissed_until_ci_passes_alone_while_ci_fails(settings, capsys):
+    github = watching(settings)
+    _mine(github, 23, checks=_checks("failure"))
+    watcher_over(settings, github=github).run_cycle()
+    disk_dismissals(settings.data_dir).dismiss_until_ci_passes(a_pr(23, REPO))
+    capsys.readouterr()
+
+    out = _dry_run(settings, capsys, github)
+
+    assert "would leave PR 23 alone (dismissed until CI passes)" in out
+
+
 def test_dry_run_summary_counts_the_prs_the_events_and_the_teardowns(settings, capsys):
     github = watching(settings)
     _theirs(github, 1)

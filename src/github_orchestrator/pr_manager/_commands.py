@@ -112,6 +112,9 @@ class ManagerCommands:
             case Command.DISMISS_UNTIL_READY_FOR_REVIEW:
                 self._dismissals.dismiss_until_ready_for_review(self._config.pr)
                 self._leave("until ready for review")
+            case Command.DISMISS_UNTIL_CI_PASSES:
+                self._dismissals.dismiss_until_ci_passes(self._config.pr)
+                self._leave("until CI passes")
             case Command.DISMISS_FOREVER:
                 self._dismissals.dismiss_forever(self._config.pr)
                 self._leave("forever")

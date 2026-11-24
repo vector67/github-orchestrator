@@ -44,41 +44,56 @@ def test_holding_one_pr_leaves_the_others_running(switches):
 def test_a_pr_is_not_dismissed_until_someone_dismisses_it(switches):
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is None
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is False
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False, ci_passing=False) is False
 
 
 def test_a_pr_dismissed_forever_stays_hidden_whatever_is_waiting(switches):
     switches.dismissals.dismiss_forever(a_pr(42, REPO))
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is DismissUntil.FOREVER
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is True
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=False) is True
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=False, ci_passing=False) is True
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is True
 
 
 def test_a_pr_dismissed_until_the_next_event_is_hidden_while_nothing_waits(switches):
     switches.dismissals.dismiss_until_next_event(a_pr(42, REPO))
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is True
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False, ci_passing=False) is True
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is DismissUntil.NEXT_EVENT
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
 
 
 def test_an_event_waiting_ends_a_dismissal_until_the_next_event(switches):
     switches.dismissals.dismiss_until_next_event(a_pr(42, REPO))
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=False) is False
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=False, ci_passing=False) is False
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is None
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is False
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False, ci_passing=False) is False
 
 
 def test_a_draft_dismissed_until_ready_for_review_stays_hidden_whatever_is_waiting(switches):
     switches.dismissals.dismiss_until_ready_for_review(a_pr(42, REPO))
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=True) is True
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=True, ci_passing=False) is True
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is DismissUntil.READY_FOR_REVIEW
     assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
 
 
 def test_leaving_draft_ends_a_dismissal_until_ready_for_review(switches):
     switches.dismissals.dismiss_until_ready_for_review(a_pr(42, REPO))
-    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False) is False
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False, ci_passing=False) is False
+    assert switches.dismissals.dismissal(a_pr(42, REPO)) is None
+
+
+def test_a_pr_dismissed_until_ci_passes_stays_hidden_while_ci_is_not_passing(switches):
+    switches.dismissals.dismiss_until_ci_passes(a_pr(42, REPO))
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=True, draft=False,
+                                         ci_passing=False) is True
+    assert switches.dismissals.dismissal(a_pr(42, REPO)) is DismissUntil.CI_PASSES
+    assert switches.dismissals.is_dismissed_forever(a_pr(42, REPO)) is False
+
+
+def test_ci_passing_ends_a_dismissal_until_ci_passes(switches):
+    switches.dismissals.dismiss_until_ci_passes(a_pr(42, REPO))
+    assert switches.dismissals.is_hidden(a_pr(42, REPO), events_waiting=False, draft=False,
+                                         ci_passing=True) is False
     assert switches.dismissals.dismissal(a_pr(42, REPO)) is None
 
 
@@ -98,7 +113,7 @@ def test_undismissing_says_whether_there_was_a_dismissal(switches):
 def test_dismissing_one_pr_leaves_the_others_shown(switches):
     switches.dismissals.dismiss_forever(a_pr(1, REPO))
     assert switches.dismissals.dismissal(a_pr(2, REPO)) is None
-    assert switches.dismissals.is_hidden(a_pr(2, REPO), events_waiting=False, draft=False) is False
+    assert switches.dismissals.is_hidden(a_pr(2, REPO), events_waiting=False, draft=False, ci_passing=False) is False
 
 
 def test_nothing_is_flagged_when_no_pr_is_on_hold_or_dismissed(switches):

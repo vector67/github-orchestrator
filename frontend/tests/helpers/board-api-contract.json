@@ -4393,6 +4393,7 @@
    "enum": [
     "next-event",
     "ready-for-review",
+    "ci-passes",
     "forever"
    ],
    "type": "string"
