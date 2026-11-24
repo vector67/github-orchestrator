@@ -16,10 +16,10 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    and `gh issue list --search '<the area>'`: other sessions commit here too, and
    part of what you would design may already be built.
 
-2. Cut an isolated workspace through the `using-git-worktrees` skill — never edit
-   or commit on `main` or the target. It prefers the harness's own worktree tool, which puts the
-   tree under `.claude/worktrees/<branch>`; drop to `git worktree add` only where
-   that skill says to. A worktree under `.claude/` is gitignored, so it cannot
+2. Cut an isolated workspace with the harness's `EnterWorktree` tool — never edit
+   or commit on `main` or the target. It puts the tree under
+   `.claude/worktrees/<name>`; drop to `git worktree add` only for another target,
+   below. A worktree under `.claude/` is gitignored, so it cannot
    show up as untracked clutter in `git status` the way a sibling `../gho-<slug>`
    does. The harness branches the tree from `origin/main`, which lags the local
    `main` that sessions merge into without pushing, so run
@@ -110,7 +110,7 @@ merged into `main` straight after, so `main` never lacks a fix the release has.
    the code, and ask the user the moment you need them, before starting anything
    else.
 
-8. Remove the workspace the way the `using-git-worktrees` skill made it, then
+8. Remove the workspace you cut in step 2, then
    `git branch -d <branch>` (`-D` when nothing is pushed, once
    `git branch --merged main` lists it). Leave an `EnterWorktree` tree with
    `action: "keep"`, check that `git rev-parse <branch> main` prints one sha
