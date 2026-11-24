@@ -65,12 +65,13 @@ def test_a_saved_description_changes_the_title_and_body_on_github_and_counts_as_
     fake, board = described()
 
     answer = board.client.post(SAVE, json={"title": "Rename the helper for good",
-                                           "body": "🤖 Renames it.", "started_from": WRITTEN})
+                                           "body": "🤖 Renames it.", "title_started_from": TITLE, "started_from": WRITTEN})
 
     assert answer.status_code == 200
     saved = answer.json()
     assert saved["saved"] is True
-    assert saved["on_github"] == "🤖 Renames it."
+    assert (saved["title_on_github"], saved["on_github"]) == ("Rename the helper for good",
+                                                              "🤖 Renames it.")
     assert (on_github(fake).title, on_github(fake).body) == ("Rename the helper for good",
                                                               "🤖 Renames it.")
     pull = saved["pull_request"]
@@ -84,7 +85,7 @@ def test_a_description_changed_on_github_since_the_edit_started_is_not_saved_ove
     changed_on_github(fake, "A teammate's words.")
 
     answer = board.client.post(SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
-                                           "started_from": WRITTEN})
+                                           "title_started_from": TITLE, "started_from": WRITTEN})
 
     assert answer.status_code == 200
     assert answer.json()["saved"] is False
@@ -93,12 +94,28 @@ def test_a_description_changed_on_github_since_the_edit_started_is_not_saved_ove
     assert on_github(fake).body == "A teammate's words."
 
 
+def test_a_title_renamed_on_github_since_the_edit_started_is_not_saved_over():
+    fake, board = described()
+    record = fake.github.prs[THE_PR]
+    record.state = replace(record.state, title="Rename the helper, says a teammate")
+
+    answer = board.client.post(SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
+                                           "title_started_from": TITLE, "started_from": WRITTEN})
+
+    assert answer.status_code == 200
+    assert answer.json()["saved"] is False
+    assert (answer.json()["title_on_github"], answer.json()["on_github"]) == (
+        "Rename the helper, says a teammate", WRITTEN)
+    assert (on_github(fake).title, on_github(fake).body) == (
+        "Rename the helper, says a teammate", WRITTEN)
+
+
 def test_github_refusing_the_save_says_why():
     fake, board = described()
     del fake.github.prs[THE_PR]
 
     answer = board.client.post(SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
-                                           "started_from": WRITTEN})
+                                           "title_started_from": TITLE, "started_from": WRITTEN})
 
     assert answer.status_code == 502
     assert answer.json()["errors"][0]["code"] == "github-rejected"
@@ -109,7 +126,7 @@ def test_a_saved_description_is_served_until_a_poll_newer_than_the_save_reads_it
     polls = Clock(POLLED)
     fake, board = described(polls=polls)
     board.client.post(SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
-                                  "started_from": WRITTEN})
+                                  "title_started_from": TITLE, "started_from": WRITTEN})
 
     before = board.client.get("/api/pull-request").json()
     changed_on_github(fake, "A teammate's words.")
@@ -157,8 +174,8 @@ def posted(board, path: str, fields: dict[str, str]):
 
 
 @pytest.mark.parametrize("fields", [
-    {"title": TITLE, "body": "🤖 Renames it" + LONE_SURROGATE, "started_from": WRITTEN},
-    {"title": "Rename" + LONE_SURROGATE, "body": "🤖 Renames it.", "started_from": WRITTEN},
+    {"title": TITLE, "body": "🤖 Renames it" + LONE_SURROGATE, "title_started_from": TITLE, "started_from": WRITTEN},
+    {"title": "Rename" + LONE_SURROGATE, "body": "🤖 Renames it.", "title_started_from": TITLE, "started_from": WRITTEN},
 ])
 def test_a_save_holding_a_lone_surrogate_is_refused_before_github_hears_it(fields):
     fake, board = described()
@@ -184,10 +201,10 @@ class ReadThenWaitToWrite:
         self.github = github
         self.both_read = both_read
 
-    def edit_description(self, pr, title, body, *, started_from):
-        on_github = self.github.prs[pr].state.body
-        if on_github != started_from:
-            return DescriptionMoved(on_github)
+    def edit_description(self, pr, title, body, *, title_started_from, started_from):
+        on_github = self.github.prs[pr].state
+        if on_github.body != started_from:
+            return DescriptionMoved(on_github.title, on_github.body)
         with contextlib.suppress(threading.BrokenBarrierError):
             self.both_read.wait(timeout=0.5)
         record = self.github.prs[pr]
@@ -203,7 +220,7 @@ def test_of_two_saves_from_the_same_description_the_second_finds_the_first():
     with ThreadPoolExecutor(2) as saving:
         answers = list(saving.map(
             lambda body: board.client.post(SAVE, json={"title": TITLE, "body": body,
-                                                       "started_from": WRITTEN}).json(),
+                                                       "title_started_from": TITLE, "started_from": WRITTEN}).json(),
             ["🤖 One tab's words.", "🤖 The other tab's words."]))
 
     assert sorted(answer["saved"] for answer in answers) == [False, True]
@@ -244,7 +261,7 @@ def test_a_check_beside_a_save_keeps_the_save():
         checking = both.submit(board.client.post, CHECK, json={"body": WRITTEN})
         assert records.check_writing.wait(timeout=5)
         both.submit(board.client.post, SAVE, json={"title": TITLE, "body": "🤖 Renames it.",
-                                                   "started_from": WRITTEN}).result()
+                                                   "title_started_from": TITLE, "started_from": WRITTEN}).result()
         checking.result()
 
     pull = board.client.get("/api/pull-request").json()

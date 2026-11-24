@@ -324,6 +324,9 @@ class PullRequest(BaseModel):
 class DescriptionSaveRequest(BaseModel):
     title: str = Field(min_length=1)
     body: str
+    title_started_from: str = Field(
+        description="The title the editor opened on. The save is refused when GitHub's "
+                    "no longer matches it.")
     started_from: str = Field(
         description="The description the editor opened on. The save is refused when "
                     "GitHub's no longer matches it.")
@@ -337,8 +340,11 @@ class DescriptionSave(BaseModel):
     """What came of a save of the title and description."""
 
     saved: bool = Field(
-        description="False when GitHub's description changed since `started_from`: "
-                    "nothing was written.")
+        description="False when GitHub's title or description changed since "
+                    "`title_started_from` or `started_from`: nothing was written.")
+    title_on_github: str = Field(
+        description="The title GitHub holds after the call: the one saved, or the one "
+                    "that changed under the edit.")
     on_github: str = Field(
         description="The description GitHub holds after the call: the one saved, or the "
                     "one that changed under the edit.")

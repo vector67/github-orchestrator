@@ -4162,10 +4162,14 @@
     },
     "saved": {
      "type": "boolean"
+    },
+    "title_on_github": {
+     "type": "string"
     }
    },
    "required": [
     "saved",
+    "title_on_github",
     "on_github",
     "pull_request"
    ],
@@ -4182,11 +4186,15 @@
     "title": {
      "minLength": 1,
      "type": "string"
+    },
+    "title_started_from": {
+     "type": "string"
     }
    },
    "required": [
     "title",
     "body",
+    "title_started_from",
     "started_from"
    ],
    "type": "object"

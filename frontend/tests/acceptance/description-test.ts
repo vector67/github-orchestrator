@@ -190,6 +190,7 @@ module('Acceptance | pull request description', function (hooks) {
         body: {
           title: 'Rename the helper',
           body: '🤖 Renames it _for good_.',
+          title_started_from: 'Fix the widget',
           started_from: WRITTEN,
         },
       },
@@ -227,7 +228,9 @@ module('Acceptance | pull request description', function (hooks) {
     assert.dom('[data-test-description-text]').hasValue('🤖 Your words.');
     assert
       .dom('[data-test-description-moved]')
-      .containsText('The description changed on GitHub since you opened it.');
+      .containsText(
+        'The title or description changed on GitHub since you opened it.',
+      );
     assert
       .dom('[data-test-description-on-github] strong')
       .hasText('teammate’s');
@@ -240,11 +243,13 @@ module('Acceptance | pull request description', function (hooks) {
         {
           title: 'Fix the widget',
           body: '🤖 Your words.',
+          title_started_from: 'Fix the widget',
           started_from: WRITTEN,
         },
         {
           title: 'Fix the widget',
           body: '🤖 Your words.',
+          title_started_from: 'Fix the widget',
           started_from: 'A **teammate’s** words.',
         },
       ],
@@ -270,7 +275,61 @@ module('Acceptance | pull request description', function (hooks) {
     assert.deepEqual(saves().at(-1)?.body, {
       title: 'Fix the widget',
       body: 'A teammate’s words.',
+      title_started_from: 'Fix the widget',
       started_from: 'A teammate’s words.',
+    });
+  });
+
+  test('a title renamed on GitHub since Edit is not saved over, and shows GitHub’s title beside yours', async function (assert) {
+    described();
+    await visit('/pr/o/r/7/summary');
+    await click('[data-test-description-edit]');
+    await fillIn('[data-test-description-text]', '🤖 Your words.');
+    board().titleOnGithub = 'Fix the widget for good';
+
+    await click('[data-test-description-save]');
+
+    assert.dom('[data-test-description-title]').hasValue('Fix the widget');
+    assert
+      .dom('[data-test-description-moved]')
+      .containsText(
+        'The title or description changed on GitHub since you opened it.',
+      );
+    assert
+      .dom('[data-test-description-title-on-github]')
+      .hasText('Fix the widget for good');
+
+    await click('[data-test-description-save-over]');
+
+    assert.deepEqual(saves().at(-1)?.body, {
+      title: 'Fix the widget',
+      body: '🤖 Your words.',
+      title_started_from: 'Fix the widget for good',
+      started_from: WRITTEN,
+    });
+  });
+
+  test('starting again from GitHub’s puts its title in the title field too', async function (assert) {
+    described();
+    await visit('/pr/o/r/7/summary');
+    await click('[data-test-description-edit]');
+    await fillIn('[data-test-description-title]', 'My title');
+    board().titleOnGithub = 'Fix the widget for good';
+    await click('[data-test-description-save]');
+
+    await click('[data-test-description-start-again]');
+
+    assert
+      .dom('[data-test-description-title]')
+      .hasValue('Fix the widget for good');
+
+    await click('[data-test-description-save]');
+
+    assert.deepEqual(saves().at(-1)?.body, {
+      title: 'Fix the widget for good',
+      body: WRITTEN,
+      title_started_from: 'Fix the widget for good',
+      started_from: WRITTEN,
     });
   });
 

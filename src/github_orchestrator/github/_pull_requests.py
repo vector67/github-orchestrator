@@ -398,12 +398,13 @@ def assign_reviewers(gh: Gh, pr: Pr, reviewers: Sequence[str], detailed: str | N
     gh.api_json(path, {"body": with_detailed_reviewer(body, detailed)}, method="PATCH")
 
 
-def edit_description(gh: Gh, pr: Pr, title: str, body: str,
+def edit_description(gh: Gh, pr: Pr, title: str, body: str, title_started_from: str,
                      started_from: str) -> DescriptionMoved | None:
     path = f"repos/{pr.repo}/pulls/{pr.number}"
-    on_github = gh.api(path).get("body") or ""
-    if on_github != started_from:
-        return DescriptionMoved(on_github)
+    found = gh.api(path)
+    on_github = DescriptionMoved(found.get("title") or "", found.get("body") or "")
+    if (on_github.title, on_github.body) != (title_started_from, started_from):
+        return on_github
     gh.api_json(path, {"title": title, "body": body}, method="PATCH")
     return None
 

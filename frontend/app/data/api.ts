@@ -344,6 +344,7 @@ export interface DescriptionCheckRequest {
 
 export interface DescriptionSave {
   saved: boolean;
+  title_on_github: string;
   on_github: string;
   pull_request: PullRequest;
 }
@@ -351,6 +352,7 @@ export interface DescriptionSave {
 export interface DescriptionSaveRequest {
   title: string;
   body: string;
+  title_started_from: string;
   started_from: string;
 }
 

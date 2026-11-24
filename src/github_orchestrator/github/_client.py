@@ -176,10 +176,11 @@ class GhCliGitHub:
             return str(refused)
         return None
 
-    def edit_description(self, pr: Pr, title: str, body: str, *,
+    def edit_description(self, pr: Pr, title: str, body: str, *, title_started_from: str,
                          started_from: str) -> DescriptionMoved | str | None:
         try:
-            return _pull_requests.edit_description(self._gh, pr, title, body, started_from)
+            return _pull_requests.edit_description(self._gh, pr, title, body,
+                                                   title_started_from, started_from)
         except GhError as refused:
             return str(refused)
 

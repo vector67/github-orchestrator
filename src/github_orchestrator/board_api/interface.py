@@ -610,7 +610,7 @@ class Mentionable(Protocol):
 
 
 class Descriptions(Protocol):
-    def edit_description(self, pr: Pr, title: str, body: str, *,
+    def edit_description(self, pr: Pr, title: str, body: str, *, title_started_from: str,
                          started_from: str) -> DescriptionMoved | str | None: ...
 
 

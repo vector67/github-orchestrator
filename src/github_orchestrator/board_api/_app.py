@@ -1257,25 +1257,28 @@ GITHUB_REFUSED_THE_EDIT = {"description": "GitHub would not read or write the de
              responses={502: GITHUB_REFUSED_THE_EDIT},
              summary="Save the pull request's title and description on GitHub together.")
 def save_description(board: Serving, asked: DescriptionSaveRequest) -> DescriptionSave:
-    """GitHub's description is read just before the write. When it no longer
-    matches `started_from`, nothing is written and `saved` is false, with
-    GitHub's description in `on_github`. A save counts as checking the
+    """GitHub's title and description are read just before the write. When
+    either no longer matches `title_started_from` or `started_from`, nothing is
+    written and `saved` is false, with GitHub's in `title_on_github` and
+    `on_github`. A save counts as checking the
     description, and `GET /pull-request` serves what was saved until a poll
     newer than the save reads it.
     """
-    _encodable(asked.title, asked.body, asked.started_from)
+    _encodable(asked.title, asked.body, asked.title_started_from, asked.started_from)
     with board.shelf.lock(KEPT_DESCRIPTION):
-        edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
-                                                     started_from=asked.started_from)
+        edited = board.descriptions.edit_description(
+            board.pr, asked.title, asked.body, title_started_from=asked.title_started_from,
+            started_from=asked.started_from)
         if isinstance(edited, str):
             raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
         if isinstance(edited, DescriptionMoved):
-            return DescriptionSave(saved=False, on_github=edited.body,
-                                   pull_request=_pull_request(board))
+            return DescriptionSave(saved=False, title_on_github=edited.title,
+                                   on_github=edited.body, pull_request=_pull_request(board))
         dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
                             saved_title=asked.title, saved_body=asked.body,
                             saved_at=board.clock().isoformat()).keep(board.shelf)
-    return DescriptionSave(saved=True, on_github=asked.body, pull_request=_pull_request(board))
+    return DescriptionSave(saved=True, title_on_github=asked.title, on_github=asked.body,
+                           pull_request=_pull_request(board))
 
 
 @writes.post("/pull-request/description:check", response_model=PullRequest,
