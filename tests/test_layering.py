@@ -1068,9 +1068,11 @@ def test_a_package_exports_only_its_pinned_names(short):
     package = f"github_orchestrator.{short}"
     exported = set(importlib.import_module(package).__all__)
     pinned = PACKAGES[short].pinned
+    names = ", ".join(f'"{name}"' for name in sorted(exported))
     assert exported == pinned, (
         f"{package} exports {sorted(exported - pinned)} and no longer "
-        f"{sorted(pinned - exported)}; each export is a decision, so pin it here by name"
+        f"{sorted(pinned - exported)}; each export is a decision. To keep its __all__, pin "
+        f"it in tests/test_layering.py: PACKAGES[\"{short}\"] gets pinned=frozenset({{{names}}})"
     )
 
 

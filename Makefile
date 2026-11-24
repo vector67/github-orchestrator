@@ -66,10 +66,10 @@ notifier_apps:
 	@sh src/github_orchestrator/desktop/notifier/build.sh
 
 fmt:
-	uv run mdformat $(MD_FILES)
+	@uv run mdformat $(MD_FILES)
 
 fmt-check:
-	uv run mdformat --check $(MD_FILES)
+	@uv run mdformat --check $(MD_FILES) || { echo "fix: make fmt"; exit 1; }
 
 lint:
 	@echo "==> Linting python"
@@ -81,12 +81,18 @@ lint:
 
 lint-python:
 	uv run ruff check src tests plugins .claude/skills; ruff=$$?; uv run mypy; mypy=$$?; \
-	uv run pytest tests/test_layering.py -q -p no:randomly; layering=$$?; \
+	uv run pytest tests/test_layering.py -q -p no:randomly --tb=line -rN; layering=$$?; \
+	[ $$ruff -eq 0 ] || echo "fix: make lint-python-fix, then edit what ruff still reports"; \
 	[ $$ruff -eq 0 ] && [ $$mypy -eq 0 ] && [ $$layering -eq 0 ]
 
 lint-frontend:
 	@$(MAKE) frontend_deps
-	@cd $(FRONTEND_DIR) && npm run lint
+	@cd $(FRONTEND_DIR) && log=$$(mktemp) && trap 'rm -f "$$log" "$$log.status"' EXIT; \
+	{ npm run lint; echo $$? > "$$log.status"; } 2>&1 | tee "$$log"; \
+	[ "$$(cat "$$log.status")" -eq 0 ] && exit 0; \
+	grep -qE 'lint:(format|js|css|hbs) exited with code [1-9]' "$$log" && \
+	echo "fix: make lint-frontend-fix fixes prettier and what eslint, stylelint and ember-template-lint can; edit the rest"; \
+	exit 1
 
 lint-fix:
 	@echo "==> Fixing python"
@@ -97,7 +103,7 @@ lint-fix:
 	@$(MAKE) fmt
 
 lint-python-fix:
-	uv run ruff check --fix src tests plugins .claude/skills
+	uv run ruff check --fix --exit-zero src tests plugins .claude/skills
 
 lint-frontend-fix:
 	@$(MAKE) frontend_deps
