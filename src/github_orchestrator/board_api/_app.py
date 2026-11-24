@@ -1256,6 +1256,7 @@ def save_description(board: Serving, asked: DescriptionSaveRequest) -> Descripti
     description, and `GET /pull-request` serves what was saved until a poll
     newer than the save reads it.
     """
+    _encodable(asked.title, asked.body, asked.started_from)
     edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
                                                  started_from=asked.started_from)
     if isinstance(edited, str):
@@ -1277,6 +1278,7 @@ def check_description(board: Serving, asked: DescriptionCheckRequest) -> PullReq
     from anywhere but the board's editor. A `body` that is no longer the one
     served checks nothing that is shown.
     """
+    _encodable(asked.body)
     dataclasses.replace(DescriptionRecord.kept(board.shelf),
                         checked=digest(asked.body)).keep(board.shelf)
     return _pull_request(board)
@@ -1410,7 +1412,18 @@ def _denied(denied: Denied) -> Refusal:
     return Refusal(WRITE_REFUSALS.get(code, 409), code, denied.reason)
 
 
+def _encodable(*texts: str | None) -> None:
+    for text in texts:
+        try:
+            (text or "").encode()
+        except UnicodeEncodeError:
+            raise Refusal(400, ErrorCode.MALFORMED_REQUEST,
+                          "the text holds a lone UTF-16 surrogate, which is no "
+                          "character GitHub can store") from None
+
+
 def _within_githubs_limit(board: Board, reply: str | None) -> None:
+    _encodable(reply)
     why = None if reply is None else board.conversations.too_long(reply)
     if why is not None:
         raise Refusal(413, ErrorCode.BODY_TOO_LONG, f"that reply is too long; {why}")

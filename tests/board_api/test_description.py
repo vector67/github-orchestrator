@@ -1,5 +1,8 @@
+import json
 from dataclasses import replace
 from datetime import datetime
+
+import pytest
 
 from tests.board_api.support import (
     THE_PR,
@@ -14,6 +17,7 @@ CHECK = "/api/pull-request/description:check"
 WRITTEN = "🤖 Renames the helper."
 POLLED = "2026-08-28T10:00:00Z"
 SAVED = "2026-08-28T10:05:00Z"
+LONE_SURROGATE = "\ud800"
 
 
 class Clock:
@@ -140,3 +144,31 @@ def test_checking_a_description_that_has_since_changed_leaves_it_unchecked():
     answer = board.client.post(CHECK, json={"body": "🤖 What the page showed before."})
 
     assert answer.json()["description_checked"] is False
+
+
+def posted(board, path: str, fields: dict[str, str]):
+    return board.client.post(path, content=json.dumps(fields),
+                             headers={"Content-Type": "application/json"})
+
+
+@pytest.mark.parametrize("fields", [
+    {"title": TITLE, "body": "🤖 Renames it" + LONE_SURROGATE, "started_from": WRITTEN},
+    {"title": "Rename" + LONE_SURROGATE, "body": "🤖 Renames it.", "started_from": WRITTEN},
+])
+def test_a_save_holding_a_lone_surrogate_is_refused_before_github_hears_it(fields):
+    fake, board = described()
+
+    answer = posted(board, SAVE, fields)
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
+    assert (on_github(fake).title, on_github(fake).body) == (TITLE, WRITTEN)
+
+
+def test_a_check_holding_a_lone_surrogate_is_refused():
+    _, board = described()
+
+    answer = posted(board, CHECK, {"body": WRITTEN + LONE_SURROGATE})
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
