@@ -74,6 +74,7 @@ from github_orchestrator.wiring import (
 )
 from github_orchestrator.working_copies.fake import FakeWorkingCopies
 from tests.forked_run import run_in_forks, temp_paths
+from tests.reaping import reap_what_this_process_leaves, spare
 from tests.subprocess_recording import (
     RECORDING,
     Recorder,
@@ -144,6 +145,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 
 def pytest_configure(config: pytest.Config) -> None:
+    reap_what_this_process_leaves()
     config.stash[gc_collect_iterations_key] = 1
     config.addinivalue_line(
         "markers",
@@ -203,8 +205,9 @@ def _remove_in_the_background(worker_temp: Path) -> None:
         worker_temp.rename(doomed)
     except OSError:
         return
-    _REAL_POPEN(["rm", "-rf", str(doomed)], start_new_session=True,
-                stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    removing = _REAL_POPEN(["rm", "-rf", str(doomed)], start_new_session=True,
+                           stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    spare(removing.pid)
 
 
 _PASSED_SESSIONS: list[pytest.Session] = []
