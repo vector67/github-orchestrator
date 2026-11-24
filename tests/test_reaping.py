@@ -1,5 +1,4 @@
 import os
-import select
 import signal
 import subprocess
 import sys
@@ -9,7 +8,7 @@ import pytest
 
 from tests.waiting import until
 
-pytestmark = pytest.mark.skipif(not hasattr(select, "kqueue"), reason="the reaper follows forks with kqueue")
+pytestmark = pytest.mark.skipif(sys.platform != "darwin", reason="the reaper follows forks with macOS's kqueue")
 
 CHECKOUT = Path(__file__).resolve().parent.parent
 
