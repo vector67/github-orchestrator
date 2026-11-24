@@ -75,6 +75,7 @@ class ReviewerPick:
 
 @dataclass(frozen=True)
 class DescriptionMoved:
+    title: str
     body: str
 
 

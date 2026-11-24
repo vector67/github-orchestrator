@@ -1,6 +1,7 @@
 import json
 import re
 from collections.abc import Mapping, Sequence
+from contextlib import AbstractContextManager
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
@@ -556,6 +557,8 @@ class Shelf(Protocol):
 
     def delete(self, kind: str, key: ShelfKey) -> None: ...
 
+    def lock(self, name: str) -> AbstractContextManager[None]: ...
+
 
 class Shelves(Protocol):
     def of(self, pr: Pr) -> Shelf: ...
@@ -607,7 +610,7 @@ class Mentionable(Protocol):
 
 
 class Descriptions(Protocol):
-    def edit_description(self, pr: Pr, title: str, body: str, *,
+    def edit_description(self, pr: Pr, title: str, body: str, *, title_started_from: str,
                          started_from: str) -> DescriptionMoved | str | None: ...
 
 

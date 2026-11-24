@@ -846,6 +846,7 @@ export class FakeBoard {
   fixChecks: FixChecks = { asked: [], skipped: [] };
   summary: PrSummary = prSummary();
   onGithub: string | null = null;
+  titleOnGithub: string | null = null;
   anotherSummaryRunning = false;
 
   private countChecks(ignores: (one: CiCheck) => boolean): void {
@@ -1984,15 +1985,21 @@ export class FakeBoard {
       return this.json(200, this.pullRequestOf(url));
     }
     const onGithub = this.onGithub ?? held.body;
-    if (onGithub !== body.started_from) {
+    const titleOnGithub = this.titleOnGithub ?? held.title ?? '';
+    if (
+      onGithub !== body.started_from ||
+      titleOnGithub !== body.title_started_from
+    ) {
       const moved: DescriptionSave = {
         saved: false,
+        title_on_github: titleOnGithub,
         on_github: onGithub,
         pull_request: this.pullRequestOf(url),
       };
       return this.json(200, moved);
     }
     this.onGithub = null;
+    this.titleOnGithub = null;
     this.pullRequest = {
       ...held,
       title: body.title,
@@ -2002,6 +2009,7 @@ export class FakeBoard {
     };
     const saved: DescriptionSave = {
       saved: true,
+      title_on_github: body.title,
       on_github: body.body,
       pull_request: this.pullRequestOf(url),
     };

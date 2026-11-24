@@ -7,6 +7,7 @@ import sys
 import threading
 import time
 from collections.abc import Callable, Collection, Mapping, Sequence
+from contextlib import AbstractContextManager
 from dataclasses import KW_ONLY, dataclass, replace
 from datetime import datetime, timedelta, timezone
 from functools import cache
@@ -1349,6 +1350,9 @@ class RecordShelf:
 
     def delete(self, kind: str, key: ShelfKey) -> None:
         self._records.delete(kind, str(key))
+
+    def lock(self, name: str) -> AbstractContextManager[None]:
+        return self._records.lock(name)
 
 
 class RecordShelves:

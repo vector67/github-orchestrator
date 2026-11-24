@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -645,6 +646,19 @@ def test_a_reply_longer_than_github_takes_is_refused_before_it_is_queued(ready):
 
     assert answer.status_code == 413
     assert answer.json()["errors"][0]["code"] == "body-too-long"
+    assert tag_of(client) == tag
+
+
+def test_a_reply_holding_a_lone_surrogate_is_refused_before_it_is_queued(ready):
+    client = client_of(ready)
+    tag = tag_of(client)
+
+    answer = client.post(f"/api/conversations/{KEY}/operations:approve",
+                         headers={"If-Match": tag, "Content-Type": "application/json"},
+                         content=json.dumps({"reply": "landing this \ud800"}))
+
+    assert answer.status_code == 400
+    assert answer.json()["errors"][0]["code"] == "malformed-request"
     assert tag_of(client) == tag
 
 

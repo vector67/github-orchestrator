@@ -307,6 +307,7 @@ def test_a_description_i_edit_changes_its_title_and_body_together(world, github)
     world.add_pr(a_pr(1, REPO), _state(title="Widgets", body="🤖 Adds widgets."))
 
     assert github.edit_description(a_pr(1, REPO), "Add widgets", "Adds the widgets.",
+                                   title_started_from="Widgets",
                                    started_from="🤖 Adds widgets.") is None
 
     state = github.pr_state(a_pr(1, REPO))
@@ -318,16 +319,29 @@ def test_a_description_that_moved_since_the_edit_started_is_left_as_github_holds
     world.add_pr(a_pr(1, REPO), _state(title="Widgets", body="Adds widgets, says a teammate."))
 
     moved = github.edit_description(a_pr(1, REPO), "Add widgets", "Adds the widgets.",
+                                    title_started_from="Widgets",
                                     started_from="🤖 Adds widgets.")
 
-    assert moved == DescriptionMoved("Adds widgets, says a teammate.")
+    assert moved == DescriptionMoved("Widgets", "Adds widgets, says a teammate.")
     state = github.pr_state(a_pr(1, REPO))
     assert (state.title, state.body) == ("Widgets", "Adds widgets, says a teammate.")
 
 
+def test_a_title_renamed_since_the_edit_started_is_left_as_github_holds_it(world, github):
+    world.add_pr(a_pr(1, REPO), _state(title="Widgets, renamed", body="🤖 Adds widgets."))
+
+    moved = github.edit_description(a_pr(1, REPO), "Add widgets", "Adds the widgets.",
+                                    title_started_from="Widgets",
+                                    started_from="🤖 Adds widgets.")
+
+    assert moved == DescriptionMoved("Widgets, renamed", "🤖 Adds widgets.")
+    state = github.pr_state(a_pr(1, REPO))
+    assert (state.title, state.body) == ("Widgets, renamed", "🤖 Adds widgets.")
+
+
 def test_editing_the_description_of_a_pr_github_does_not_know_says_why(github):
     refused = github.edit_description(a_pr(40, REPO), "Add widgets", "Adds the widgets.",
-                                      started_from="")
+                                      title_started_from="", started_from="")
 
     assert "Not Found" in str(refused)
 

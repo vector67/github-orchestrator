@@ -304,14 +304,14 @@ class FakeGitHub:
             body=state.body if detailed is None else with_detailed_reviewer(state.body, detailed))
         return None
 
-    def edit_description(self, pr: Pr, title: str, body: str, *,
+    def edit_description(self, pr: Pr, title: str, body: str, *, title_started_from: str,
                          started_from: str) -> DescriptionMoved | str | None:
         record = self.prs.get(pr)
         if record is None:
             return (f"gh api repos/{pr.repo}/pulls/{pr.number} failed (exit 1): "
                     "gh: Not Found (HTTP 404)")
-        if record.state.body != started_from:
-            return DescriptionMoved(record.state.body)
+        if (record.state.title or "", record.state.body) != (title_started_from, started_from):
+            return DescriptionMoved(record.state.title or "", record.state.body)
         record.state = replace(record.state, title=title, body=body)
         return None
 

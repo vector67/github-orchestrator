@@ -11,6 +11,11 @@ import type StoreService from 'frontend/services/store';
 
 type Pane = 'write' | 'preview';
 
+interface OnGithub {
+  title: string;
+  body: string;
+}
+
 interface PrDescriptionSignature {
   Args: {
     title: string | null;
@@ -32,10 +37,10 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
   @tracked title = '';
   @tracked text = '';
   @tracked pane: Pane = 'write';
-  @tracked moved: string | null = null;
+  @tracked moved: OnGithub | null = null;
   @tracked refused: string | null = null;
   @tracked saving = false;
-  private startedFrom = '';
+  private startedFrom: OnGithub = { title: '', body: '' };
 
   isPane = (pane: Pane): boolean => this.pane === pane;
 
@@ -50,7 +55,10 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
   edit = (): void => {
     this.title = this.args.title ?? '';
     this.text = this.args.body ?? '';
-    this.startedFrom = this.args.body ?? '';
+    this.startedFrom = {
+      title: this.args.title ?? '',
+      body: this.args.body ?? '',
+    };
     this.pane = 'write';
     this.moved = null;
     this.refused = null;
@@ -89,19 +97,23 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
   };
 
   startAgain = (): void => {
-    this.text = this.moved ?? this.text;
-    this.startedFrom = this.moved ?? this.startedFrom;
+    if (this.moved) {
+      this.title = this.moved.title;
+      this.text = this.moved.body;
+      this.startedFrom = this.moved;
+    }
     this.moved = null;
     this.pane = 'write';
   };
 
-  private async saveFrom(startedFrom: string): Promise<void> {
+  private async saveFrom(startedFrom: OnGithub): Promise<void> {
     this.saving = true;
     this.refused = null;
     const taken = await this.store.saveDescription(this.here.at, {
       title: this.title,
       body: this.text,
-      started_from: startedFrom,
+      title_started_from: startedFrom.title,
+      started_from: startedFrom.body,
     });
     this.saving = false;
     if (!taken.done) {
@@ -109,7 +121,10 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
       return;
     }
     if (!taken.body.saved) {
-      this.moved = taken.body.on_github;
+      this.moved = {
+        title: taken.body.title_on_github,
+        body: taken.body.on_github,
+      };
       return;
     }
     this.moved = null;
@@ -188,12 +203,16 @@ export default class PrDescription extends Component<PrDescriptionSignature> {
           {{/if}}
           {{#if this.moved}}
             <div class="description-moved" data-test-description-moved>
-              <p class="said" data-refused="true">The description changed on
-                GitHub since you opened it. Yours is in the box above; GitHub’s
-                is below.</p>
+              <p class="said" data-refused="true">The title or description
+                changed on GitHub since you opened it. Yours is in the box
+                above; GitHub’s is below.</p>
+              <h3
+                class="description-title-on-github"
+                data-test-description-title-on-github
+              >{{this.moved.title}}</h3>
               <CommentBody
                 class="description-on-github"
-                @body={{this.moved}}
+                @body={{this.moved.body}}
                 data-test-description-on-github
               />
               <div class="dialog-actions">

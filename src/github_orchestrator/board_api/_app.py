@@ -105,7 +105,14 @@ from github_orchestrator.board_api._contract import (
     side_of,
     verdict_of,
 )
-from github_orchestrator.board_api._description import DescriptionRecord, digest, served
+from github_orchestrator.board_api._description import (
+    DESCRIPTION as KEPT_DESCRIPTION,
+)
+from github_orchestrator.board_api._description import (
+    DescriptionRecord,
+    digest,
+    served,
+)
 from github_orchestrator.board_api._errors import (
     BAD_RANGE,
     DIFF_FAILED,
@@ -1250,23 +1257,28 @@ GITHUB_REFUSED_THE_EDIT = {"description": "GitHub would not read or write the de
              responses={502: GITHUB_REFUSED_THE_EDIT},
              summary="Save the pull request's title and description on GitHub together.")
 def save_description(board: Serving, asked: DescriptionSaveRequest) -> DescriptionSave:
-    """GitHub's description is read just before the write. When it no longer
-    matches `started_from`, nothing is written and `saved` is false, with
-    GitHub's description in `on_github`. A save counts as checking the
+    """GitHub's title and description are read just before the write. When
+    either no longer matches `title_started_from` or `started_from`, nothing is
+    written and `saved` is false, with GitHub's in `title_on_github` and
+    `on_github`. A save counts as checking the
     description, and `GET /pull-request` serves what was saved until a poll
     newer than the save reads it.
     """
-    edited = board.descriptions.edit_description(board.pr, asked.title, asked.body,
-                                                 started_from=asked.started_from)
-    if isinstance(edited, str):
-        raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
-    if isinstance(edited, DescriptionMoved):
-        return DescriptionSave(saved=False, on_github=edited.body,
-                               pull_request=_pull_request(board))
-    dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
-                        saved_title=asked.title, saved_body=asked.body,
-                        saved_at=board.clock().isoformat()).keep(board.shelf)
-    return DescriptionSave(saved=True, on_github=asked.body, pull_request=_pull_request(board))
+    _encodable(asked.title, asked.body, asked.title_started_from, asked.started_from)
+    with board.shelf.lock(KEPT_DESCRIPTION):
+        edited = board.descriptions.edit_description(
+            board.pr, asked.title, asked.body, title_started_from=asked.title_started_from,
+            started_from=asked.started_from)
+        if isinstance(edited, str):
+            raise Refusal(502, ErrorCode.GITHUB_REJECTED, edited)
+        if isinstance(edited, DescriptionMoved):
+            return DescriptionSave(saved=False, title_on_github=edited.title,
+                                   on_github=edited.body, pull_request=_pull_request(board))
+        dataclasses.replace(DescriptionRecord.kept(board.shelf), checked=digest(asked.body),
+                            saved_title=asked.title, saved_body=asked.body,
+                            saved_at=board.clock().isoformat()).keep(board.shelf)
+    return DescriptionSave(saved=True, title_on_github=asked.title, on_github=asked.body,
+                           pull_request=_pull_request(board))
 
 
 @writes.post("/pull-request/description:check", response_model=PullRequest,
@@ -1277,8 +1289,10 @@ def check_description(board: Serving, asked: DescriptionCheckRequest) -> PullReq
     from anywhere but the board's editor. A `body` that is no longer the one
     served checks nothing that is shown.
     """
-    dataclasses.replace(DescriptionRecord.kept(board.shelf),
-                        checked=digest(asked.body)).keep(board.shelf)
+    _encodable(asked.body)
+    with board.shelf.lock(KEPT_DESCRIPTION):
+        dataclasses.replace(DescriptionRecord.kept(board.shelf),
+                            checked=digest(asked.body)).keep(board.shelf)
     return _pull_request(board)
 
 
@@ -1410,7 +1424,18 @@ def _denied(denied: Denied) -> Refusal:
     return Refusal(WRITE_REFUSALS.get(code, 409), code, denied.reason)
 
 
+def _encodable(*texts: str | None) -> None:
+    for text in texts:
+        try:
+            (text or "").encode()
+        except UnicodeEncodeError:
+            raise Refusal(400, ErrorCode.MALFORMED_REQUEST,
+                          "the text holds a lone UTF-16 surrogate, which is no "
+                          "character GitHub can store") from None
+
+
 def _within_githubs_limit(board: Board, reply: str | None) -> None:
+    _encodable(reply)
     why = None if reply is None else board.conversations.too_long(reply)
     if why is not None:
         raise Refusal(413, ErrorCode.BODY_TOO_LONG, f"that reply is too long; {why}")
