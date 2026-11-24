@@ -37,5 +37,6 @@ if [ -n "$py" ]; then
 	restage "$py" ruff
 	# shellcheck disable=SC2086
 	uv run --quiet ruff check $py
-	uv run --quiet mypy
+	main_checkout=$(dirname "$(git rev-parse --path-format=absolute --git-common-dir)")
+	MYPY_CACHE_DIR="$main_checkout/.shared-cache/mypy" uv run --quiet mypy
 fi

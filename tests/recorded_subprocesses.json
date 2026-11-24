@@ -109048,6 +109048,140 @@
     }
    ]
   },
+  "tests/test_pre_commit_hook.py::test_a_worktrees_hook_checks_types_against_the_main_checkouts_shared_mypy_cache#24cbf9fa3a5a": {
+   "[[\"git\", \"-c\", \"user.name=octocat\", \"-c\", \"user.email=octocat@example.com\", \"add\", \"widget.py\"], \"<TMP>/tree\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=octocat",
+      "-c",
+      "user.email=octocat@example.com",
+      "add",
+      "widget.py"
+     ],
+     "fs": {},
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=octocat\", \"-c\", \"user.email=octocat@example.com\", \"commit\", \"-q\", \"--allow-empty\", \"-m\", \"start\"], \"<TMP>/main\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=octocat",
+      "-c",
+      "user.email=octocat@example.com",
+      "commit",
+      "-q",
+      "--allow-empty",
+      "-m",
+      "start"
+     ],
+     "fs": {
+      "main/.git/refs/heads/main": {
+       "text": "385da4cf815b83fe90b7ffc418aeb0eed3164c92\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=octocat\", \"-c\", \"user.email=octocat@example.com\", \"init\", \"-q\"], \"<TMP>/main\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=octocat",
+      "-c",
+      "user.email=octocat@example.com",
+      "init",
+      "-q"
+     ],
+     "fs": {
+      "main/.git": {
+       "dir": true
+      },
+      "main/.git/HEAD": {
+       "text": "ref: refs/heads/main\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"git\", \"-c\", \"user.name=octocat\", \"-c\", \"user.email=octocat@example.com\", \"worktree\", \"add\", \"-q\", \"<TMP>/tree\"], \"<TMP>/main\", null]": [
+    {
+     "argv": [
+      "git",
+      "-c",
+      "user.name=octocat",
+      "-c",
+      "user.email=octocat@example.com",
+      "worktree",
+      "add",
+      "-q",
+      "<TMP>/tree"
+     ],
+     "fs": {
+      "main/.git/refs/heads/tree": {
+       "text": "385da4cf815b83fe90b7ffc418aeb0eed3164c92\n"
+      },
+      "main/.git/worktrees/tree/HEAD": {
+       "text": "ref: refs/heads/tree\n"
+      },
+      "main/.git/worktrees/tree/commondir": {
+       "text": "../..\n"
+      },
+      "tree": {
+       "dir": true
+      },
+      "tree/.git": {
+       "text": "gitdir: <TMP>/main/.git/worktrees/tree\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": {
+      "b64": ""
+     },
+     "stdout": {
+      "b64": ""
+     }
+    }
+   ],
+   "[[\"sh\", \"<REPO>/.githooks/pre-commit\"], \"<TMP>/tree\", null]": [
+    {
+     "argv": [
+      "sh",
+      "<REPO>/.githooks/pre-commit"
+     ],
+     "fs": {
+      "stub.log": {
+       "text": "uv run --quiet ruff check --fix --quiet widget.py MYPY_CACHE_DIR=\nuv run --quiet ruff check widget.py MYPY_CACHE_DIR=\nuv run --quiet mypy MYPY_CACHE_DIR=<TMP>/main/.shared-cache/mypy\n"
+      }
+     },
+     "returncode": 0,
+     "stderr": null,
+     "stdout": null
+    }
+   ]
+  },
   "tests/thread_names/test_pass.py::test_a_bare_key_branch_without_a_workspace_is_renamed": {
    "[[\"git\", \"-C\", \"<TMP>/clone\", \"branch\", \"-m\", \"orchestrator/thread/7/PRRT_a\", \"orchestrator/thread/7/PRRT_a-1e\"], null, null]": [
     {
